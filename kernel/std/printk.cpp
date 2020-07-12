@@ -162,6 +162,8 @@ char *int2hexstr(uint64_t val, int &end_index)
                 buff[i++] = hex_table[hex];
         }
         end_index = i > 0 ? i - 1 : 0;
+        if (i == 0)
+                buff[0] = '0';
         return buff;
 }
 
@@ -176,6 +178,8 @@ char *int2str(uint64_t val, int &end_index)
                 buff[i++] = hex + '0';
         }
         end_index = i > 0 ? i - 1 : 0;
+        if (i == 0)
+                buff[0] = '0';
         return buff;
 }
 

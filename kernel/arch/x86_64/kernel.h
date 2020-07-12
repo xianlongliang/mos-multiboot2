@@ -5,7 +5,7 @@
 
 // START macros must have the same value in the kernel linker script
 #define KERNEL_PHYSICAL_START 0x0000000000000000
-#define KERNEL_VIRTUAL_START  0xFFFF800000000000
+#define KERNEL_VIRTUAL_START  0xFFFFFFFF80000000
 
 #define KERNEL_GDT_ENTRY 1
 

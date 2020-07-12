@@ -50,10 +50,7 @@ gdt_ptr:
 .type _start, @function
 _start:
 
-        call 1f
-        1:  pop %eax
-        add $low_pdpt - 1b, %eax
-        
+                movl $low_pdpt, %eax
         or $(MMU_PRESENT | MMU_WRITABLE), %eax
         movl %eax, pml4 + (PML4_ADDR_TO_ENTRY_INDEX(KERNEL_PHYSICAL_START) * PML4_ENTRY_SIZE)
 

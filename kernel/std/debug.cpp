@@ -10,7 +10,7 @@ static ELFDebugSymbol elf_symbol;
 void debug_init(ELFDebugSymbol symbol)
 {
     printk("debug_init. \n");
-    printk("symtab %p, size %d, strtab %p, size %d\n", symbol.symtab, symbol.symtabsz,  symbol.strtab, symbol.strtabsz);
+    printk("symtab %p, size %x, strtab %p, size %x\n", symbol.symtab, symbol.symtabsz,  symbol.strtab, symbol.strtabsz);
     elf_symbol = symbol;
 }
 

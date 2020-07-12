@@ -1,6 +1,6 @@
-#include "buddy_system.h"
-#include "lib/debug.h"
-#include "lib/printk.h"
+#include "zone.h"
+#include <std/debug.h>
+#include <std/printk.h>
 uint64_t round_up_pow_of_2(uint64_t x) { return x == 1 ? 1 : 1 << (64 - __builtin_clzl(x - 1)); }
 #define LEFT_LEAF(index) ((index)*2 + 1)
 #define RIGHT_LEAF(index) ((index)*2 + 2)
@@ -11,12 +11,12 @@ uint64_t round_up_pow_of_2(uint64_t x) { return x == 1 ? 1 : 1 << (64 - __builti
 
 #include "memory.h"
 
-uint64_t BuddySystem::PageSize()
+uint64_t Zone::PageSize()
 {
     return this->total_pages_count * sizeof(Page);
 }
 
-void BuddySystem::Construct(uint64_t pages_count)
+void Zone::Construct(uint64_t pages_count)
 {
     assert(pages_count >= 1, "pages_count < 1");
 
@@ -45,7 +45,7 @@ void BuddySystem::Construct(uint64_t pages_count)
     }
 }
 
-int64_t BuddySystem::AllocPages(uint64_t pages_count)
+int64_t Zone::AllocPages(uint64_t pages_count)
 {
     assert(pages_count >= 1, "pages_count < 1");
 
@@ -84,7 +84,7 @@ int64_t BuddySystem::AllocPages(uint64_t pages_count)
 
     return offset;
 }
-int64_t BuddySystem::FreePages(uint64_t offset)
+int64_t Zone::FreePages(uint64_t offset)
 {
     unsigned node_size, index = 0;
     unsigned left_longest, right_longest;
@@ -119,7 +119,7 @@ int64_t BuddySystem::FreePages(uint64_t offset)
     return 1;
 }
 
-int64_t BuddySystem::GetBeginIndex(uint64_t offset)
+int64_t Zone::GetBeginIndex(uint64_t offset)
 {
     unsigned node_size, index = 0;
     unsigned left_longest, right_longest;
@@ -131,6 +131,6 @@ int64_t BuddySystem::GetBeginIndex(uint64_t offset)
 
     return index;
 }
-int64_t BuddySystem::GetEndIndex(uint64_t page_index)
+int64_t Zone::GetEndIndex(uint64_t page_index)
 {
 }

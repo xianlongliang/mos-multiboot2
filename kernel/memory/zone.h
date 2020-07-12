@@ -1,11 +1,21 @@
 #pragma once
-#include "lib/stdint.h"
+#include <std/stdint.h>
 
-class Page;
+class Zone;
 
-class BuddySystem
+struct Page
+{
+    Zone *zone;
+    uint64_t physical_address;
+    uint32_t reference_count;
+    uint16_t attributes;
+    uint16_t age;
+};
+
+class Zone
 {
 public:
+    
     void Construct(uint64_t page_count);
     int64_t AllocPages(uint64_t page_count);
     int64_t FreePages(uint64_t page_index);
@@ -15,7 +25,7 @@ public:
     uint64_t BuddySystemSize()
     {
         // printk("total_pages_count %d\n", this->total_pages_count);
-        return this->total_pages_count * sizeof(uint64_t) + sizeof(BuddySystem);
+        return this->total_pages_count * sizeof(uint64_t) + sizeof(Zone);
     }
 
     uint64_t PageSize();
@@ -53,11 +63,3 @@ private:
     uint64_t nodes[0];
 };
 
-struct Page
-{
-    BuddySystem *buddy;
-    uint64_t physical_address;
-    uint32_t reference_count;
-    uint16_t attributes;
-    uint16_t age;
-};
