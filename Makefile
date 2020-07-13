@@ -6,7 +6,7 @@ dump:
 	objdump -S build/kernel > build/kernel.dump
 
 qemu:
-	qemu-system-x86_64 -cdrom build/kernel.iso -serial stdio -m 1024M
+	nohup qemu-system-x86_64 -cdrom build/kernel.iso -serial stdio -m 1024M -s -S > /dev/null 2>&1 &
 
 bochs: 
 	bochs -qf bochsrc
