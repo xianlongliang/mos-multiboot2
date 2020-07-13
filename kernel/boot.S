@@ -30,6 +30,10 @@ header_end:
 .comm low_page_directory_table, PAGE_DIRECTORY_SIZE, PAGE_DIRECTORY_ALIGNMENT
 .comm high_page_directory_table, PAGE_DIRECTORY_SIZE, PAGE_DIRECTORY_ALIGNMENT
 
+.comm pdpe, 0x1000, 0x1000
+.comm pde, 0x1000, 0x1000
+.comm pte, 0x1000, 0x1000
+
 .data
 .align GDT_TABLE_ALIGNMENT
 gdt_table:
@@ -49,7 +53,7 @@ gdt_ptr:
 .type _start, @function
 _start:
 
-                movl $low_pdpt, %eax
+        movl $low_pdpt, %eax
         or $(MMU_PRESENT | MMU_WRITABLE), %eax
         movl %eax, pml4 + (PML4_ADDR_TO_ENTRY_INDEX(KERNEL_PHYSICAL_START) * PML4_ENTRY_SIZE)
 
