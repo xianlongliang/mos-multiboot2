@@ -1,5 +1,5 @@
 #include "gdt.h"
-#include <std/string.h>
+#include <std/kstring.h>
 #include <std/printk.h>
 #include "tss.h"
 

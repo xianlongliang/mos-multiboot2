@@ -10,7 +10,7 @@ extern "C"
 
     void memset(void *dest, uint8_t val, uint64_t len);
 
-    void bzero(void *dest, uint64_t len);
+    void bzero2(void *dest, uint64_t len);
 
     int strcmp(const char *s1, const char *s2);
 

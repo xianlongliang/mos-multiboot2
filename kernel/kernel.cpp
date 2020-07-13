@@ -8,6 +8,9 @@
 #include <memory/physical.h>
 #include <arch/x86_64/kernel.h>
 #include <gdt.h>
+#include <std/kstring.h>
+#include <interrupt/idt.h>
+#include <interrupt/timer.h>
 
 extern "C" uint8_t _kernel_virtual_start;
 
@@ -15,7 +18,7 @@ extern "C" void Kernel_Main(unsigned long addr)
 {
 
   clear();
-
+  bzero2((void*)0x20000, 1);
   auto mbi_size = *(uint64_t *)addr;
   auto mbi_end = addr + mbi_size + KERNEL_VIRTUAL_START;
   PhysicalMemory::ZONE_VIRTUAL_START = (void*)mbi_end;
@@ -75,7 +78,9 @@ extern "C" void Kernel_Main(unsigned long addr)
   }
 
   gdt_init();
-
+  idt_init();
+  timer_init(10000);
+  asm volatile("sti");
   while (1)
     ;
 }

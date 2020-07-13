@@ -1,7 +1,7 @@
 #pragma once
 #include <multiboot2.h>
 #include <std/stdint.h>
-#include <std/string.h>
+#include <std/kstring.h>
 
 #define flush_tlb()               \
     do                            \

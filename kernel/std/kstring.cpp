@@ -1,6 +1,7 @@
-#include "string.h"
+#include "kstring.h"
+#include <std/stdint.h>
 
-inline void memcpy(void *dst, const void *src, uint64_t len)
+void memcpy(void *dst, const void *src, uint64_t len)
 {
     uint8_t *cdst = (uint8_t *)dst;
     uint8_t *csrc = (uint8_t *)src;
@@ -10,7 +11,7 @@ inline void memcpy(void *dst, const void *src, uint64_t len)
     }
 }
 
-inline void memmove(void *dst, const void *src, uint64_t len)
+void memmove(void *dst, const void *src, uint64_t len)
 {
     uint8_t *cdst = (uint8_t *)dst;
     uint8_t *csrc = (uint8_t *)src;
@@ -20,7 +21,7 @@ inline void memmove(void *dst, const void *src, uint64_t len)
     }
 }
 
-inline void memset(void *dst, uint8_t val, uint64_t len)
+void memset(void *dst, uint8_t val, uint64_t len)
 {
     uint8_t *cdst = (uint8_t *)dst;
     for (; len != 0; len--)
@@ -29,12 +30,12 @@ inline void memset(void *dst, uint8_t val, uint64_t len)
     }
 }
 
-inline void bzero(void *dest, uint64_t len)
+void bzero2(void *dest, uint64_t len)
 {
     memset(dest, 0, len);
 }
 
-inline int strcmp(const char *s1, const char *s2)
+int strcmp(const char *s1, const char *s2)
 {
     int8_t res = 0;
     while (*s1 && !(res = *(uint8_t *)s2 - *(uint8_t *)s1))
@@ -49,7 +50,7 @@ inline int strcmp(const char *s1, const char *s2)
     return res;
 }
 
-inline char *strcpy(char *dst, const char *src)
+char *strcpy(char *dst, const char *src)
 {
     char *tmp = dst;
     while (*src)
@@ -62,7 +63,7 @@ inline char *strcpy(char *dst, const char *src)
     return tmp;
 }
 
-inline char *strncpy(char *dest, const char *src, uint32_t len)
+char *strncpy(char *dest, const char *src, uint32_t len)
 {
     char *dst = dest;
     while (len > 0)
@@ -77,7 +78,7 @@ inline char *strncpy(char *dest, const char *src, uint32_t len)
     return dst;
 }
 
-inline char *strcat(char *dest, const char *src)
+char *strcat(char *dest, const char *src)
 {
     char *cp = dest;
 
@@ -92,7 +93,7 @@ inline char *strcat(char *dest, const char *src)
     return dest;
 }
 
-inline int strlen(const char *src)
+int strlen(const char *src)
 {
     const char *eos = src;
 

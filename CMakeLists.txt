@@ -5,6 +5,10 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_FLAGS  "-fno-pie -no-pie -g -std=gnu++17 -fno-builtin -fno-exceptions -fno-rtti -fno-threadsafe-statics -nostdlib -ffreestanding -g -Wall -Wextra -MMD -mno-red-zone -mcmodel=kernel -Wl,--build-id=none -T ${CMAKE_SOURCE_DIR}/kernel/kernel.ld")
 set(CMAKE_C_FLAGS "-fno-pie -no-pie -g -mcmodel=kernel")
 
+set(CMAKE_ASM_NASM_SOURCE_FILE_EXTENSIONS nasm asm)
+set(CMAKE_ASM_NASM_OBJECT_FORMAT elf64)
+ENABLE_LANGUAGE(ASM_NASM)
+
 include_directories(${CMAKE_SOURCE_DIR}/kernel)
 set_property(SOURCE kernel/boot.S PROPERTY LANGUAGE C)
 add_executable(kernel 
@@ -13,8 +17,8 @@ add_executable(kernel
         kernel/kernel.cpp 
         kernel/std/printk.h 
         kernel/std/printk.cpp 
-        kernel/std/string.h 
-        kernel/std/string.cpp
+        kernel/std/kstring.h 
+        kernel/std/kstring.cpp
         kernel/std/debug.h
         kernel/std/debug.cpp
         kernel/memory/zone.h
@@ -25,6 +29,13 @@ add_executable(kernel
         kernel/tss.cpp
         kernel/gdt.h
         kernel/gdt.cpp
+        kernel/interrupt/idt.h
+        kernel/interrupt/idt.cpp
+        kernel/interrupt/isr.asm
+        kernel/interrupt/irq.asm
+        kernel/interrupt/page_fault.cpp
+        kernel/interrupt/timer.h
+        kernel/interrupt/timer.cpp
         )
 
 add_custom_command(TARGET kernel

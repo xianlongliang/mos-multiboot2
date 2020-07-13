@@ -1,5 +1,5 @@
 #include "physical.h"
-#include <std/string.h>
+#include <std/kstring.h>
 #include <std/printk.h>
 #include <std/debug.h>
 #include <std/new.h>
