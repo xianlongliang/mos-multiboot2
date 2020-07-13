@@ -6,7 +6,8 @@
         {
             "label": "qemu",
             "type": "shell",
-            "command": "make qemu"
+            "command": "make qemu",
+            "isBackground": true
         }
     ]
 }
