@@ -21,6 +21,10 @@ add_executable(kernel
         kernel/memory/zone.cpp
         kernel/memory/physical.h
         kernel/memory/physical.cpp
+        kernel/tss.h
+        kernel/tss.cpp
+        kernel/gdt.h
+        kernel/gdt.cpp
         )
 
 add_custom_command(TARGET kernel

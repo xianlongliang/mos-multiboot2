@@ -29,7 +29,6 @@ header_end:
 .comm high_pdpt, PDPT_SIZE, PDPT_ALIGNMENT
 .comm low_page_directory_table, PAGE_DIRECTORY_SIZE, PAGE_DIRECTORY_ALIGNMENT
 .comm high_page_directory_table, PAGE_DIRECTORY_SIZE, PAGE_DIRECTORY_ALIGNMENT
-.comm tmp_stack, KERNEL_BOOT_STACK_SIZE, KERNEL_BOOT_STACK_ALIGNMENT
 
 .data
 .align GDT_TABLE_ALIGNMENT

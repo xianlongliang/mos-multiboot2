@@ -6,8 +6,9 @@
 #include <std/new.h>
 #include <memory/zone.h>
 #include <memory/physical.h>
+#include <arch/x86_64/kernel.h>
+#include <gdt.h>
 
-extern "C" uint8_t _kernel_virtual_end;
 extern "C" uint8_t _kernel_virtual_start;
 
 extern "C" void Kernel_Main(unsigned long addr)
@@ -16,7 +17,9 @@ extern "C" void Kernel_Main(unsigned long addr)
   clear();
 
   auto mbi_size = *(uint64_t *)addr;
-  printk("kernel virtual address from: %p to %p\n", &_kernel_virtual_start, addr + mbi_size);
+  auto mbi_end = addr + mbi_size + KERNEL_VIRTUAL_START;
+  PhysicalMemory::ZONE_VIRTUAL_START = (void*)mbi_end;
+  printk("kernel virtual address from: %p to %p\n", &_kernel_virtual_start, mbi_end);
 
   for (auto tag = (struct multiboot_tag *)(addr + 8);
        tag->type != MULTIBOOT_TAG_TYPE_END;
@@ -50,20 +53,16 @@ extern "C" void Kernel_Main(unsigned long addr)
     {
       auto elf_tag = (multiboot_tag_elf_sections *)tag;
       ELFDebugSymbol debug_symbol;
-      printk("elf section %p size: %d, num: %d, entsize: %d, shndx: %d\n", tag, elf_tag->size, elf_tag->num, elf_tag->entsize, elf_tag->shndx);
       for (int i = 0; i < elf_tag->num; ++i)
       {
         auto shdr = (Elf64_Shdr *)(elf_tag->sections + i * elf_tag->entsize);
-        // printk("header %d, type %d, shdr %p\n", i, shdr->sh_type, shdr->sh_addr);
         if (shdr->sh_type == SHT_SYMTAB)
         {
-          printk("SHT_SYMTAB addr: %p\n", shdr->sh_addr);
           debug_symbol.symtab = (Elf64_Sym *)shdr->sh_addr;
           debug_symbol.symtabsz = shdr->sh_size;
         }
         if (shdr->sh_type == SHT_STRTAB)
         {
-          printk("SHT_STRTAB\n");
           debug_symbol.strtab = (const char *)shdr->sh_addr;
           debug_symbol.strtabsz = shdr->sh_size;
           break;
@@ -74,6 +73,9 @@ extern "C" void Kernel_Main(unsigned long addr)
     }
     }
   }
+
+  gdt_init();
+
   while (1)
     ;
 }
