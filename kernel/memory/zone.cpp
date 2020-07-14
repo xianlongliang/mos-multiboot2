@@ -67,8 +67,10 @@ Zone::Zone(multiboot_mmap_entry *mmap)
     printk("reserved pages %d\n", reserved_pages);
     printk("zone init, start at: %p span: %x\n", this, this->Span());
     auto pidx = this->AllocatePages(reserved_pages);
-    printk("reserved page %d start at %p\n", pidx, this->pages[pidx].physical_address);
+    printk("reserved page from %p to %p\n", this->pages[pidx].physical_address, this->pages[pidx + reserved_pages - 1].physical_address);
     // pages[pidx].attributes = ...
+    auto test = this->AllocatePages(1);
+    printk("test page idx %d, physical addr %p\n", test, this->pages[test].physical_address);
 }
 
 int64_t Zone::AllocatePages(uint64_t pages_count)

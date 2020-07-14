@@ -13,7 +13,13 @@ task_struct *get_current_task()
 {
     return current_task;
 }
+extern "C" unsigned long do_exit(unsigned long code)
+{
+    printk("init2 finished\n");
 
+    while (1)
+        ;
+}
 static int create_kernel_thread(uint64_t (*fn)(uint64_t), uint64_t arg, uint64_t flags);
 
 extern "C" void ret_syscall();
@@ -50,31 +56,15 @@ uint64_t init(uint64_t arg)
 
 void task_init()
 {
-
+    // set syscall
     wrmsr(MSR_STAR, ((uint64_t)0x0020) << 48);
 
     auto page = PhysicalMemory::GetInstance()->Allocate(1, PG_PTable_Maped | PG_Kernel | PG_Active);
 
-    auto stack_start = (void*)(Phy_To_Virt(page->physical_address) + PAGE_4K_SIZE);
+    auto init_task_stack = (void*)(Phy_To_Virt(page->physical_address) + PAGE_4K_SIZE);
 
-    auto ist = (uint64_t)Phy_To_Virt(0x0000000000007c00);
-
-    tss_struct init_task_tss =
-        {.reserved1 = 0,
-         .rsp0 = (uint64_t)stack_start,
-         .rsp1 = 0,
-         .rsp2 = 0,
-         .reserved2 = 0,
-         .ist1 = 0,
-         .ist2 = 0,
-         .ist3 = 0,
-         .ist4 = 0,
-         .ist5 = 0,
-         .ist6 = 0,
-         .ist7 = 0,
-         .reserved3 = 0,
-         .reserved4 = 0,
-         .io_map_base_addr = 0};
+    tss_struct init_task_tss = {0};
+    init_task_tss.rsp0 = (uint64_t)init_task_stack;
 
     set_tss(init_task_tss);
 
@@ -96,7 +86,7 @@ void task_init()
 
     init_task->mm = &init_task_mm;
     init_task_mm.page = Get_CR3();
-    init_task_mm.start_stack = stack_start;
+    init_task_mm.start_stack = init_task_stack;
 
     auto thread = (struct thread_struct *)(init_task + 1);
     init_task->thread = thread;

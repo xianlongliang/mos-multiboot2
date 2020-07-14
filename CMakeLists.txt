@@ -32,6 +32,8 @@ add_executable(kernel
         kernel/std/debug.cpp
         kernel/memory/zone.h
         kernel/memory/zone.cpp
+        kernel/memory/virtual_page.h
+        kernel/memory/physical_page.h
         kernel/memory/physical.h
         kernel/memory/physical.cpp
         kernel/memory/kernel_page.h
