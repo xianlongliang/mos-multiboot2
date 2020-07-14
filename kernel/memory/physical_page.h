@@ -22,7 +22,7 @@ class Zone;
 struct Page
 {
     Zone *zone;
-    uint64_t physical_address;
+    void* physical_address;
     uint32_t reference_count;
     uint16_t attributes;
     uint16_t age;

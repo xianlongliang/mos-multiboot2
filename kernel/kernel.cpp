@@ -4,6 +4,7 @@
 #include <interrupt/timer.h>
 #include <setup.h>
 #include <task.h>
+#include <syscall.h>
 
 extern "C" void Kernel_Main(unsigned long addr)
 {
@@ -11,6 +12,7 @@ extern "C" void Kernel_Main(unsigned long addr)
   basic_init((void*)addr);
   gdt_init();
   idt_init();
+  syscall_init();
   timer_init(10000);
   task_init();
   while (1)

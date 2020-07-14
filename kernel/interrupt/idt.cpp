@@ -256,5 +256,5 @@ extern "C" void irq_handler(uint64_t irq_number, uint64_t error_code)
     {
         // cpu_hlt();
     }
-    printk("irq: %d error_code: %d\n", irq_number, error_code);
+    // printk("irq: %d error_code: %d\n", irq_number, error_code);
 }

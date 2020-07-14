@@ -8,7 +8,7 @@ void timer_callback(uint64_t error_code)
 {
     static uint64_t tick = 0;
     // schedule();
-    printk("tick: %x\n", tick++);
+    // printk("tick: %x\n", tick++);
 }
 
 void timer_init(uint32_t frequency)

@@ -57,7 +57,7 @@ Zone::Zone(multiboot_mmap_entry *mmap)
     for (int j = 0; j < this->FreePagesCount(); ++j)
     {
         pages[j].zone = this;
-        pages[j].physical_address = this->physical_start_address + PAGE_4K_SIZE * j;
+        pages[j].physical_address = (void*)(this->physical_start_address + PAGE_4K_SIZE * j);
         pages[j].attributes = 0;
         pages[j].reference_count = 0;
         pages[j].age = 0;
