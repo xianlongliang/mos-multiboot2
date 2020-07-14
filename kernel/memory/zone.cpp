@@ -3,6 +3,7 @@
 #include <std/printk.h>
 #include <multiboot2.h>
 #include <arch/x86_64/kernel.h>
+#include "physical_page.h"
 #include "flags.h"
 
 uint64_t round_up_pow_of_2(uint64_t x) { return x == 1 ? 1 : 1 << (64 - __builtin_clzl(x - 1)); }

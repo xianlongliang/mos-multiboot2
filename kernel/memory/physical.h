@@ -2,6 +2,7 @@
 #include <multiboot2.h>
 #include <std/stdint.h>
 #include <std/kstring.h>
+#include "physical_page.h"
 
 #define flush_tlb()               \
     do                            \
@@ -27,14 +28,13 @@ inline void *Get_CR3()
 }
 
 class multiboot_mmap_entry;
-class Zone;
+
 
 constexpr uint64_t ZONES_RESERVED = 8;
 
 class PhysicalMemory
 {
 public:
-    void Add(multiboot_mmap_entry *mmap);
 
     static PhysicalMemory *GetInstance()
     {
@@ -42,11 +42,15 @@ public:
         return &instance;
     }
 
+    Page* Allocate(uint64_t count, uint64_t page_flags);
+    void  Free(Page* page);
+    
     inline static void* ZONE_VIRTUAL_START = 0x0;
 
 private:
-    // only recognize 2 zones, 0-1M and 1-End
-    Zone *zones[ZONES_RESERVED];
-    // how many zones are avaliable
-    uint64_t zones_count = 0;
+    friend void basic_init(void* mbi_addr);
+    void Add(multiboot_mmap_entry *mmap);
+
+    // only recognize 1 zones, 1-End
+    Zone *zones;
 };

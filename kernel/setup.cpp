@@ -14,7 +14,6 @@ void basic_init(void *mbi_addr)
     auto mbi_size = *(uint64_t *)addr;
     auto mbi_end = addr + mbi_size + KERNEL_VIRTUAL_START;
     PhysicalMemory::ZONE_VIRTUAL_START = (void *)mbi_end;
-    printk("kernel virtual address from: %p to %p\n", &_kernel_virtual_start, mbi_end);
 
     for (auto tag = (struct multiboot_tag *)(addr + 8);
          tag->type != MULTIBOOT_TAG_TYPE_END;

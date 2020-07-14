@@ -3,7 +3,9 @@
 #include <interrupt/idt.h>
 #include <interrupt/timer.h>
 #include <setup.h>
-
+extern "C" void do_exit() {
+  
+}
 extern "C" void Kernel_Main(unsigned long addr)
 {
   clear();
@@ -11,7 +13,6 @@ extern "C" void Kernel_Main(unsigned long addr)
   gdt_init();
   idt_init();
   timer_init(10000);
-
   while (1)
     ;
 }

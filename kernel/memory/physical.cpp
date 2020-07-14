@@ -17,6 +17,23 @@ void PhysicalMemory::Add(multiboot_mmap_entry *mmap)
         printk("mmap end <= start, drop\n");
         return;
     }
-    this->zones[this->zones_count] = new ((void*)this->ZONE_VIRTUAL_START) Zone(mmap);
-    this->zones_count += 1;
+    this->zones = new ((void*)this->ZONE_VIRTUAL_START) Zone(mmap);
+}
+
+Page* PhysicalMemory::Allocate(uint64_t count, uint64_t page_flags) {
+    auto idx = this->zones->AllocatePages(count);
+    if (idx != -1) {
+        for (int i = idx; i < idx + count; ++i) {
+            this->zones->Pages()[idx].attributes |= page_flags;
+            this->zones->Pages()[idx].reference_count = 1;
+        }
+        return &this->zones->Pages()[idx];
+    }
+    return nullptr;
+}
+
+void  PhysicalMemory::Free(Page* page) {
+    auto start_page = this->zones->Pages();
+    auto diff = page - start_page;
+    this->zones->FreePages(diff);
 }

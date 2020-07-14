@@ -10,13 +10,20 @@ set(CMAKE_ASM_NASM_OBJECT_FORMAT elf64)
 ENABLE_LANGUAGE(ASM_NASM)
 
 include_directories(${CMAKE_SOURCE_DIR}/kernel)
-set_property(SOURCE kernel/boot.S PROPERTY LANGUAGE C)
 add_executable(kernel 
         kernel/boot.asm
         kernel/kernel.h 
         kernel/kernel.cpp 
         kernel/setup.h 
         kernel/setup.cpp 
+        kernel/regs.h
+        kernel/tss.h
+        kernel/tss.cpp
+        kernel/gdt.h
+        kernel/gdt.cpp
+        kernel/task.h
+        kernel/task.cpp
+        kernel/task.asm
         kernel/std/printk.h 
         kernel/std/printk.cpp 
         kernel/std/kstring.h 
@@ -29,10 +36,6 @@ add_executable(kernel
         kernel/memory/physical.cpp
         kernel/memory/kernel_page.h
         kernel/memory/kernel_page.cpp
-        kernel/tss.h
-        kernel/tss.cpp
-        kernel/gdt.h
-        kernel/gdt.cpp
         kernel/interrupt/idt.h
         kernel/interrupt/idt.cpp
         kernel/interrupt/isr.asm

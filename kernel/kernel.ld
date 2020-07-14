@@ -1,28 +1,15 @@
+OUTPUT_FORMAT("elf64-x86-64")
+OUTPUT_ARCH(i386:x86-64)
 ENTRY(_start)
 
 SECTIONS
 {
   . = 0x0;
   _kernel_physical_start = .;
-  .boottext :
-    {
-      *boot.S*.o (.multiboot)
-      *boot.S*.o (.text)
-    }
-  .bootrodata :
-    {
-      *boot.S*.o (.rodata)
-    }
-  .bootdata :
-    {
-      *boot.S*.o (.data)
-    }
-  .bootbss :
-    {
-      *boot.S*.o (.bss)
-      *boot.S*.o (COMMON)
-    }
-
+  .boot :
+  {
+    *(.multiboot_header)
+  }
   . = ALIGN(0x1000);
   _boot_end = .;
 
@@ -35,28 +22,30 @@ SECTIONS
   }
 
   . = ALIGN(0x1000);
+  .rodata : 
+	{
+		_kernel_rodata_start = .;
+		*(.rodata)
+		_kernel_rodata_end = .;
+	}
 
-  .rodata : AT ( (LOADADDR (.text) + SIZEOF (.text) + 0xFFF) & 0xFFFFFFFFFFFFF000 )
-  {
-    *(.rodata)
-  }
+  . = ALIGN(0x1000);
+  .data :
+	{
+		_kernel_data_start = .;
+		*(.data)
+		_kernel_data_end = .;
+	}
 
   . = ALIGN(0x1000);
 
-  .data : AT ( (LOADADDR (.rodata) + SIZEOF (.rodata) + 0xFFF) & 0xFFFFFFFFFFFFF000 )
-  {
-    *(.data)
-  }
+  .bss :
+	{
+		_kernel_bss_start = .;
+		*(.bss)
+		*(COMMON)
+		_kernel_bss_end = .;
+	}
 
-  . = ALIGN(0x1000);
-
-  .bss : AT ( (LOADADDR (.data) + SIZEOF (.data) + 0xFFF) & 0xFFFFFFFFFFFFF000 )
-  {
-    *(COMMON)
-    *(.bss)
-  }
-
-  _kernel_virtual_end = .;
-
-  _kernel_physical_end = (LOADADDR (.bss) + SIZEOF (.bss) + 0xFFF) & 0xFFFFFFFFFFFFF000;
+	_kernel_end = .;
 }
