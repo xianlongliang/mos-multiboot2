@@ -24,12 +24,7 @@ header_end:
 .code32
 
 .section .bss
-.comm pml4, PML4_SIZE, PML4_ALIGNMENT
-.comm low_pdpt, PDPT_SIZE, PDPT_ALIGNMENT
-.comm high_pdpt, PDPT_SIZE, PDPT_ALIGNMENT
-.comm low_page_directory_table, PAGE_DIRECTORY_SIZE, PAGE_DIRECTORY_ALIGNMENT
-.comm high_page_directory_table, PAGE_DIRECTORY_SIZE, PAGE_DIRECTORY_ALIGNMENT
-
+.comm pml4, 0x1000, 0x1000
 .comm pdpe, 0x1000, 0x1000
 .comm pde, 0x1000, 0x1000
 .comm pte, 0x1000, 0x1000
@@ -53,37 +48,34 @@ gdt_ptr:
 .type _start, @function
 _start:
 
-        movl $low_pdpt, %eax
+        movl $pdpe, %eax
         or $(MMU_PRESENT | MMU_WRITABLE), %eax
-        movl %eax, pml4 + (PML4_ADDR_TO_ENTRY_INDEX(KERNEL_PHYSICAL_START) * PML4_ENTRY_SIZE)
+        movl %eax, pml4 
 
-        movl $high_pdpt, %eax
+        pushl %eax
+        addl $0xff0, %eax
+        movl %eax, pml4 + 0xff8
+        pop %eax
+
+        movl $pde, %eax
         or $(MMU_PRESENT | MMU_WRITABLE), %eax
-        movl %eax, pml4 + (PML4_ADDR_TO_ENTRY_INDEX(KERNEL_VIRTUAL_START) * PML4_ENTRY_SIZE)
+        movl %eax, pdpe
+        movl %eax, pdpe + 0xff0
 
-        movl $low_page_directory_table, %eax
+        movl $pte, %eax
         or $(MMU_PRESENT | MMU_WRITABLE), %eax
-        movl %eax, low_pdpt + (PDPT_ADDR_TO_ENTRY_INDEX(KERNEL_PHYSICAL_START) * PDPT_ENTRY_SIZE)
+        movl %eax, pde
 
-        movl $high_page_directory_table, %eax
+        movl $0x200000, %ecx
+        or $(MMU_PRESENT | MMU_WRITABLE), %ecx
+        movl $0x0, %edi
+        movl $0x0, %eax
         or $(MMU_PRESENT | MMU_WRITABLE), %eax
-        movl %eax, high_pdpt + (PDPT_ADDR_TO_ENTRY_INDEX(KERNEL_VIRTUAL_START) * PDPT_ENTRY_SIZE)
-
-        mov $0, %ecx
-
-        movl $_kernel_physical_end, %esi
-        shrl $TWO_MEGABYTES_SHIFT, %esi
-        addl $1, %esi
-
 page_directory_table_loop:
-        movl $TWO_MEGABYTES, %eax
-        mul %ecx
-        or $(MMU_PRESENT | MMU_WRITABLE | MMU_PDE_TWO_MB), %eax
-        movl %eax, low_page_directory_table(, %ecx, PAGE_DIRECTORY_ENTRY_SIZE)
-        movl %eax, high_page_directory_table(, %ecx, PAGE_DIRECTORY_ENTRY_SIZE)
-
-        inc %ecx
-        cmp %esi, %ecx
+        movl %eax, pte(, %edi, 0x8)
+        addl $0x1000, %eax
+        addl $0x1, %edi
+        cmp %eax, %ecx
         jne page_directory_table_loop  // if not equal redo loop
 
         movl $pml4, %eax

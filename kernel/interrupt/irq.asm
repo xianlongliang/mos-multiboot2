@@ -1,8 +1,3 @@
-
-    _ISR_CODE	equ	0x90
-    _ERROR_CODE	equ	0x98
-    _HANDLER	equ	0x80
-
 [BITS 64]
 %macro IRQ 2
 [GLOBAL irq%1]

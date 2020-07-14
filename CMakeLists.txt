@@ -12,7 +12,7 @@ ENABLE_LANGUAGE(ASM_NASM)
 include_directories(${CMAKE_SOURCE_DIR}/kernel)
 set_property(SOURCE kernel/boot.S PROPERTY LANGUAGE C)
 add_executable(kernel 
-        kernel/boot.S
+        kernel/boot.asm
         kernel/kernel.h 
         kernel/kernel.cpp 
         kernel/std/printk.h 

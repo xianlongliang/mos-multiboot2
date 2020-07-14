@@ -4,7 +4,6 @@ SECTIONS
 {
   . = 0x0;
   _kernel_physical_start = .;
-
   .boottext :
     {
       *boot.S*.o (.multiboot)

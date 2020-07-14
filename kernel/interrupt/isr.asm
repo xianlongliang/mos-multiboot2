@@ -1,27 +1,28 @@
 
-    _R15	equ	0x00
-    _R14	equ	0x08
-    _R13	equ	0x10
-    _R12	equ	0x18
-    _R11	equ	0x20
-    _R10	equ	0x28
-    _R9	equ	0x30
-    _R8	equ	0x38
-    _RBX	equ	0x40
-    _RCX	equ	0x48
-    _RDX	equ	0x50
-    _RSI	equ	0x58
-    _RDI	equ	0x60
-    _RBP	equ	0x68
-    _HANDLER	equ	0x70
-    _RAX	equ	0x78
-    _ISR_CODE	equ	0x80
-    _ERROR_CODE	equ	0x88
-    _RIP	equ	0x90
-    _CS	equ	0x98
-    _RFLAGS	equ	0xa0
-    _OLDRSP	equ	0xa8
-    _OLDSS	equ	0xb0
+    %define _R15 0x00
+    %define _R14 0x08
+    %define _R13 0x10
+    %define _R12 0x18
+    %define _R11 0x20
+    %define _R10 0x28
+    %define _R9 0x30
+    %define _R8 0x38
+
+    %define _RBX 0x40
+    %define _RCX 0x48
+    %define _RDX 0x50
+    %define _RSI 0x58
+    %define _RDI 0x60
+    %define _RBP 0x68
+    %define _HANDLER 0x70
+    %define _RAX 0x78
+    %define _ISR_CODE 0x80
+    %define _ERROR_CODE 0x88
+    %define _RIP 0x90
+    %define _CS 0x98
+    %define _RFLAGS 0xa0
+    %define _OLDRSP 0xa8
+    %define _OLDSS 0xb0
 
 [BITS 64]      
 SECTION .text
