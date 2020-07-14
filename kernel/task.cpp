@@ -96,10 +96,9 @@ extern "C" void ret_syscall();
 
 void schedule()
 {
-    auto next = list_prev(&current->list);
-    auto p = (task_struct *)next;
-    // printk("from %d to %d\n", current->pid, p->pid);
-    switch_to(current, p);
+    auto next = (task_struct *)list_prev(&current->list);
+    printk("from %d to %d\n", current->pid, next->pid);
+    switch_to(current, next);
 }
 
 uint64_t init2(uint64_t arg)
@@ -123,8 +122,7 @@ uint64_t init(uint64_t arg)
     printk("current rsp : %x\n", current->thread->rsp0);
     printk("next rsp : %x\n", p->thread->rsp0);
     current_task = current;
-    switch_to(current, p);
-
+    asm volatile("sti");
     while (1)
     {
         printk("1");
@@ -189,15 +187,15 @@ extern "C" void __switch_to(struct task_struct *prev, struct task_struct *next)
 
     set_tss(task_tss);
 
-    __asm__ __volatile__("movq	%%fs,	%0 \n\t"
+    asm volatile("movq	%%fs,	%0 \n\t"
                          : "=a"(prev->thread->fs));
-    __asm__ __volatile__("movq	%%gs,	%0 \n\t"
+    asm volatile("movq	%%gs,	%0 \n\t"
                          : "=a"(prev->thread->gs));
 
-    __asm__ __volatile__("movq	%0,	%%fs \n\t" ::"a"(next->thread->fs));
-    __asm__ __volatile__("movq	%0,	%%gs \n\t" ::"a"(next->thread->gs));
+    asm volatile("movq	%0,	%%fs \n\t" ::"a"(next->thread->fs));
+    asm volatile("movq	%0,	%%gs \n\t" ::"a"(next->thread->gs));
 
     current_task = next;
 
-    __asm__ __volatile__("sti");
+    asm volatile("sti");
 }

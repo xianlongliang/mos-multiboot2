@@ -1,13 +1,14 @@
 #include "timer.h"
 #include <std/port_ops.h>
 #include <std/printk.h>
+#include <task.h>
 #include "idt.h"
 // #include "task.h"
 
 void timer_callback(uint64_t error_code)
 {
     static uint64_t tick = 0;
-    // schedule();
+    schedule();
     // printk("tick: %x\n", tick++);
 }
 

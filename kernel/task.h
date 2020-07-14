@@ -92,7 +92,8 @@ inline struct task_struct *get_current()
 #define switch_to(prev, next)                                                      \
     do                                                                             \
     {                                                                              \
-        __asm__ __volatile__(                                                      \
+        asm volatile(                                                      \
+            "cli            \n\t"                                                     \
             "pushq	%%rax	\n\t"                                                     \
             "pushq	%%rbp	\n\t"                                                     \
             "pushq	%%rdi	\n\t"                                                     \

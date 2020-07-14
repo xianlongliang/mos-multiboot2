@@ -13,7 +13,7 @@ extern "C" void Kernel_Main(unsigned long addr)
   gdt_init();
   idt_init();
   syscall_init();
-  timer_init(10000);
+  timer_init(1);
   task_init();
   while (1)
     ;
