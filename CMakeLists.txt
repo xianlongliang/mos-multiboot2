@@ -15,6 +15,8 @@ add_executable(kernel
         kernel/boot.asm
         kernel/kernel.h 
         kernel/kernel.cpp 
+        kernel/setup.h 
+        kernel/setup.cpp 
         kernel/std/printk.h 
         kernel/std/printk.cpp 
         kernel/std/kstring.h 
@@ -25,6 +27,8 @@ add_executable(kernel
         kernel/memory/zone.cpp
         kernel/memory/physical.h
         kernel/memory/physical.cpp
+        kernel/memory/kernel_page.h
+        kernel/memory/kernel_page.cpp
         kernel/tss.h
         kernel/tss.cpp
         kernel/gdt.h

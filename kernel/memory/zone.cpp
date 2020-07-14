@@ -20,12 +20,12 @@ uint64_t Zone::PageSize()
 
 Zone::Zone(multiboot_mmap_entry *mmap)
 {
-    this->physical_start_address = PAGE_2M_ALIGN(mmap->addr);
-    this->physical_end_address = ((mmap->addr + mmap->len) >> PAGE_2M_SHIFT) << PAGE_2M_SHIFT;
+    this->physical_start_address = PAGE_4K_ALIGN(mmap->addr);
+    this->physical_end_address = ((mmap->addr + mmap->len) >> PAGE_4K_SHIFT) << PAGE_4K_SHIFT;
     this->attribute = 0;
 
-    uint64_t pages_count = (this->physical_end_address - this->physical_start_address) >> PAGE_2M_SHIFT;
-    printk("page size: 2M, avaliable pages: %d\n", pages_count);
+    uint64_t pages_count = (this->physical_end_address - this->physical_start_address) >> PAGE_4K_SHIFT;
+    printk("page size: 4k, avaliable pages: %d\n", pages_count);
 
     this->free_pages_count = pages_count;
     this->total_pages_count = pages_count;
@@ -39,10 +39,10 @@ Zone::Zone(multiboot_mmap_entry *mmap)
     // node number is size * 2 - 1, we alloc size * 2
     auto node_size = this->total_pages_count_rounded_up * 2;
     // nodes placed at the end of the zone
-    this->nodes = (uint64_t *)(uint64_t(this) + sizeof(Zone));
+    this->nodes = (uint32_t *)(uint64_t(this) + sizeof(Zone));
     // nodes placed at the end of the nodes
-    this->pages = (Page *)(uint64_t(this) + sizeof(Zone) + node_size * sizeof(uint64_t));
-    printk("nodes start at %p -> %p\n", nodes, uint64_t(this->nodes) + node_size * sizeof(uint64_t));
+    this->pages = (Page *)(uint64_t(this) + sizeof(Zone) + node_size * sizeof(uint32_t));
+    printk("nodes start at %p -> %p\n", nodes, uint64_t(this->nodes) + node_size * sizeof(uint32_t));
     printk("pages start at %p -> %p\n", pages, uint64_t(pages) + this->total_pages_count * sizeof(Page));
 
     // build the buddy tree
@@ -56,13 +56,13 @@ Zone::Zone(multiboot_mmap_entry *mmap)
     for (int j = 0; j < this->FreePagesCount(); ++j)
     {
         pages[j].zone = this;
-        pages[j].physical_address = this->physical_start_address + PAGE_2M_SIZE * j;
+        pages[j].physical_address = this->physical_start_address + PAGE_4K_SIZE * j;
         pages[j].attributes = 0;
         pages[j].reference_count = 0;
         pages[j].age = 0;
     }
 
-    auto reserved_pages = (PAGE_2M_ALIGN(uint64_t(this) + this->Span()) - KERNEL_VIRTUAL_START) / PAGE_2M_SIZE;
+    auto reserved_pages = (PAGE_4K_ALIGN(uint64_t(this) + this->Span()) - KERNEL_VIRTUAL_START) / PAGE_4K_SIZE;
     printk("reserved pages %d\n", reserved_pages);
     printk("zone init, start at: %p span: %x\n", this, this->Span());
     auto pidx = this->AllocatePages(reserved_pages);

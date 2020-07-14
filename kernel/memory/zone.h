@@ -77,6 +77,6 @@ private:
     uint64_t physical_end_address;
     uint64_t attribute;
 
-    uint64_t *nodes;
+    uint32_t *nodes;
     Page *pages;
 };

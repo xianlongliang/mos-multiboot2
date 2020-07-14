@@ -30,7 +30,7 @@ void memset(void *dst, uint8_t val, uint64_t len)
     }
 }
 
-void bzero2(void *dest, uint64_t len)
+void bzero(void *dest, uint64_t len)
 {
     memset(dest, 0, len);
 }

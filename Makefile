@@ -6,7 +6,7 @@ dump:
 	objdump -M intel -S build/kernel > build/kernel.dump
 
 qemu:
-	qemu-system-x86_64 -cdrom build/kernel.iso -serial stdio -m 1024M -s -S 
+	qemu-system-x86_64 -cdrom build/kernel.iso -serial stdio -m 32M -s -S 
 
 bochs: 
 	bochs -qf bochsrc

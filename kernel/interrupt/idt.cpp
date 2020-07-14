@@ -110,7 +110,7 @@ extern "C"
 
 void idt_init()
 {
-    bzero2(interrupt_handlers, INTERRUPT_MAX * sizeof(interrupt_handler_t));
+    bzero(interrupt_handlers, INTERRUPT_MAX * sizeof(interrupt_handler_t));
 
     /*                   ____________                          ____________
     Real Time Clock --> |            |   Timer -------------> |            |

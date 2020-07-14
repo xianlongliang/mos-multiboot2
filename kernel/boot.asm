@@ -31,10 +31,13 @@ header_end:
 
 section .data
 global pml4
+global pdpe
+global pde
+global pte
 align PAGE_SIZE
 pml4 equ $ - KERNEL_TEXT_BASE
     times 512 dq 0
-pdpe_high equ $ - KERNEL_TEXT_BASE
+pdpe equ $ - KERNEL_TEXT_BASE
     times 512 dq 0
 pde equ $ - KERNEL_TEXT_BASE
     times 512 dq 0
@@ -64,18 +67,19 @@ section .text
 bits 32
 global _start
 _start:
+
     mov eax, pdpe_low
     or  eax, (PAGE_PRESENT | PAGE_WRITE)
     mov dword [pml4], eax
 
-    mov eax, pdpe_high
+    mov eax, pdpe
     or  eax, (PAGE_PRESENT | PAGE_WRITE)
     mov dword [pml4 + 0xff8], eax
 
     mov eax, pde
     or  eax, (PAGE_PRESENT | PAGE_WRITE)
     mov [pdpe_low], eax
-    mov [pdpe_high + 0xff0], eax
+    mov [pdpe + 0xff0], eax
     
     mov eax, pte
     or  eax, (PAGE_PRESENT | PAGE_WRITE)
@@ -119,13 +123,13 @@ _start64 equ $ - KERNEL_TEXT_BASE
     mov gs, ax
     mov ss, ax
 
-
-    mov rsp, STACK_START
+    mov rsp, STACK_START + KERNEL_TEXT_BASE
     mov rbp, rsp
 
     mov rdi, rbx
-        
-    call Kernel_Main
+
+    mov rax, Kernel_Main
+    call rax
 
     cli
     hlt
