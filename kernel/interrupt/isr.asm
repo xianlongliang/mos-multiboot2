@@ -74,8 +74,12 @@ int_with_ec:
 
     mov rdi, [rsp + _ISR_CODE]
     mov rsi, [rsp + _ERROR_CODE]
-    mov rdx, [rsp + _HANDLER]
-    call rdx
+    mov rdx, [rsp + _OLDRSP]
+    mov rcx, [rsp + _RFLAGS]
+    mov r8,  [rsp + _RIP]
+    
+    mov r9, [rsp + _HANDLER]
+    call r9
     jmp int_ret
 
 ; common isr_handler

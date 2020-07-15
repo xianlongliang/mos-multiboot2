@@ -3,6 +3,7 @@
 #include "gdt.h"
 #include <std/printk.h>
 #include <std/port_ops.h>
+#include "keyboard.h"
 
 #define IO_PIC1 (0x20) // Master (IRQs 0-7)
 #define IO_PIC2 (0xA0) // Slave  (IRQs 8-15)
@@ -104,9 +105,9 @@ static inline void _set_gate(IDT_Descriptor_Type type, unsigned int n, unsigned 
 
 extern "C"
 {
-    void page_fault_handler(uint64_t error_code);
-    void keyboard_irq_handler(uint64_t error_code);
+    void page_fault_handler(uint64_t error_code, uint64_t rsp, uint64_t rflags, uint64_t rip);
 }
+
 
 void idt_init()
 {
@@ -202,17 +203,17 @@ void idt_init()
     set_intr_gate(47, 1, CONVERT_IRQ_ADDR(15));
 
     register_interrupt_handler(14, page_fault_handler);
-    // register_interrupt_handler(33, keyboard_irq_handler);
+    register_interrupt_handler(33, keyboard_irq_handler);
     load_idt(&idtr);
     printk("gdt_init IDT_PTR %x\n", &idtr);
 }
 
-extern "C" void isr_handler(uint64_t isr_number, uint64_t error_code)
+extern "C" void isr_handler(uint64_t isr_number, uint64_t error_code, uint64_t rsp, uint64_t rflags, uint64_t rip)
 {
     if (interrupt_handlers[isr_number])
     {
         printk("interrupt_handlers %p\n", interrupt_handlers[isr_number]);
-        interrupt_handlers[isr_number](error_code);
+        interrupt_handlers[isr_number](error_code, rsp, rflags, rip);
     }
     else
     {
@@ -243,14 +244,14 @@ static void clear_interrupt_chip(uint32_t intr_no)
     outb(IO_PIC1, 0x20);
 }
 
-extern "C" void irq_handler(uint64_t irq_number, uint64_t error_code)
+extern "C" void irq_handler(uint64_t irq_number, uint64_t error_code, uint64_t rsp, uint64_t rflags, uint64_t rip)
 {
     if (interrupt_handlers[irq_number])
     {
         clear_interrupt_chip(irq_number);
         // asm volatile("cli");
         // printk("irq_handler called\n");
-        interrupt_handlers[irq_number](error_code);
+        interrupt_handlers[irq_number](error_code, rsp, rflags, rip);
     }
     else
     {
