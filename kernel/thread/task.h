@@ -93,7 +93,6 @@ inline struct task_struct *get_current()
     do                                                                             \
     {                                                                              \
         asm volatile(                                                      \
-            "cli            \n\t"                                                     \
             "pushq	%%rax	\n\t"                                                     \
             "pushq	%%rbp	\n\t"                                                     \
             "pushq	%%rdi	\n\t"                                                     \

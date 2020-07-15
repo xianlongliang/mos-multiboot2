@@ -89,7 +89,6 @@ extern isr_handler
 %macro ISR_WITHOUT_ERROR_CODE 1
 [GLOBAL isr%1]
 isr%1:
-    cli                  ; 关闭中断
     push 0               ; push error_code (invalid)
     push %1              ; push isr
     push    rax ; original rax
@@ -101,7 +100,6 @@ isr%1:
 %macro ISR_WITH_ERROR_CODE 1
 [GLOBAL isr%1]
 isr%1:
-    cli                  ; 关闭中断
     push    %1
     push    rax ; original rax
 	lea     rax, [rel isr_handler]
