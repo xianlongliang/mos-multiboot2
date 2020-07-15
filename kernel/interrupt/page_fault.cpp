@@ -24,11 +24,11 @@ struct page_fault_error_code
     uint32_t RMP : 1;
 };
 
-extern "C" void page_fault_handler(uint64_t error_code)
+extern "C" void page_fault_handler(uint64_t error_code, uint64_t rsp, uint64_t rflags, uint64_t rip)
 {
-    printk("%d\n", sizeof(page_fault_error_code));
     uint64_t test = 0;
     auto pfec = (page_fault_error_code *)&test;
+    printk("page_fault RIP: %p\n", rip);
     printk("page_fault address CR2: %p\n", GetCR2());
     printk("page_fault error_code %x\n", error_code);
     printk("P:%d R_W:%d U_S:%d RSV:%d I_D:%d PK:%d\n",

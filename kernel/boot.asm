@@ -7,6 +7,8 @@ KERNEL_TEXT_BASE equ 0xffffffff80000000
 %define KERNEL_CR4 (CONTROL_REGISTER4_PHYSICAL_ADDRESS_EXTENSION)
 %define MSR_EFER 0xC0000080
 %define MSR_EFER_LME (1 << 8)
+%define MSR_EFER_SCE (1 << 0)
+
 %define CONTROL_REGISTER0_PROTECTED_MODE_ENABLED (1 << 0)
 %define CONTROL_REGISTER0_EXTENSION_TYPE (1 << 4)
 %define CONTROL_REGISTER0_PAGE (1 << 31)
@@ -73,20 +75,20 @@ _start:
     mov dword [pml4], eax
 
     mov eax, pdpe
-    or  eax, (PAGE_PRESENT | PAGE_WRITE)
+    or  eax, (PAGE_PRESENT | PAGE_WRITE | PAGE_USER)
     mov dword [pml4 + 0xff8], eax
 
     mov eax, pde
-    or  eax, (PAGE_PRESENT | PAGE_WRITE)
+    or  eax, (PAGE_PRESENT | PAGE_WRITE | PAGE_USER)
     mov [pdpe_low], eax
     mov [pdpe + 0xff0], eax
     
     mov eax, pte
-    or  eax, (PAGE_PRESENT | PAGE_WRITE)
+    or  eax, (PAGE_PRESENT | PAGE_WRITE | PAGE_USER)
     mov [pde], eax
     
     mov edx, pte         
-    mov eax, PAGE_PRESENT | PAGE_WRITE    
+    mov eax, (PAGE_PRESENT | PAGE_WRITE | PAGE_USER)    
 .build2MTable:
     mov [edx], eax
     add eax, 0x1000
@@ -102,7 +104,7 @@ _start:
 
     mov ecx, MSR_EFER
     rdmsr
-    or eax, MSR_EFER_LME
+    or eax, MSR_EFER_LME | MSR_EFER_SCE
     wrmsr
     mov eax, KERNEL_CR0
     mov cr0, eax

@@ -23,9 +23,11 @@ add_executable(kernel
         kernel/tss.cpp
         kernel/gdt.h
         kernel/gdt.cpp
-        kernel/task.h
-        kernel/task.cpp
-        kernel/task.asm
+        kernel/thread/task.h
+        kernel/thread/task.cpp
+        kernel/thread/task.asm
+        kernel/thread/userland.h
+        kernel/thread/userland.cpp
         kernel/std/msr.h 
         kernel/std/printk.h 
         kernel/std/printk.cpp 
@@ -48,6 +50,8 @@ add_executable(kernel
         kernel/interrupt/page_fault.cpp
         kernel/interrupt/timer.h
         kernel/interrupt/timer.cpp
+        kernel/interrupt/keyboard.h
+        kernel/interrupt/keyboard.cpp
         )
 
 add_custom_command(TARGET kernel
