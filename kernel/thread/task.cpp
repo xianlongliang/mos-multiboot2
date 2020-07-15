@@ -96,7 +96,7 @@ extern "C" void ret_syscall();
 void schedule()
 {
     auto next = (task_struct *)list_prev(&current->list);
-    printk("from %d to %d\n", current->pid, next->pid);
+    // printk("from %d to %d\n", current->pid, next->pid);
     switch_to(current, next);
 }
 #include "userland.h"
@@ -104,7 +104,7 @@ void schedule()
 uint64_t init2(uint64_t arg)
 {
     printk("this is init 2\n");
-
+    while(1);
     current->thread->rip = uint64_t(&ret_syscall);
     current->thread->rsp = uint64_t((uint8_t *)current + STACK_SIZE - sizeof(Regs));
     auto regs = (Regs *)current->thread->rsp;
