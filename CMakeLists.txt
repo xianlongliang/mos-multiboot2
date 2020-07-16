@@ -18,11 +18,11 @@ add_executable(kernel
         kernel/syscall.cpp 
         kernel/setup.h 
         kernel/setup.cpp 
-        kernel/regs.h
         kernel/tss.h
         kernel/tss.cpp
         kernel/gdt.h
         kernel/gdt.cpp
+        kernel/thread/regs.h
         kernel/thread/task.h
         kernel/thread/task.cpp
         kernel/thread/task.asm

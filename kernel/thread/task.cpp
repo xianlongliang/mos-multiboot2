@@ -1,7 +1,7 @@
 #include "task.h"
 #include <memory/flags.h>
 #include "tss.h"
-#include <regs.h>
+#include <thread/regs.h>
 #include <std/printk.h>
 #include <std/debug.h>
 #include <memory/physical.h>
@@ -158,7 +158,7 @@ void init2()
     auto ret_stack = uint64_t((uint8_t *)task + STACK_SIZE - sizeof(Regs));
     asm volatile("movq	%0,	%%rsp	\n\t"
                  "pushq	%1		    \n\t" ::
-                 "m"(ret_stack),
+                     "m"(ret_stack),
                  "m"(ret_syscall_addr)
                  : "memory");
 
@@ -262,13 +262,13 @@ extern "C" void __switch_to(struct task_struct *prev, struct task_struct *next)
 
     if (prev->mm == nullptr && next->mm)
     {
-        // printk("userland to kernel\n");
+        // printk("kernel to userland\n");
         SET_CR3(next->mm->pml4);
         flush_tlb();
     }
     else if (prev->mm && next->mm == nullptr)
     {
-        // printk("kernel to userland\n");
+        // printk("userland to kernel\n");
         SET_CR3(&pml4);
         flush_tlb();
     }
