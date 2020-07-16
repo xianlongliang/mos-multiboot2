@@ -35,6 +35,7 @@ section .data
 global pml4
 global pdpe
 global pde
+global pdpe_low
 global pte
 align PAGE_SIZE
 pml4 equ $ - KERNEL_TEXT_BASE

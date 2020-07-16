@@ -4,11 +4,12 @@
 #include <std/printk.h>
 #include <thread/regs.h>
 #include <tss.h>
+#include <memory/physical_page.h>
 
-static uint64_t syscall_entry(uint64_t syscall_number)
+extern "C" uint64_t syscall_entry_c(uint64_t syscall_number)
 {
-    auto i = get_tss();
-    asm volatile("sysretq");
+    static uint64_t count = 0;
+    printk("syscall %d times\n", count++);
     return 0;
 }
 
@@ -18,6 +19,15 @@ struct MSR_STAR_LAYOUT
     uint64_t syscall_cs_ss : 16;
     uint64_t sysret_cs_ss : 16;
 };
+
+extern "C" char pdpe_low;
+
+struct CPU_STRUCT {
+    void* syscall_stack;
+    void* syscall_old_stack;
+};
+
+extern "C" void syscall_entry();
 
 void syscall_init()
 {
@@ -33,4 +43,8 @@ void syscall_init()
     wrmsr(MSR_STAR, *(uint64_t *)(&star));
     // set the syscall entry address
     wrmsr(MSR_LSTAR, (uint64_t(&syscall_entry)));
+
+    auto cpu_struct = (CPU_STRUCT*)Phy_To_Virt(&pdpe_low);
+    cpu_struct->syscall_stack = Phy_To_Virt((char*)&pdpe_low + 0x1000);
+    wrmsr(MSR_KERNEL_GS_BASE, uint64_t(Phy_To_Virt((char*)&pdpe_low)));
 }

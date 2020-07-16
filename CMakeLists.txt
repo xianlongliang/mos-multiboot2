@@ -16,6 +16,7 @@ add_executable(kernel
         kernel/kernel.cpp 
         kernel/syscall.h 
         kernel/syscall.cpp 
+        kernel/syscall.asm 
         kernel/setup.h 
         kernel/setup.cpp 
         kernel/tss.h
