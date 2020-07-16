@@ -3,6 +3,7 @@
 #include <std/stdint.h>
 #include <std/kstring.h>
 #include "physical_page.h"
+#include <std/printk.h>
 
 #define flush_tlb()               \
     do                            \
@@ -27,8 +28,17 @@ inline void *Get_CR3()
     return addr;
 }
 
-class multiboot_mmap_entry;
+inline void SET_CR3(void* pml4)
+{
+    printk("setting: %p\n", pml4);
+    asm volatile(
+        "movq   %0,    %%rax   \n\t"
+        "movq	%%rax, %%cr3   \n\t"
+        :: "m"(pml4)
+        : "memory");
+}
 
+class multiboot_mmap_entry;
 
 constexpr uint64_t ZONES_RESERVED = 8;
 

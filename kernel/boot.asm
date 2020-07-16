@@ -75,20 +75,20 @@ _start:
     mov dword [pml4], eax
 
     mov eax, pdpe
-    or  eax, (PAGE_PRESENT | PAGE_WRITE | PAGE_USER)
+    or  eax, (PAGE_PRESENT | PAGE_WRITE)
     mov dword [pml4 + 0xff8], eax
 
     mov eax, pde
-    or  eax, (PAGE_PRESENT | PAGE_WRITE | PAGE_USER)
+    or  eax, (PAGE_PRESENT | PAGE_WRITE)
     mov [pdpe_low], eax
     mov [pdpe + 0xff0], eax
     
     mov eax, pte
-    or  eax, (PAGE_PRESENT | PAGE_WRITE | PAGE_USER)
+    or  eax, (PAGE_PRESENT | PAGE_WRITE)
     mov [pde], eax
     
     mov edx, pte         
-    mov eax, (PAGE_PRESENT | PAGE_WRITE | PAGE_USER)    
+    mov eax, (PAGE_PRESENT | PAGE_WRITE)    
 .build2MTable:
     mov [edx], eax
     add eax, 0x1000

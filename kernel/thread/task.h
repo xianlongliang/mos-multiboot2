@@ -2,6 +2,7 @@
 #include <std/stdint.h>
 #include <std/list.h>
 #include <tss.h>
+#include <memory/virtual_page.h>
 
 //GDT selector
 #define KERNEL_CS (0x08)
@@ -25,7 +26,7 @@
 
 struct mm_struct
 {
-    void* page; //page table point
+    Page_PML4* pml4; //page table point
 
     // all addresses below are virtual
     void* start_code;
@@ -64,7 +65,7 @@ struct task_struct
     volatile uint8_t state;
     uint8_t flags;
 
-    mm_struct *mm;
+    mm_struct* mm;
     thread_struct *thread;
 
     uint64_t pid;

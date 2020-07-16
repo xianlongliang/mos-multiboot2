@@ -21,8 +21,8 @@ ret_syscall:
 			 
 	add	rsp, 0x10
 
-	pushf
-	pop r11
+	popf
+
 	pop rsp
 
     o64 sysret
@@ -40,6 +40,7 @@ kernel_thread_func:
 	pop	r10				 	
 	pop	r9				 	
 	pop	r8
+
 	pop	rbx				 	
 	pop	rcx				 	
 	pop	rdx				 	
@@ -49,8 +50,13 @@ kernel_thread_func:
 	pop	rax				 	
 
 	add rsp, 0x10
+	
 	popf
+
 	pop rsp
+
+	sub rsp, 0x100
+	
 	call rbx
 
 	call do_exit

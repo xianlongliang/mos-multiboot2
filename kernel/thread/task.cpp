@@ -14,13 +14,7 @@ extern "C" void kernel_thread_func();
 // if not kernel thread, return to userspace
 extern "C" void ret_syscall();
 
-
 static task_struct *init_task;
-static task_struct *current_task;
-task_struct *get_current_task()
-{
-    return current_task;
-}
 
 extern "C" unsigned long do_exit(unsigned long code)
 {
@@ -53,7 +47,7 @@ static uint64_t do_fork(struct Regs *regs, unsigned long clone_flags)
 
     regs->rsp = (uint64_t)task + STACK_SIZE;
     regs->rbp = regs->rsp;
-    
+
     // copy to regs to the stack end
     memcpy((void *)((uint8_t *)task + STACK_SIZE - sizeof(Regs)), regs, sizeof(Regs));
 
@@ -73,8 +67,7 @@ static uint64_t do_fork(struct Regs *regs, unsigned long clone_flags)
     return 0;
 }
 
-
-static int create_kernel_thread(uint64_t (*fn)(uint64_t), uint64_t arg, uint64_t flags)
+static int create_kernel_thread(void (*fn)(), uint64_t arg, uint64_t flags)
 {
 
     Regs regs;
@@ -92,39 +85,93 @@ static int create_kernel_thread(uint64_t (*fn)(uint64_t), uint64_t arg, uint64_t
 
 extern "C" void ret_syscall();
 
-
-void schedule()
-{
-    auto next = (task_struct *)list_prev(&current->list);
-    // printk("from %d to %d\n", current->pid, next->pid);
-    switch_to(current, next);
-}
 #include "userland.h"
 
-uint64_t init2(uint64_t arg)
-{
-    printk("this is init 2\n");
-    while(1);
-    current->thread->rip = uint64_t(&ret_syscall);
-    current->thread->rsp = uint64_t((uint8_t *)current + STACK_SIZE - sizeof(Regs));
-    auto regs = (Regs *)current->thread->rsp;
-    asm __volatile__("movq	%0,	%%rsp	\n\t"
-                     "pushq	%1		\n\t"::
-                     "m"(current->thread->rsp), "m"(current->thread->rip)
-                     : "memory");
-    regs->rsp = (uint64_t)Phy_To_Virt(0x500000); // RSP
-    regs->rcx = (uint64_t)Phy_To_Virt(0x400000); // RIP
-    // regs->rax = 1;
-    regs->cs = KERNEL_CS;
+// the kernel pml4
+extern "C" char pml4;
+extern "C" char pdpe;
+extern "C" char pde;
 
-    memcpy((void *)Phy_To_Virt(0x400000), (uint8_t *)&userland_entry, 1024);
+void kernel_page_copy();
+
+void userland_pagetable_init(task_struct *task)
+{
+    auto page_table = PhysicalMemory::GetInstance()->Allocate(4, PG_PTable_Maped | PG_Active);
+    bzero(Phy_To_Virt(page_table->physical_address), 0x1000 * 4);
+    auto page_program_and_stack = PhysicalMemory::GetInstance()->Allocate(3, PG_PTable_Maped | PG_Active);
+    // map start at 0x400000
+    auto pml4_virtual = (Page_PML4 *)Phy_To_Virt(page_table->physical_address);
+    memcpy(pml4_virtual, Phy_To_Virt(&pml4), 0x1000);
+    pml4_virtual[0].PDPE = uint64_t(Virt_To_Phy(pml4_virtual) + 0x1000) >> PAGE_4K_SHIFT;
+    pml4_virtual[0].P = 1;
+    pml4_virtual[0].R_W = 1;
+    pml4_virtual[0].U_S = 1;
+
+    auto pml4ff8 = &((Page_PML4 *)pml4_virtual)[511];
+    auto pml40 = &((Page_PML4 *)pml4_virtual)[0];
+
+    // pml4_virtual[0xff8].PDPE = uint64_t(&pdpe);
+    // *(uint64_t *)&pml4_virtual[0xff8] |= 0x7;
+
+    auto pdpe_virtual = (Page_PDPE *)((void *)pml4_virtual + PAGE_4K_SIZE);
+    pdpe_virtual[0].NEXT = uint64_t(Virt_To_Phy(pdpe_virtual) + 0x1000) >> PAGE_4K_SHIFT;
+    pdpe_virtual[0].P = 1;
+    pdpe_virtual[0].R_W = 1;
+    pdpe_virtual[0].U_S = 1;
+
+    auto pdpet = &((Page_PDPE *)pdpe_virtual)[0];
+
+    auto pde_virtual = (Page_PDE *)((void *)pdpe_virtual + PAGE_4K_SIZE);
+    pde_virtual[2].NEXT = uint64_t(Virt_To_Phy(pde_virtual) + 0x1000) >> PAGE_4K_SHIFT;
+    pde_virtual[2].P = 1;
+    pde_virtual[2].R_W = 1;
+    pde_virtual[2].U_S = 1;
+
+    auto pdet = &((Page_PDE *)pde_virtual)[1];
+
+    auto pte = (Page_PTE *)((void *)pde_virtual + PAGE_4K_SIZE);
+    pte[0].PPBA = uint64_t(page_program_and_stack->physical_address) >> PAGE_4K_SHIFT;
+    *(uint64_t *)&pte[0] |= 0x7;
+    pte[1].PPBA = uint64_t(page_program_and_stack->physical_address + PAGE_4K_SIZE) >> PAGE_4K_SHIFT;
+    *(uint64_t *)&pte[1] |= 0x7;
+    pte[2].PPBA = uint64_t(page_program_and_stack->physical_address + 2 * PAGE_4K_SIZE) >> PAGE_4K_SHIFT;
+    *(uint64_t *)&pte[2] |= 0x7;
+
+    task->mm->start_code = Phy_To_Virt(pte[0].PPBA << 12);
+    task->mm->end_code = Phy_To_Virt(pte[0].PPBA << 12 + PAGE_4K_SIZE);
+    task->mm->pml4 = (Page_PML4 *)Virt_To_Phy(pml4_virtual);
+}
+
+void init2()
+{
+    asm volatile("cli");
+    printk("this is init 2\n");
+
+    auto task = current;
+    task->mm = (mm_struct *)((char *)task->thread + sizeof(thread_struct));
+    bzero(task->mm, sizeof(mm_struct));
+    userland_pagetable_init(task);
+    memcpy((void *)task->mm->start_code, (uint8_t *)&userland_entry, 1024);
+    SET_CR3(task->mm->pml4);
+
+    auto ret_syscall_addr = uint64_t(&ret_syscall);
+    auto ret_stack = uint64_t((uint8_t *)task + STACK_SIZE - sizeof(Regs));
+    asm volatile("movq	%0,	%%rsp	\n\t"
+                 "pushq	%1		    \n\t" ::
+                 "m"(ret_stack),
+                 "m"(ret_syscall_addr)
+                 : "memory");
+
+    auto regs = (Regs *)ret_stack;
+    bzero(regs, sizeof(Regs));
+    regs->rsp = (uint64_t)(0x402fff & 0xfffff0); // RSP
+    regs->rbp = regs->rsp;                       // RSP
+    regs->rcx = (uint64_t)(0x400000);            // RIP
+    regs->r11 = (1 << 9);
+
+    printk("enter userland\n");
 
     asm volatile("retq");
-    while (1)
-    {
-        printk("2");
-    }
-    return 0;
 }
 
 uint64_t init(uint64_t arg)
@@ -136,22 +183,20 @@ uint64_t init(uint64_t arg)
     auto next = (task_struct *)list_next(&current->list);
     printk("current rsp : %x\n", current->thread->rsp0);
     printk("next rsp : %x\n", next->thread->rsp0);
-    current_task = current;
     // switch_to(current, next);
     asm volatile("sti");
     while (1)
     {
-        // printk("1");
+        printk("1");
     }
 }
-
 
 void task_init()
 {
 
     auto page = PhysicalMemory::GetInstance()->Allocate(1, PG_PTable_Maped | PG_Kernel | PG_Active);
 
-    auto init_task_stack = (void*)(Phy_To_Virt(page->physical_address) + PAGE_4K_SIZE);
+    auto init_task_stack = (void *)(Phy_To_Virt(page->physical_address) + PAGE_4K_SIZE);
 
     tss_struct init_task_tss;
     bzero(&init_task_tss, sizeof(tss_struct));
@@ -193,25 +238,39 @@ void task_init()
     asm volatile("retq");
 }
 
+void schedule()
+{
+    auto next = (task_struct *)list_prev(&current->list);
+    printk("from %d to %d\n", current->pid, next->pid);
+    switch_to(current, next);
+}
+
 extern "C" void __switch_to(struct task_struct *prev, struct task_struct *next)
 {
 
     auto &task_tss = get_tss();
     task_tss.rsp0 = next->thread->rsp0;
-    task_tss.rsp1 = next->thread->rsp0;
-    task_tss.rsp2 = next->thread->rsp0;
-
     set_tss(task_tss);
 
     asm volatile("movq	%%fs,	%0 \n\t"
-                         : "=a"(prev->thread->fs));
+                 : "=a"(prev->thread->fs));
     asm volatile("movq	%%gs,	%0 \n\t"
-                         : "=a"(prev->thread->gs));
+                 : "=a"(prev->thread->gs));
 
     asm volatile("movq	%0,	%%fs \n\t" ::"a"(next->thread->fs));
     asm volatile("movq	%0,	%%gs \n\t" ::"a"(next->thread->gs));
 
-    current_task = next;
-
+    if (prev->mm == nullptr && next->mm)
+    {
+        printk("userland to kernel\n");
+        SET_CR3(next->mm->pml4);
+        flush_tlb();
+    }
+    else if (prev->mm && next->mm == nullptr)
+    {
+        printk("kernel to userland\n");
+        SET_CR3(&pml4);
+        flush_tlb();
+    }
     asm volatile("sti");
 }

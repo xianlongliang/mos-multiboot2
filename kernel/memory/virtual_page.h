@@ -5,7 +5,7 @@ constexpr auto PAGE_SIZE_4K = 0x1000;
 // pml4 at 0x9000
 const uint64_t PML4E_ADDR = 0x9000;
 
-struct Page_PML4E
+struct Page_PML4
 {
     uint64_t P : 1;          // whether present in physical memory
     uint64_t R_W : 1;        // 0 read only, 1 read write

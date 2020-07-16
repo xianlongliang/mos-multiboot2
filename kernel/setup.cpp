@@ -34,7 +34,6 @@ void do_8mb_mapping() {
         {
             pte_base[j].P = 1;
             pte_base[j].R_W = 1;
-            pte_base[j].U_S = 1;
             pte_base[j].PPBA = (physical_base * i + j * step) >> 12;
         }
         // switch to next pte base

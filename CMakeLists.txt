@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.16)
 project(kernel)
 
 set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_FLAGS  "-fno-pie -no-pie -g -std=gnu++17 -fno-builtin -fno-exceptions -fno-rtti -fno-threadsafe-statics -nostdlib -ffreestanding -g -Wall -Wextra -MMD -mno-red-zone -mcmodel=kernel -Wl,--build-id=none -T ${CMAKE_SOURCE_DIR}/kernel/kernel.ld")
+set(CMAKE_CXX_FLAGS  "-fno-pie -no-pie -g -fno-builtin -fno-exceptions -fno-rtti -fno-threadsafe-statics -nostdlib -ffreestanding -g -Wall -Wextra -MMD -mno-red-zone -mcmodel=kernel -Wl,--build-id=none -T ${CMAKE_SOURCE_DIR}/kernel/kernel.ld")
 set(CMAKE_C_FLAGS "-fno-pie -no-pie -g -mcmodel=kernel")
 
 set(CMAKE_ASM_NASM_SOURCE_FILE_EXTENSIONS nasm asm)
