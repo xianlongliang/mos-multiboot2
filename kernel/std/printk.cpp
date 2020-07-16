@@ -85,6 +85,7 @@ namespace Kernel::VGA
                 if (c == 0x08 && cursor_x)
                 {
                         cursor_x--;
+                        video_memory[cursor_y * 80 + cursor_x] = ' ' | attribute;
                 }
                 else if (c == 0x09)
                 {
@@ -93,6 +94,7 @@ namespace Kernel::VGA
                 else if (c == '\r')
                 {
                         cursor_x = 0;
+                        cursor_y++;
                 }
                 else if (c == '\n')
                 {

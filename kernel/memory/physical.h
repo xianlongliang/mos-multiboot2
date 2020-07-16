@@ -30,7 +30,7 @@ inline void *Get_CR3()
 
 inline void SET_CR3(void* pml4)
 {
-    printk("setting: %p\n", pml4);
+    // printk("setting: %p\n", pml4);
     asm volatile(
         "movq   %0,    %%rax   \n\t"
         "movq	%%rax, %%cr3   \n\t"

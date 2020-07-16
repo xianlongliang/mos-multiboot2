@@ -187,7 +187,7 @@ uint64_t init(uint64_t arg)
     asm volatile("sti");
     while (1)
     {
-        printk("1");
+        // printk("1");
     }
 }
 
@@ -241,7 +241,7 @@ void task_init()
 void schedule()
 {
     auto next = (task_struct *)list_prev(&current->list);
-    printk("from %d to %d\n", current->pid, next->pid);
+    // printk("from %d to %d\n", current->pid, next->pid);
     switch_to(current, next);
 }
 
@@ -262,13 +262,13 @@ extern "C" void __switch_to(struct task_struct *prev, struct task_struct *next)
 
     if (prev->mm == nullptr && next->mm)
     {
-        printk("userland to kernel\n");
+        // printk("userland to kernel\n");
         SET_CR3(next->mm->pml4);
         flush_tlb();
     }
     else if (prev->mm && next->mm == nullptr)
     {
-        printk("kernel to userland\n");
+        // printk("kernel to userland\n");
         SET_CR3(&pml4);
         flush_tlb();
     }
