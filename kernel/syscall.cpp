@@ -47,4 +47,7 @@ void syscall_init()
     auto cpu_struct = (CPU_STRUCT*)Phy_To_Virt(&pdpe_low);
     cpu_struct->syscall_stack = Phy_To_Virt((char*)&pdpe_low + 0x1000);
     wrmsr(MSR_KERNEL_GS_BASE, uint64_t(Phy_To_Virt((char*)&pdpe_low)));
+
+    // cli when syscall
+    wrmsr(MSR_SYSCALL_MASK, (1 << 9));
 }

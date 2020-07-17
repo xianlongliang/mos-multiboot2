@@ -31,7 +31,6 @@ syscall_entry:
 
     mov rbp, rsp
     call syscall_entry_c
-
     popf
     pop r15
     pop r14
@@ -54,5 +53,4 @@ syscall_entry:
 
     swapgs
     o64 sysret
-    jmp $
 	
