@@ -13,7 +13,8 @@ extern "C" char pde;
 
 static __attribute__((aligned(0x1000))) Page_PTE pte2_8[512 * 3];
 
-void do_8mb_mapping() {
+void do_8mb_mapping()
+{
 
     printk("pml4 at %p, pdpe at %p, pde at %p\n", &pml4, &pdpe, &pde);
     auto pte_base = (Page_PTE *)(pte2_8);
@@ -58,6 +59,14 @@ void basic_init(void *mbi_addr)
     {
         switch (tag->type)
         {
+        case MULTIBOOT_TAG_TYPE_MODULE:
+        {
+            auto module = (multiboot_tag_module*)tag;
+            auto elf_header = (Elf64_Ehdr*)module->mod_start;
+            printk("elf: %d\n", elf_header->e_shnum);
+            printk("find module: %x, %x\n", module->mod_start, module->mod_end);
+            printk("size: %d\n", module->size);
+        }
         case MULTIBOOT_TAG_TYPE_MMAP:
         {
             multiboot_mmap_entry *mmap;

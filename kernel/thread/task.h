@@ -27,7 +27,8 @@
 struct mm_struct
 {
     Page_PML4* pml4; //page table point
-
+    List physical_page_list;
+    
     // all addresses below are virtual
     void* start_code;
     void* end_code;
@@ -38,6 +39,7 @@ struct mm_struct
     void* start_brk;
     void* end_brk;
     void* start_stack;
+
 };
 
 struct thread_struct

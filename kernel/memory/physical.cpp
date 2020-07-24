@@ -27,6 +27,7 @@ Page* PhysicalMemory::Allocate(uint64_t count, uint64_t page_flags) {
             this->zones->Pages()[idx].attributes |= page_flags;
             this->zones->Pages()[idx].reference_count = 1;
         }
+        printk("alloc: %p\n", this->zones->Pages()[idx].physical_address);
         return &this->zones->Pages()[idx];
     }
     return nullptr;

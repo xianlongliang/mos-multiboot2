@@ -1,5 +1,6 @@
 #pragma once
 #include <std/stdint.h>
+#include <std/list.h>
 #define PAGE_OFFSET 0xFFFFFFFF80000000
 #define Virt_To_Phy(addr) ((uint8_t *)(addr)-PAGE_OFFSET)
 #define Phy_To_Virt(addr) ((uint8_t *)((uint8_t *)(addr) + PAGE_OFFSET))
@@ -23,6 +24,7 @@ struct Page
 {
     Zone *zone;
     void* physical_address;
+    List list;
     uint32_t reference_count;
     uint16_t attributes;
     uint16_t age;

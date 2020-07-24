@@ -94,52 +94,98 @@ extern "C" char pde;
 
 void kernel_page_copy();
 
+// vstart must aligned to 4K
+int vmap_frame(task_struct *task, uint64_t vstart, uint64_t attributes)
+{
+    auto pml4_offset = (vstart & 0xff8000000000) >> 39;
+    auto pdpe_offset = (vstart & 0x7fc0000000) >> 30;
+    auto pde_offset = (vstart & 0x3fe00000) >> 21;
+    auto pte_offset = (vstart & 0x1ff000) >> 12;
+
+    auto &pml4 = task->mm->pml4;
+
+    auto pm_instance = PhysicalMemory::GetInstance();
+
+    uint64_t pml4_physical_addr;
+
+    if (pml4 == nullptr)
+    {
+        auto slot = pm_instance->Allocate(1, PG_PTable_Maped | PG_Active);
+        list_init(&slot->list);
+        task->mm->physical_page_list = slot->list;
+        pml4 = (Page_PML4 *)Phy_To_Virt(slot->physical_address);
+        bzero(pml4, 0x1000);
+    }
+
+    Page_PDPE *pdpe = (Page_PDPE *)Phy_To_Virt(pml4[pml4_offset].PDPE << PAGE_4K_SHIFT);
+    if ((uint64_t)pdpe == PAGE_OFFSET)
+    {
+        auto slot = pm_instance->Allocate(1, PG_PTable_Maped | PG_Active);
+        bzero(Phy_To_Virt(slot->physical_address), 0x1000);
+        list_add_to_behind(&task->mm->physical_page_list, &slot->list);
+        pml4[pml4_offset].PDPE = (uint64_t)slot->physical_address >> PAGE_4K_SHIFT;
+        *(uint64_t *)&pml4[pml4_offset] |= attributes;
+        pdpe = (Page_PDPE *)Phy_To_Virt(slot->physical_address);
+    }
+
+    Page_PDE *pde = (Page_PDE *)Phy_To_Virt(pdpe[pdpe_offset].NEXT << PAGE_4K_SHIFT);
+    if ((uint64_t)pde == PAGE_OFFSET)
+    {
+        auto slot = pm_instance->Allocate(1, PG_PTable_Maped | PG_Active);
+        bzero(Phy_To_Virt(slot->physical_address), 0x1000);
+        list_add_to_behind(&task->mm->physical_page_list, &slot->list);
+        pdpe[pdpe_offset].NEXT = (uint64_t)slot->physical_address >> PAGE_4K_SHIFT;
+        *(uint64_t *)&pdpe[pdpe_offset] |= attributes;
+        pde = (Page_PDE *)Phy_To_Virt(slot->physical_address);
+    }
+
+    Page_PTE *pte = (Page_PTE *)Phy_To_Virt(pde[pde_offset].NEXT << PAGE_4K_SHIFT);
+    if ((uint64_t)pte == PAGE_OFFSET)
+    {
+        auto slot = pm_instance->Allocate(1, PG_PTable_Maped | PG_Active);
+        bzero(Phy_To_Virt(slot->physical_address), 0x1000);
+        list_add_to_behind(&task->mm->physical_page_list, &slot->list);
+        pde[pde_offset].NEXT = (uint64_t)slot->physical_address >> PAGE_4K_SHIFT;
+        *(uint64_t *)&pde[pde_offset] |= attributes;
+        pte = (Page_PTE *)Phy_To_Virt(slot->physical_address);
+    }
+
+    if (pte[pte_offset].P == 1)
+    {
+        return -1;
+    }
+
+    auto max_vmap_count = 511 - pte_offset;
+    max_vmap_count = max_vmap_count > 16 ? 16 : max_vmap_count;
+    auto slot = pm_instance->Allocate(max_vmap_count, PG_PTable_Maped | PG_Active);
+    bzero(Phy_To_Virt(slot->physical_address), 0x1000 * max_vmap_count);
+    list_add_to_behind(&task->mm->physical_page_list, &slot->list);
+    for (int i = 0; i <= max_vmap_count; ++i)
+    {
+        pte[pte_offset + i].PPBA = ((uint64_t)slot->physical_address + i * 0x1000) >> PAGE_4K_SHIFT;
+        *(uint64_t *)&pte[pte_offset + i] |= attributes;
+    }
+
+    return 0;
+}
+
 void userland_pagetable_init(task_struct *task)
 {
-    auto page_table = PhysicalMemory::GetInstance()->Allocate(4, PG_PTable_Maped | PG_Active);
-    bzero(Phy_To_Virt(page_table->physical_address), 0x1000 * 4);
+    auto page_table = PhysicalMemory::GetInstance()->Allocate(1, PG_PTable_Maped | PG_Active);
+    bzero(Phy_To_Virt(page_table->physical_address), 0x1000);
+
     auto page_program_and_stack = PhysicalMemory::GetInstance()->Allocate(3, PG_PTable_Maped | PG_Active);
     // map start at 0x400000
     auto pml4_virtual = (Page_PML4 *)Phy_To_Virt(page_table->physical_address);
     memcpy(pml4_virtual, Phy_To_Virt(&pml4), 0x1000);
-    pml4_virtual[0].PDPE = uint64_t(Virt_To_Phy(pml4_virtual) + 0x1000) >> PAGE_4K_SHIFT;
-    pml4_virtual[0].P = 1;
-    pml4_virtual[0].R_W = 1;
-    pml4_virtual[0].U_S = 1;
+    list_init(&page_table->list);
+    task->mm->pml4 = (Page_PML4 *)pml4_virtual;
+    task->mm->physical_page_list = page_table->list;
 
-    auto pml4ff8 = &((Page_PML4 *)pml4_virtual)[511];
-    auto pml40 = &((Page_PML4 *)pml4_virtual)[0];
+    vmap_frame(current, 0x400000, 0x07);
 
-    // pml4_virtual[0xff8].PDPE = uint64_t(&pdpe);
-    // *(uint64_t *)&pml4_virtual[0xff8] |= 0x7;
-
-    auto pdpe_virtual = (Page_PDPE *)((void *)pml4_virtual + PAGE_4K_SIZE);
-    pdpe_virtual[0].NEXT = uint64_t(Virt_To_Phy(pdpe_virtual) + 0x1000) >> PAGE_4K_SHIFT;
-    pdpe_virtual[0].P = 1;
-    pdpe_virtual[0].R_W = 1;
-    pdpe_virtual[0].U_S = 1;
-
-    auto pdpet = &((Page_PDPE *)pdpe_virtual)[0];
-
-    auto pde_virtual = (Page_PDE *)((void *)pdpe_virtual + PAGE_4K_SIZE);
-    pde_virtual[2].NEXT = uint64_t(Virt_To_Phy(pde_virtual) + 0x1000) >> PAGE_4K_SHIFT;
-    pde_virtual[2].P = 1;
-    pde_virtual[2].R_W = 1;
-    pde_virtual[2].U_S = 1;
-
-    auto pdet = &((Page_PDE *)pde_virtual)[1];
-
-    auto pte = (Page_PTE *)((void *)pde_virtual + PAGE_4K_SIZE);
-    pte[0].PPBA = uint64_t(page_program_and_stack->physical_address) >> PAGE_4K_SHIFT;
-    *(uint64_t *)&pte[0] |= 0x7;
-    pte[1].PPBA = uint64_t(page_program_and_stack->physical_address + PAGE_4K_SIZE) >> PAGE_4K_SHIFT;
-    *(uint64_t *)&pte[1] |= 0x7;
-    pte[2].PPBA = uint64_t(page_program_and_stack->physical_address + 2 * PAGE_4K_SIZE) >> PAGE_4K_SHIFT;
-    *(uint64_t *)&pte[2] |= 0x7;
-
-    task->mm->start_code = Phy_To_Virt(pte[0].PPBA << 12);
-    task->mm->end_code = Phy_To_Virt(pte[0].PPBA << 12 + PAGE_4K_SIZE);
-    task->mm->pml4 = (Page_PML4 *)Virt_To_Phy(pml4_virtual);
+    task->mm->start_code = (void *)0x400000;
+    task->mm->end_code = (void *)0x400000 + PAGE_4K_SIZE;
 }
 
 void init2()
@@ -151,9 +197,9 @@ void init2()
     task->mm = (mm_struct *)((char *)task->thread + sizeof(thread_struct));
     bzero(task->mm, sizeof(mm_struct));
     userland_pagetable_init(task);
+    SET_CR3(Virt_To_Phy(task->mm->pml4));
     memcpy((void *)task->mm->start_code, (uint8_t *)&userland_entry, 1024);
-    SET_CR3(task->mm->pml4);
-
+    while(1);
     auto ret_syscall_addr = uint64_t(&ret_syscall);
     auto ret_stack = uint64_t((uint8_t *)task + STACK_SIZE - sizeof(Regs));
     asm volatile("movq	%0,	%%rsp	\n\t"
@@ -241,7 +287,7 @@ void task_init()
 void schedule()
 {
     auto next = (task_struct *)list_prev(&current->list);
-    // printk("from %d to %d\n", current->pid, next->pid);
+    printk("from %d to %d\n", current->pid, next->pid);
     switch_to(current, next);
 }
 
@@ -263,7 +309,7 @@ extern "C" void __switch_to(struct task_struct *prev, struct task_struct *next)
     if (prev->mm == nullptr && next->mm)
     {
         // printk("kernel to userland\n");
-        SET_CR3(next->mm->pml4);
+        SET_CR3(Virt_To_Phy(next->mm->pml4));
         flush_tlb();
     }
     else if (prev->mm && next->mm == nullptr)

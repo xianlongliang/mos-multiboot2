@@ -212,7 +212,7 @@ extern "C" void isr_handler(uint64_t isr_number, uint64_t error_code, uint64_t r
 {
     if (interrupt_handlers[isr_number])
     {
-        printk("interrupt_handlers %p\n", interrupt_handlers[isr_number]);
+        // printk("interrupt_handlers %p\n", interrupt_handlers[isr_number]);
         interrupt_handlers[isr_number](error_code, rsp, rflags, rip);
     }
     else
