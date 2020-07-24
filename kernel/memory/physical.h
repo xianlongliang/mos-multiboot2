@@ -28,7 +28,7 @@ inline void *Get_CR3()
     return addr;
 }
 
-inline void SET_CR3(void* pml4)
+inline void set_cr3(void* pml4)
 {
     // printk("setting: %p\n", pml4);
     asm volatile(

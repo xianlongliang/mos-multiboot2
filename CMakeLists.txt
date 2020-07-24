@@ -36,6 +36,7 @@ add_executable(kernel
         kernel/std/kstring.cpp
         kernel/std/debug.h
         kernel/std/debug.cpp
+        kernel/std/interrupt.h
         kernel/memory/zone.h
         kernel/memory/zone.cpp
         kernel/memory/virtual_page.h

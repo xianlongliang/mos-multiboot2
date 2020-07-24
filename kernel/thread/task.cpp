@@ -5,6 +5,7 @@
 #include <std/printk.h>
 #include <std/debug.h>
 #include <memory/physical.h>
+#include <std/interrupt.h>
 
 // we pop all pt_regs out
 // then restore the stack to rsp0(stack base)
@@ -170,14 +171,8 @@ int vmap_copy_kernel(task_struct *task) {
     task->mm->pml4[511] = kernel_pml4[511];
 }
 
-void userland_pagetable_init(task_struct *task)
+void userland_page_init(task_struct *task)
 {
-    auto page_table = PhysicalMemory::GetInstance()->Allocate(1, PG_PTable_Maped | PG_Active);
-    bzero(Phy_To_Virt(page_table->physical_address), 0x1000);
-
-    // auto page_program_and_stack = PhysicalMemory::GetInstance()->Allocate(3, PG_PTable_Maped | PG_Active);
-    // // map start at 0x400000
-
     vmap_frame(current, 0x400000, 0x07);
     vmap_copy_kernel(current);
     task->mm->start_code = (void *)0x400000;
@@ -186,14 +181,14 @@ void userland_pagetable_init(task_struct *task)
 
 void init2()
 {
-    asm volatile("cli");
+    cli();
     printk("this is init 2\n");
 
     auto task = current;
     task->mm = (mm_struct *)((char *)task->thread + sizeof(thread_struct));
     bzero(task->mm, sizeof(mm_struct));
-    userland_pagetable_init(task);
-    SET_CR3(Virt_To_Phy(task->mm->pml4));
+    userland_page_init(task);
+    set_cr3(Virt_To_Phy(task->mm->pml4));
     memcpy((void *)task->mm->start_code, (uint8_t *)&userland_entry, 1024);
     auto ret_syscall_addr = uint64_t(&ret_syscall);
     auto ret_stack = uint64_t((uint8_t *)task + STACK_SIZE - sizeof(Regs));
@@ -304,13 +299,13 @@ extern "C" void __switch_to(struct task_struct *prev, struct task_struct *next)
     if (prev->mm == nullptr && next->mm)
     {
         // printk("kernel to userland\n");
-        SET_CR3(Virt_To_Phy(next->mm->pml4));
+        set_cr3(Virt_To_Phy(next->mm->pml4));
         flush_tlb();
     }
     else if (prev->mm && next->mm == nullptr)
     {
         // printk("userland to kernel\n");
-        SET_CR3(&pml4);
+        set_cr3(&pml4);
         flush_tlb();
     }
     asm volatile("sti");
