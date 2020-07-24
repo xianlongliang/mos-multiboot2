@@ -92,8 +92,6 @@ extern "C" char pml4;
 extern "C" char pdpe;
 extern "C" char pde;
 
-void kernel_page_copy();
-
 // vstart must aligned to 4K
 int vmap_frame(task_struct *task, uint64_t vstart, uint64_t attributes)
 {
@@ -105,8 +103,6 @@ int vmap_frame(task_struct *task, uint64_t vstart, uint64_t attributes)
     auto &pml4 = task->mm->pml4;
 
     auto pm_instance = PhysicalMemory::GetInstance();
-
-    uint64_t pml4_physical_addr;
 
     if (pml4 == nullptr)
     {
@@ -160,7 +156,7 @@ int vmap_frame(task_struct *task, uint64_t vstart, uint64_t attributes)
     auto slot = pm_instance->Allocate(max_vmap_count, PG_PTable_Maped | PG_Active);
     bzero(Phy_To_Virt(slot->physical_address), 0x1000 * max_vmap_count);
     list_add_to_behind(&task->mm->physical_page_list, &slot->list);
-    for (int i = 0; i <= max_vmap_count; ++i)
+    for (uint64_t i = 0; i <= max_vmap_count; ++i)
     {
         pte[pte_offset + i].PPBA = ((uint64_t)slot->physical_address + i * 0x1000) >> PAGE_4K_SHIFT;
         *(uint64_t *)&pte[pte_offset + i] |= attributes;
@@ -169,21 +165,21 @@ int vmap_frame(task_struct *task, uint64_t vstart, uint64_t attributes)
     return 0;
 }
 
+int vmap_copy_kernel(task_struct *task) {
+    auto kernel_pml4 = (Page_PML4*)Phy_To_Virt(&pml4);
+    task->mm->pml4[511] = kernel_pml4[511];
+}
+
 void userland_pagetable_init(task_struct *task)
 {
     auto page_table = PhysicalMemory::GetInstance()->Allocate(1, PG_PTable_Maped | PG_Active);
     bzero(Phy_To_Virt(page_table->physical_address), 0x1000);
 
-    auto page_program_and_stack = PhysicalMemory::GetInstance()->Allocate(3, PG_PTable_Maped | PG_Active);
-    // map start at 0x400000
-    auto pml4_virtual = (Page_PML4 *)Phy_To_Virt(page_table->physical_address);
-    memcpy(pml4_virtual, Phy_To_Virt(&pml4), 0x1000);
-    list_init(&page_table->list);
-    task->mm->pml4 = (Page_PML4 *)pml4_virtual;
-    task->mm->physical_page_list = page_table->list;
+    // auto page_program_and_stack = PhysicalMemory::GetInstance()->Allocate(3, PG_PTable_Maped | PG_Active);
+    // // map start at 0x400000
 
     vmap_frame(current, 0x400000, 0x07);
-
+    vmap_copy_kernel(current);
     task->mm->start_code = (void *)0x400000;
     task->mm->end_code = (void *)0x400000 + PAGE_4K_SIZE;
 }
@@ -199,7 +195,6 @@ void init2()
     userland_pagetable_init(task);
     SET_CR3(Virt_To_Phy(task->mm->pml4));
     memcpy((void *)task->mm->start_code, (uint8_t *)&userland_entry, 1024);
-    while(1);
     auto ret_syscall_addr = uint64_t(&ret_syscall);
     auto ret_stack = uint64_t((uint8_t *)task + STACK_SIZE - sizeof(Regs));
     asm volatile("movq	%0,	%%rsp	\n\t"
