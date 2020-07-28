@@ -7,3 +7,7 @@ inline void cli() {
 inline void sti() {
     asm volatile("sti");
 }
+
+inline void hlt() {
+    asm volatile("hlt");
+}

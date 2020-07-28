@@ -6,7 +6,7 @@
 #include <std/kstring.h>
 #include <std/debug.h>
 
-#define ROUND_UP_8BYTES(addr) (addr + (8 - 1)) & -8
+#include <std/math.h>
 
 static SlabNode *slab_node_create(uint64_t object_size)
 {
@@ -18,23 +18,23 @@ static SlabNode *slab_node_create(uint64_t object_size)
     }
     bzero(slab_node, sizeof(SlabNode));
 
-    slab_node->page = PhysicalMemory::GetInstance()->Allocate(1, 0);
+    // slab_node->page = PhysicalMemory::GetInstance()->Allocate(1, 0);
 
-    if (!slab_node->page)
-    {
-        printk("!slab_node->page\n");
-        kfree(slab_node);
-        return nullptr;
-    }
+    // if (!slab_node->page)
+    // {
+    //     printk("!slab_node->page\n");
+    //     kfree(slab_node);
+    //     return nullptr;
+    // }
 
     slab_node->free_count = PAGE_4K_SIZE / object_size;
     slab_node->bitmap_size = slab_node->free_count / 8 + 1;
-    slab_node->bitmap = (uint64_t *)kmalloc(slab_node->bitmap_size / 8, 0);
+    slab_node->bitmap = (uint8_t *)kmalloc(slab_node->bitmap_size / 8, 0);
     if (!slab_node->bitmap)
     {
         printk("!slab_node->bitmap\n");
         kfree(slab_node);
-        PhysicalMemory::GetInstance()->Free(slab_node->page);
+        // PhysicalMemory::GetInstance()->Free(slab_node->page);
         return nullptr;
     }
 
@@ -115,7 +115,7 @@ void *Slab::Alloc()
                     selected_node->used_count++;
                     this->total_free--;
                     this->total_used++;
-                    return (void *)Phy_To_Virt(selected_node->page->physical_address + this->object_size * i);
+                    return (void *)selected_node->vaddr + this->object_size * i;
                 }
                 panic("selected_node bit not found\n");
             }

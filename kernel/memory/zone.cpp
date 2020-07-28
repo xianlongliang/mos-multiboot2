@@ -5,8 +5,8 @@
 #include <arch/x86_64/kernel.h>
 #include "physical_page.h"
 #include "flags.h"
+#include <std/math.h>
 
-uint64_t round_up_pow_of_2(uint64_t x) { return x == 1 ? 1 : 1 << (64 - __builtin_clzl(x - 1)); }
 #define LEFT_LEAF(index) ((index)*2 + 1)
 #define RIGHT_LEAF(index) ((index)*2 + 2)
 #define PARENT(index) (((index) + 1) / 2 - 1)

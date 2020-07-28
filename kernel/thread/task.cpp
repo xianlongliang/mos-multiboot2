@@ -6,6 +6,8 @@
 #include <std/debug.h>
 #include <memory/physical.h>
 #include <std/interrupt.h>
+#include <memory/mapping.h>
+#include <memory/kmalloc.h>
 
 // we pop all pt_regs out
 // then restore the stack to rsp0(stack base)
@@ -93,79 +95,6 @@ extern "C" char pml4;
 extern "C" char pdpe;
 extern "C" char pde;
 
-// vstart must aligned to 4K
-int vmap_frame(task_struct *task, uint64_t vstart, uint64_t attributes)
-{
-    auto pml4_offset = (vstart & 0xff8000000000) >> 39;
-    auto pdpe_offset = (vstart & 0x7fc0000000) >> 30;
-    auto pde_offset = (vstart & 0x3fe00000) >> 21;
-    auto pte_offset = (vstart & 0x1ff000) >> 12;
-
-    auto &pml4 = task->mm->pml4;
-
-    auto pm_instance = PhysicalMemory::GetInstance();
-
-    if (pml4 == nullptr)
-    {
-        auto slot = pm_instance->Allocate(1, PG_PTable_Maped | PG_Active);
-        list_init(&slot->list);
-        task->mm->physical_page_list = slot->list;
-        pml4 = (Page_PML4 *)Phy_To_Virt(slot->physical_address);
-        bzero(pml4, 0x1000);
-    }
-
-    Page_PDPE *pdpe = (Page_PDPE *)Phy_To_Virt(pml4[pml4_offset].PDPE << PAGE_4K_SHIFT);
-    if ((uint64_t)pdpe == PAGE_OFFSET)
-    {
-        auto slot = pm_instance->Allocate(1, PG_PTable_Maped | PG_Active);
-        bzero(Phy_To_Virt(slot->physical_address), 0x1000);
-        list_add_to_behind(&task->mm->physical_page_list, &slot->list);
-        pml4[pml4_offset].PDPE = (uint64_t)slot->physical_address >> PAGE_4K_SHIFT;
-        *(uint64_t *)&pml4[pml4_offset] |= attributes;
-        pdpe = (Page_PDPE *)Phy_To_Virt(slot->physical_address);
-    }
-
-    Page_PDE *pde = (Page_PDE *)Phy_To_Virt(pdpe[pdpe_offset].NEXT << PAGE_4K_SHIFT);
-    if ((uint64_t)pde == PAGE_OFFSET)
-    {
-        auto slot = pm_instance->Allocate(1, PG_PTable_Maped | PG_Active);
-        bzero(Phy_To_Virt(slot->physical_address), 0x1000);
-        list_add_to_behind(&task->mm->physical_page_list, &slot->list);
-        pdpe[pdpe_offset].NEXT = (uint64_t)slot->physical_address >> PAGE_4K_SHIFT;
-        *(uint64_t *)&pdpe[pdpe_offset] |= attributes;
-        pde = (Page_PDE *)Phy_To_Virt(slot->physical_address);
-    }
-
-    Page_PTE *pte = (Page_PTE *)Phy_To_Virt(pde[pde_offset].NEXT << PAGE_4K_SHIFT);
-    if ((uint64_t)pte == PAGE_OFFSET)
-    {
-        auto slot = pm_instance->Allocate(1, PG_PTable_Maped | PG_Active);
-        bzero(Phy_To_Virt(slot->physical_address), 0x1000);
-        list_add_to_behind(&task->mm->physical_page_list, &slot->list);
-        pde[pde_offset].NEXT = (uint64_t)slot->physical_address >> PAGE_4K_SHIFT;
-        *(uint64_t *)&pde[pde_offset] |= attributes;
-        pte = (Page_PTE *)Phy_To_Virt(slot->physical_address);
-    }
-
-    if (pte[pte_offset].P == 1)
-    {
-        return -1;
-    }
-
-    auto max_vmap_count = 511 - pte_offset;
-    max_vmap_count = max_vmap_count > 16 ? 16 : max_vmap_count;
-    auto slot = pm_instance->Allocate(max_vmap_count, PG_PTable_Maped | PG_Active);
-    bzero(Phy_To_Virt(slot->physical_address), 0x1000 * max_vmap_count);
-    list_add_to_behind(&task->mm->physical_page_list, &slot->list);
-    for (uint64_t i = 0; i <= max_vmap_count; ++i)
-    {
-        pte[pte_offset + i].PPBA = ((uint64_t)slot->physical_address + i * 0x1000) >> PAGE_4K_SHIFT;
-        *(uint64_t *)&pte[pte_offset + i] |= attributes;
-    }
-
-    return 0;
-}
-
 int vmap_copy_kernel(task_struct *task) {
     auto kernel_pml4 = (Page_PML4*)Phy_To_Virt(&pml4);
     task->mm->pml4[511] = kernel_pml4[511];
@@ -212,8 +141,7 @@ void init2()
 
 uint64_t init(uint64_t arg)
 {
-
-    printk("this is init thread\n");
+    printk("this is kernel thread\n");
 
     create_kernel_thread(&init2, 1, CLONE_FS | CLONE_FILES | CLONE_SIGNAL);
     auto next = (task_struct *)list_next(&current->list);

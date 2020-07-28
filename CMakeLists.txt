@@ -30,6 +30,8 @@ add_executable(kernel
         kernel/thread/userland.h
         kernel/thread/userland.cpp
         kernel/std/msr.h 
+        kernel/std/math.h 
+        kernel/std/math.cpp
         kernel/std/printk.h 
         kernel/std/printk.cpp 
         kernel/std/kstring.h 
@@ -40,11 +42,18 @@ add_executable(kernel
         kernel/memory/zone.h
         kernel/memory/zone.cpp
         kernel/memory/virtual_page.h
+        kernel/memory/virtual.h
         kernel/memory/physical_page.h
         kernel/memory/physical.h
         kernel/memory/physical.cpp
         kernel/memory/kernel_page.h
         kernel/memory/kernel_page.cpp
+        kernel/memory/slab.h
+        kernel/memory/mapping.h
+        kernel/memory/mapping.cpp
+        kernel/memory/slab.cpp
+        kernel/memory/kmalloc.h
+        kernel/memory/kmalloc.cpp
         kernel/interrupt/idt.h
         kernel/interrupt/idt.cpp
         kernel/interrupt/isr.asm

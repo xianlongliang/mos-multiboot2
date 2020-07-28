@@ -3,15 +3,19 @@
 #include <std/stdint.h>
 #include "physical_page.h"
 
+class Slab;
+
 struct SlabNode
 {
     List list;
-    Page *page;
+    Slab *slab;
+    // Page *page;
+    void *vaddr;
     uint32_t used_count;
     uint32_t free_count;
 
     uint32_t bitmap_size;
-    uint64_t *bitmap;
+    uint8_t *bitmap;
 };
 
 struct Slab

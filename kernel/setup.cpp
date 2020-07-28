@@ -6,6 +6,7 @@
 #include <std/elf/elf.h>
 #include <std/debug.h>
 #include <memory/virtual_page.h>
+#include <memory/mapping.h>
 
 extern "C" char pml4;
 extern "C" char pdpe;
@@ -111,4 +112,5 @@ void basic_init(void *mbi_addr)
     }
 
     do_8mb_mapping();
+    vmap_init();
 }
