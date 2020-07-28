@@ -1,6 +1,9 @@
 #include <std/printk.h>
 #include <std/port_ops.h>
 
+static char keyboard_buffer[4096] = {0};
+static uint16_t keyboard_buffer_cursor = {0};
+
 #define KBD_BUF_PORT 0x60 // 键盘buffer寄存器端口号为0x60
 
 /* 用转义字符定义部分控制字符 */
@@ -118,7 +121,7 @@ void keyboard_irq_handler(uint64_t error_code, uint64_t rsp, uint64_t rflags, ui
         scancode = ((0xe000) | scancode);
         ext_scancode = false; // 关闭e0标记
     }
-    
+
     bool break_code = ((scancode & 0x0080) != 0);
 
     if (break_code)
@@ -193,10 +196,35 @@ void keyboard_irq_handler(uint64_t error_code, uint64_t rsp, uint64_t rflags, ui
         char cur_char = keymap[index][shift]; // 在数组中找到对应的字符
 
         /* 只处理ascii码不为0的键 */
-        if (cur_char)
+        if (cur_char != 0)
         {
             Kernel::VGA::console_putc_color(cur_char);
-            return;
+            keyboard_buffer[keyboard_buffer_cursor++] = cur_char;
+            keyboard_buffer[keyboard_buffer_cursor] = '\0';
+        }
+        switch (cur_char)
+        {
+        case '\r':
+        {
+            keyboard_buffer_cursor = 0;
+            printk("cmd: %s", keyboard_buffer);
+            Kernel::VGA::console_putc_color('#');
+            break;
+        }
+        case '\b':
+        {
+            if (keyboard_buffer_cursor == 1) {
+                keyboard_buffer[0] = '\0';
+                keyboard_buffer[1] = '\0';
+                keyboard_buffer_cursor = 0;
+                break;
+            }
+            keyboard_buffer[--keyboard_buffer_cursor] = '\0';
+            keyboard_buffer[--keyboard_buffer_cursor] = '\0';
+            break;
+        }
+        default:
+            break;
         }
 
         /* 记录本次是否按下了下面几类控制键之一,供下次键入时判断组合键 */
@@ -215,7 +243,7 @@ void keyboard_irq_handler(uint64_t error_code, uint64_t rsp, uint64_t rflags, ui
         else if (scancode == caps_lock_make)
         {
             /* 不管之前是否有按下caps_lock键,当再次按下时则状态取反,
-       * 即:已经开启时,再按下同样的键是关闭。关闭时按下表示开启。*/
+            * 即:已经开启时,再按下同样的键是关闭。关闭时按下表示开启。*/
             caps_lock_status = !caps_lock_status;
         }
     }
