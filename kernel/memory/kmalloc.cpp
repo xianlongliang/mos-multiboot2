@@ -67,6 +67,7 @@ void *kmalloc(uint64_t size, uint64_t flags)
         return nullptr;
     }
     size = round_up_pow_of_2(size);
+    size = size <= 16 ? 32 : size;
     int fit_index = 0;
     int fit_size = 32;
     while (fit_size != size)

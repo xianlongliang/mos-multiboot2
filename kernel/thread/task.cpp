@@ -31,8 +31,6 @@ static uint64_t do_fork(struct Regs *regs, unsigned long clone_flags)
 {
     auto page = PhysicalMemory::GetInstance()->Allocate(1, PG_PTable_Maped | PG_Kernel | PG_Active);
 
-    auto stack_start = (uint64_t)(Phy_To_Virt(page->physical_address));
-
     auto task = (task_struct *)Phy_To_Virt(page->physical_address);
 
     memset(task, 0, sizeof(*task));

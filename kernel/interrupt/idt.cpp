@@ -220,7 +220,7 @@ extern "C" void isr_handler(uint64_t isr_number, uint64_t error_code, uint64_t r
         // cpu_hlt();
     }
     printk("isr: %d error_code: %d\n", isr_number, error_code);
-    while (1)
+    while (isr_number != 14)
     {
         /* code */
     }

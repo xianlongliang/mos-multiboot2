@@ -42,7 +42,6 @@ add_executable(kernel
         kernel/memory/zone.h
         kernel/memory/zone.cpp
         kernel/memory/virtual_page.h
-        kernel/memory/virtual.h
         kernel/memory/physical_page.h
         kernel/memory/physical.h
         kernel/memory/physical.cpp
