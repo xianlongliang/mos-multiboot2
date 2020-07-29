@@ -95,12 +95,12 @@ void basic_init(void *mbi_addr)
                 auto shdr = (Elf64_Shdr *)(elf_tag->sections + i * elf_tag->entsize);
                 if (shdr->sh_type == SHT_SYMTAB)
                 {
-                    debug_symbol.symtab = (Elf64_Sym *)shdr->sh_addr;
+                    debug_symbol.symtab = (Elf64_Sym *)Phy_To_Virt(shdr->sh_addr);
                     debug_symbol.symtabsz = shdr->sh_size;
                 }
                 if (shdr->sh_type == SHT_STRTAB)
                 {
-                    debug_symbol.strtab = (const char *)shdr->sh_addr;
+                    debug_symbol.strtab = (const char *)Phy_To_Virt(shdr->sh_addr);
                     debug_symbol.strtabsz = shdr->sh_size;
                     break;
                 }
