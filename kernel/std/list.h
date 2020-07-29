@@ -1,5 +1,10 @@
 #pragma once
 
+#include "new.h"
+#include "move.h"
+#include "debug.h"
+#include "printk.h"
+
 #define container_of(ptr, type, member)                                     \
     ({                                                                      \
         typeof(((type *)0)->member) *p = (ptr);                             \
@@ -63,3 +68,96 @@ inline struct List *list_next(struct List *entry)
     else
         return nullptr;
 }
+
+template <typename T>
+class list
+{
+    struct list_node
+    {
+        list_node(T &&val) : val(val), next(nullptr), prev(nullptr) {}
+        T val;
+        list_node *next;
+        list_node *prev;
+    };
+
+public:
+    list() : head(nullptr) {}
+
+    bool empty()
+    {
+        return this->head == nullptr;
+    }
+
+    void remove(T val)
+    {
+        if (!head)
+            panic("remove empty list");
+
+        auto p = this->head;
+        do
+        {
+            if (p->val == val)
+                break;
+            p = p->next;
+        } while (p != this->head);
+
+        // if there's only node in list
+        if (p->next == p)
+        {
+            delete p;
+            this->head == nullptr;
+        }
+        p->prev->next = p->next;
+        p->next->prev = p->prev;
+        if (p == this->head) this->head = p->next;
+        delete p;
+    }
+
+    void push_back(T &&val)
+    {
+        auto node = new list_node(forward<T>(val));
+        if (head == nullptr)
+        {
+            head = node;
+            head->prev = head->next = head;
+        }
+        else
+        {
+            auto last = head->prev;
+            head->prev = node;
+            last->next = node;
+            node->prev = last;
+            node->next = head;
+        }
+    }
+
+    void pop_back()
+    {
+        if (!head)
+            panic("pop empty list");
+
+        auto node_to_pop = head->prev;
+        if (head == node_to_pop)
+        {
+            head = nullptr;
+        }
+        else
+        {
+            node_to_pop->prev->next = head;
+            head->prev = node_to_pop->prev;
+        }
+
+        delete node_to_pop;
+    }
+
+    T &back()
+    {
+        if (!head)
+            panic("back empty list");
+
+        return head->prev->val;
+    }
+
+private:
+    list_node *head;
+};
