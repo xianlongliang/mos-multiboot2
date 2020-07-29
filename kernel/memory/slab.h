@@ -1,6 +1,8 @@
 #pragma once
 #include <std/list.h>
 #include <std/stdint.h>
+#include <std/bitmap.h>
+
 #include "physical_page.h"
 
 class Slab;
@@ -8,14 +10,14 @@ class Slab;
 struct SlabNode
 {
     List list;
+    
     Slab *slab;
-    // Page *page;
     void *vaddr;
+
     uint32_t used_count;
     uint32_t free_count;
 
-    uint32_t bitmap_size;
-    uint8_t *bitmap;
+    Bitmap* bitmap2;
 };
 
 struct Slab
