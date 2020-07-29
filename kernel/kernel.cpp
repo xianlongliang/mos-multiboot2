@@ -7,6 +7,9 @@
 #include "syscall.h"
 #include <std/interrupt.h>
 #include <memory/kmalloc.h>
+#include <memory/slab.h>
+#include <std/unique_ptr.h>
+#include <std/list.h>
 
 extern "C" void Kernel_Main(unsigned long addr)
 {

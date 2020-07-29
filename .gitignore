@@ -5,3 +5,4 @@ iso
 kernel.iso
 build
 .idea
+*.img

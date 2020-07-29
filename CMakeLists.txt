@@ -49,6 +49,7 @@ add_executable(kernel
         kernel/std/bitmap.cpp
         kernel/std/move.h
         kernel/std/unique_ptr.h
+        kernel/std/c++/pure_virtual_function.cpp
         kernel/memory/zone.h
         kernel/memory/zone.cpp
         kernel/memory/virtual_page.h
