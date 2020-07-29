@@ -148,8 +148,13 @@ void idt_init()
     // outb(0x21, 0xfd);
     // outb(0xA1, 0xff);
 
-    outb(0x21, 0x0);
-    outb(0xA1, 0x0);
+    // outb(0x21, 0x0);
+    // outb(0xA1, 0x0);
+
+    // master irq0(clock) irq1(keyboard) irq2(cascade)
+    outb(0x21, 0xf8);
+    // slave irq 14
+    outb(0xA1, 0xbf);
 
     set_intr_gate(0, 1, CONVERT_ISR_ADDR(0));
     set_intr_gate(1, 1, CONVERT_ISR_ADDR(1));

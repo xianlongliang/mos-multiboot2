@@ -39,6 +39,8 @@ add_executable(kernel
         kernel/std/debug.h
         kernel/std/debug.cpp
         kernel/std/interrupt.h
+        kernel/std/bitmap.h
+        kernel/std/bitmap.cpp
         kernel/memory/zone.h
         kernel/memory/zone.cpp
         kernel/memory/virtual_page.h
@@ -62,6 +64,8 @@ add_executable(kernel
         kernel/interrupt/timer.cpp
         kernel/interrupt/keyboard.h
         kernel/interrupt/keyboard.cpp
+        kernel/device/ide.h
+        kernel/device/ide.cpp
         )
 
 add_custom_command(TARGET kernel
