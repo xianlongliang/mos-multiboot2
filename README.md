@@ -12,7 +12,8 @@ implementations :
 - [x] TSS
 - [x] keyboard (from os-elephant)
 - [x] slab
-- [x] kmalloc(based on slab)
+- [x] kmalloc (based on slab)
+- [x] c++ new and delete (via kmalloc)
 - [x] buddy system
 - [x] mutex
 - [x] spinlock
@@ -24,6 +25,7 @@ implementations :
 - [x] task context switch (kernel and userland)
 - [x] round robin scheduler ???
 - [x] syscall and sysret
+- [x] some stl c++ containers
 
 todos:
 
