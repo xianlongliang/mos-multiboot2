@@ -3,12 +3,12 @@
 #include <std/printk.h>
 #include <thread/task.h>
 #include "idt.h"
-// #include "task.h"
+#include <thread/scheduler.h>
 
 void timer_callback(uint64_t error_code, uint64_t rsp, uint64_t rflags, uint64_t rip)
 {
     static uint64_t tick = 0;
-    schedule();
+    Scheduler::GetInstance()->Schedule();
 }
 
 void timer_init(uint32_t frequency)
