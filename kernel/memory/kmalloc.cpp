@@ -37,7 +37,7 @@ void kmalloc_init()
         slab_node->used_count = 0;
         slab_node->free_count = kmalloc_cache[i].total_free;
         auto bitmap_size = (slab_node->free_count / 8) == 0 ? 1 : (slab_node->free_count / 8);
-        slab_node->bitmap2 = new (brk_alloc(PAGE_4K_SIZE - sizeof(SlabNode))) Bitmap(bitmap_size, true);
+        slab_node->bitmap = new (brk_alloc(PAGE_4K_SIZE - sizeof(SlabNode))) Bitmap(bitmap_size, true);
         slab_node->vaddr = brk_alloc(init_slab_size < PAGE_4K_SIZE ? PAGE_4K_SIZE : init_slab_size);
         kmalloc_cache[i].pool = slab_node;
     }
@@ -52,7 +52,7 @@ void kmalloc_create(int idx)
     slab_node->free_count = PAGE_4K_SIZE / cache.object_size == 0 ? 1 : PAGE_4K_SIZE / cache.object_size;
     slab_node->vaddr = brk_alloc(PAGE_4K_SIZE);
     auto bitmap_size = (slab_node->free_count / 8) == 0 ? 1 : (slab_node->free_count / 8);
-    slab_node->bitmap2 = new (brk_alloc(PAGE_4K_SIZE - sizeof(SlabNode))) Bitmap(bitmap_size, true);
+    slab_node->bitmap = new (brk_alloc(PAGE_4K_SIZE - sizeof(SlabNode))) Bitmap(bitmap_size, true);
     slab_node->slab = &cache;
     list_init(&slab_node->list);
     list_add_to_behind(&cache.pool->list, &slab_node->list);
@@ -90,15 +90,15 @@ void *kmalloc(uint64_t size, uint64_t flags)
             continue;
         }
 
-        for (int i = 0; i < selected_node->bitmap2->BitSize(); ++i)
+        for (int i = 0; i < selected_node->bitmap->BitSize(); ++i)
         {
-            if (!selected_node->bitmap2->IsSet(i))
+            if (!selected_node->bitmap->IsSet(i))
             {
                 selected_node->free_count--;
                 selected_node->used_count++;
                 cache.total_free--;
                 cache.total_used++;
-                selected_node->bitmap2->Set(i);
+                selected_node->bitmap->Set(i);
                 auto meta = (kmalloc_meta *)(selected_node->vaddr + cache.object_size * i);
                 meta->slab_node = selected_node;
                 return (void *)meta + 16;
@@ -114,7 +114,7 @@ void kfree(const void *ptr)
     auto slab_node = meta->slab_node;
     auto bit_offset = ((int8_t *)meta - (int8_t *)slab_node->vaddr) / slab_node->slab->object_size;
 
-    slab_node->bitmap2->UnSet(bit_offset);
+    slab_node->bitmap->UnSet(bit_offset);
 
     slab_node->free_count++;
     slab_node->used_count--;

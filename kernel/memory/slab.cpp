@@ -20,8 +20,8 @@ static SlabNode *slab_node_create(uint64_t object_size)
 
     slab_node->free_count = PAGE_4K_SIZE / object_size == 0 ? 1 : PAGE_4K_SIZE / object_size;
     auto bitmap_size = (slab_node->free_count / 8) == 0 ? 1 : (slab_node->free_count / 8);
-    slab_node->bitmap2 = new Bitmap(bitmap_size);
-    if (!slab_node->bitmap2)
+    slab_node->bitmap = new Bitmap(bitmap_size);
+    if (!slab_node->bitmap)
     {
         printk("!slab_node->bitmap\n");
         kfree(slab_node);
@@ -33,7 +33,7 @@ static SlabNode *slab_node_create(uint64_t object_size)
     if (!slab_node->vaddr)
     {
         printk("!slab_node->vaddr\n");
-        delete slab_node->bitmap2;
+        delete slab_node->bitmap;
         kfree(slab_node);
         return nullptr;
     }
@@ -105,16 +105,16 @@ void *Slab::Alloc()
             continue;
         }
 
-        for (int i = 0; i < selected_node->bitmap2->Size(); ++i)
+        for (int i = 0; i < selected_node->bitmap->Size(); ++i)
         {
 
-            if (!selected_node->bitmap2->IsSet(i))
+            if (!selected_node->bitmap->IsSet(i))
             {
                 selected_node->free_count--;
                 selected_node->used_count++;
                 this->total_free--;
                 this->total_used++;
-                selected_node->bitmap2->Set(i);
+                selected_node->bitmap->Set(i);
                 return (void *)selected_node->vaddr + this->object_size * i;
             }
             panic("selected_node bit not found\n");
@@ -134,7 +134,7 @@ void Slab::Free(const void *ptr)
         if (vstart <= ptr && ptr < vend)
         {
             auto bit_offset = ((int8_t *)ptr - (int8_t *)vstart) / this->object_size;
-            selected_node->bitmap2->UnSet(bit_offset);
+            selected_node->bitmap->UnSet(bit_offset);
             selected_node->free_count++;
             selected_node->used_count--;
             selected_node->slab->total_free++;

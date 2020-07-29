@@ -17,7 +17,7 @@ struct SlabNode
     uint32_t used_count;
     uint32_t free_count;
 
-    Bitmap* bitmap2;
+    Bitmap* bitmap;
 };
 
 struct Slab
