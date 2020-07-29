@@ -1,9 +1,11 @@
 #include "debug.h"
 #include "elf/elf-em.h"
 #include "printk.h"
+#include <memory/physical_page.h>
 
 // the rbp when we jump to kernel_start
-constexpr uint64_t start_kernel_base = 0x7000;
+
+extern char STACK_START;
 
 static ELFDebugSymbol elf_symbol;
 
@@ -45,8 +47,9 @@ static void print_stack_trace()
     asm volatile("mov %%rbp, %0"
                  : "=r"(rbp));
 
+    auto kernel_stack_start = (uint64_t)&STACK_START + PAGE_OFFSET;
     // we keep poping stack until reaching start_kernel_base
-    for (int i = 0; i < 10 && *rbp != start_kernel_base; ++i)
+    for (int i = 0; i < 10 && *rbp != kernel_stack_start; ++i)
     // while (*rbp != start_kernel_base)
     {
         printk("rbp at %p\n", rbp);
