@@ -8,6 +8,7 @@
 struct kmalloc_meta
 {
     SlabNode *slab_node;
+    void* padding;
 };
 
 static void *brk = (void *)0x800000 + PAGE_OFFSET;
@@ -109,7 +110,6 @@ void *kmalloc(uint64_t size, uint64_t flags)
 
 void kfree(const void *ptr)
 {
-    // ptr must align 16 byte
     auto meta = (kmalloc_meta *)(ptr - 16);
     auto slab_node = meta->slab_node;
     auto bit_offset = ((int8_t *)meta - (int8_t *)slab_node->vaddr) / slab_node->slab->object_size;
