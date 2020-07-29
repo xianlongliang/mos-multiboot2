@@ -64,6 +64,7 @@ GDT.Pointer equ $ - KERNEL_TEXT_BASE
 align PAGE_SIZE
 STACK_END equ $ - KERNEL_TEXT_BASE
     times PAGE_SIZE * 4 db 0
+global STACK_START
 STACK_START equ $ - KERNEL_TEXT_BASE
 
 section .text
