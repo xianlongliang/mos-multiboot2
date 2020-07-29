@@ -24,6 +24,12 @@ add_executable(kernel
         kernel/gdt.h
         kernel/gdt.cpp
         kernel/thread/regs.h
+        kernel/thread/mutex.h
+        kernel/thread/mutex.cpp
+        kernel/thread/semaphore.h
+        kernel/thread/semaphore.cpp
+        kernel/thread/scheduler.h
+        kernel/thread/scheduler.cpp
         kernel/thread/task.h
         kernel/thread/task.cpp
         kernel/thread/task.asm
