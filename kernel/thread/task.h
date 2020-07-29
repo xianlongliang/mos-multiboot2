@@ -138,4 +138,5 @@ inline struct task_struct *get_current()
             : "memory");                                                           \
     } while (0)
 
-extern "C" void schedule();
+void task_sleep();
+void task_wakeup(task_struct* task);

@@ -8,7 +8,9 @@
 #include <std/interrupt.h>
 #include <memory/mapping.h>
 #include <memory/kmalloc.h>
-
+#include "scheduler.h"
+#include "mutex.h"
+static Mutex mutex;
 // we pop all pt_regs out
 // then restore the stack to rsp0(stack base)
 // then call the fn
@@ -27,7 +29,7 @@ extern "C" unsigned long do_exit(unsigned long code)
         ;
 }
 
-static uint64_t do_fork(struct Regs *regs, unsigned long clone_flags)
+static task_struct *do_fork(struct Regs *regs, unsigned long clone_flags)
 {
     auto page = PhysicalMemory::GetInstance()->Allocate(1, PG_PTable_Maped | PG_Kernel | PG_Active);
 
@@ -37,7 +39,7 @@ static uint64_t do_fork(struct Regs *regs, unsigned long clone_flags)
     // *task = *current;
 
     list_init(&task->list);
-    list_add_to_behind(&init_task->list, &task->list);
+    // list_add_to_behind(&init_task->list, &task->list);
 
     task->pid++;
     task->state = TASK_UNINTERRUPTIBLE;
@@ -65,10 +67,10 @@ static uint64_t do_fork(struct Regs *regs, unsigned long clone_flags)
 
     task->state = TASK_RUNNING;
 
-    return 0;
+    return task;
 }
 
-static int create_kernel_thread(void (*fn)(), uint64_t arg, uint64_t flags)
+static task_struct *create_kernel_thread(void (*fn)(), uint64_t arg, uint64_t flags)
 {
 
     Regs regs;
@@ -93,8 +95,9 @@ extern "C" char pml4;
 extern "C" char pdpe;
 extern "C" char pde;
 
-int vmap_copy_kernel(task_struct *task) {
-    auto kernel_pml4 = (Page_PML4*)Phy_To_Virt(&pml4);
+int vmap_copy_kernel(task_struct *task)
+{
+    auto kernel_pml4 = (Page_PML4 *)Phy_To_Virt(&pml4);
     task->mm->pml4[511] = kernel_pml4[511];
 }
 
@@ -108,6 +111,18 @@ void userland_page_init(task_struct *task)
 
 void init2()
 {
+    mutex.Lock();
+
+    int i = 0;
+    while (1)
+    {
+        ++i;
+        printk("this is init 2 %d\n", i);
+        if (i == 2500)
+        {
+            mutex.Unlock();
+        }
+    }
     cli();
     printk("this is init 2\n");
 
@@ -137,25 +152,43 @@ void init2()
     asm volatile("retq");
 }
 
+void idle()
+{
+    while (1)
+    {
+        printk("idle\n");
+    }
+}
 uint64_t init(uint64_t arg)
 {
     printk("this is kernel thread\n");
 
-    create_kernel_thread(&init2, 1, CLONE_FS | CLONE_FILES | CLONE_SIGNAL);
-    auto next = (task_struct *)list_next(&current->list);
+    auto task_init2 = create_kernel_thread(&init2, 1, CLONE_FS | CLONE_FILES | CLONE_SIGNAL);
+    auto idle_task = create_kernel_thread(&idle, 1, CLONE_FS | CLONE_FILES | CLONE_SIGNAL);
     printk("current rsp : %x\n", current->thread->rsp0);
-    printk("next rsp : %x\n", next->thread->rsp0);
+    printk("task_init2 rsp : %x\n", task_init2->thread->rsp0);
+
+    Scheduler::GetInstance()->Add(current)->Add(task_init2)->Add(idle_task);
+
     // switch_to(current, next);
     asm volatile("sti");
+
+    int i = 0;
     while (1)
     {
-        // printk("1");
+        ++i;
+        // printk("%d\n", i);
+        if (i == 2500)
+        {
+            mutex.Lock();
+            printk("unlock\n");
+        }
     }
 }
 
 void task_init()
 {
-
+    mutex = Mutex();
     auto page = PhysicalMemory::GetInstance()->Allocate(1, PG_PTable_Maped | PG_Kernel | PG_Active);
 
     auto init_task_stack = (void *)(Phy_To_Virt(page->physical_address) + PAGE_4K_SIZE);
@@ -200,13 +233,6 @@ void task_init()
     asm volatile("retq");
 }
 
-void schedule()
-{
-    auto next = (task_struct *)list_prev(&current->list);
-    printk("from %d to %d\n", current->pid, next->pid);
-    switch_to(current, next);
-}
-
 extern "C" void __switch_to(struct task_struct *prev, struct task_struct *next)
 {
 
@@ -235,4 +261,22 @@ extern "C" void __switch_to(struct task_struct *prev, struct task_struct *next)
         flush_tlb();
     }
     asm volatile("sti");
+}
+
+void task_sleep()
+{
+    asm volatile("pushf");
+    asm volatile("cli");
+    current->state = TASK_STOPPED;
+    Scheduler::GetInstance()->Remove(current)->Schedule();
+    asm volatile("popf");
+}
+
+void task_wakeup(task_struct *task)
+{
+    asm volatile("pushf");
+    asm volatile("cli");
+    task->state = TASK_RUNNING;
+    Scheduler::GetInstance()->Add(task);
+    asm volatile("popf");
 }
