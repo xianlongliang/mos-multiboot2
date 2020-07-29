@@ -32,6 +32,8 @@ todos:
 - [ ] VFS
 - [ ] SFS Filesystem
 - [ ] Shell
+- [ ] APIC
+- [ ] SMP
 
 ## Building
 
