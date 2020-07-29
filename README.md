@@ -3,6 +3,36 @@ MOS
 
 a x64 os kernel. mos version2 using multiboot2.
 
+implementations :
+
+- [x] stack trace debug
+- [x] printk
+- [x] GDT
+- [x] IDT
+- [x] TSS
+- [x] keyboard (from os-elephant)
+- [x] slab
+- [x] kmalloc (based on slab)
+- [x] c++ new and delete (via kmalloc)
+- [x] buddy system
+- [x] mutex
+- [x] spinlock
+- [x] semaphore
+- [x] task
+- [x] task sleep and wake
+- [x] userland task
+- [x] pagefault handler
+- [x] task context switch (kernel and userland)
+- [x] round robin scheduler ???
+- [x] syscall and sysret
+- [x] some stl c++ containers
+
+todos:
+
+- [ ] VFS
+- [ ] SFS Filesystem
+- [ ] Shell
+
 ## Building
 
 make sure nasm, g++ is installed.
