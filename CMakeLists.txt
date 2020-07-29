@@ -41,6 +41,8 @@ add_executable(kernel
         kernel/std/interrupt.h
         kernel/std/bitmap.h
         kernel/std/bitmap.cpp
+        kernel/std/move.h
+        kernel/std/unique_ptr.h
         kernel/memory/zone.h
         kernel/memory/zone.cpp
         kernel/memory/virtual_page.h
