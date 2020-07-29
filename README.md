@@ -17,6 +17,8 @@ implementations :
 - [x] mutex
 - [x] spinlock
 - [x] semaphore
+- [x] task
+- [x] task sleep and wake
 - [x] userland task
 - [x] pagefault handler
 - [x] task context switch (kernel and userland)
