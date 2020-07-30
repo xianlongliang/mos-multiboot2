@@ -3,7 +3,8 @@
 
 void Scheduler::Schedule()
 {
-    auto next = (task_struct *)list_next(&current->list);
+    auto next = this->next_task;
+    this->next_task = (task_struct *)list_next(&next->list);
     printk("from %d to %d\n", current->pid, next->pid);
     if (next == current)
         return;
@@ -12,21 +13,17 @@ void Scheduler::Schedule()
 
 Scheduler *Scheduler::Add(task_struct *task)
 {
-    if (!this->active_tasks)
-        this->active_tasks = task;
-    else
-        list_add_to_behind(&this->active_tasks->list, &task->list);
-
+    auto c = current;
+    list_add_to_behind(&current->list, &task->list);
     return this;
 }
 
 Scheduler *Scheduler::Remove(task_struct *task)
 {
-    if (this->active_tasks == task)
-    {
-        this->active_tasks = (task_struct *)list_next(&this->active_tasks->list);
+    // if current is removed, the next task should be updated
+    if (current == task) {
+        this->next_task = (task_struct *)list_next(&current->list);
     }
-
     list_del(&task->list);
     return this;
 }

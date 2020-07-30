@@ -19,5 +19,5 @@ public:
 
 private:
     friend void task_init();
-    task_struct *active_tasks;
+    task_struct *next_task;
 };
