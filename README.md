@@ -25,6 +25,7 @@ implementations :
 - [x] task context switch (kernel and userland)
 - [x] round robin scheduler ???
 - [x] syscall and sysret
+- [x] ide driver
 - [x] some stl c++ containers
 
 todos:
