@@ -139,4 +139,5 @@ inline struct task_struct *get_current()
     } while (0)
 
 void task_sleep();
+void task_yield();
 void task_wakeup(task_struct* task);

@@ -8,9 +8,11 @@
 #include <std/interrupt.h>
 #include <memory/mapping.h>
 #include <memory/kmalloc.h>
+#include <device/ide.h>
 #include "scheduler.h"
 #include "mutex.h"
 static Mutex mutex;
+static uint64_t global_pid = 0;
 // we pop all pt_regs out
 // then restore the stack to rsp0(stack base)
 // then call the fn
@@ -41,7 +43,7 @@ static task_struct *do_fork(struct Regs *regs, unsigned long clone_flags)
     list_init(&task->list);
     // list_add_to_behind(&init_task->list, &task->list);
 
-    task->pid++;
+    task->pid = global_pid++;
     task->state = TASK_UNINTERRUPTIBLE;
 
     // place thread_struct after task_struct
@@ -112,15 +114,16 @@ void userland_page_init(task_struct *task)
 void init2()
 {
     mutex.Lock();
-
+    auto s = Scheduler::GetInstance();
     int i = 0;
     while (1)
     {
         ++i;
-        printk("this is init 2 %d\n", i);
-        if (i == 2500)
+        printk("%d", current->pid);
+        if (i == 100000)
         {
             mutex.Unlock();
+            printk("unlock\n");
         }
     }
     cli();
@@ -156,9 +159,12 @@ void idle()
 {
     while (1)
     {
-        printk("idle\n");
+        // task_sleep();
+        printk("%d", current->pid);
+        // asm volatile ("sti;hlt");
     }
 }
+
 uint64_t init(uint64_t arg)
 {
     printk("this is kernel thread\n");
@@ -170,6 +176,7 @@ uint64_t init(uint64_t arg)
 
     Scheduler::GetInstance()->Add(current)->Add(task_init2)->Add(idle_task);
 
+    ide_init();
     // switch_to(current, next);
     asm volatile("sti");
 
@@ -177,7 +184,7 @@ uint64_t init(uint64_t arg)
     while (1)
     {
         ++i;
-        // printk("%d\n", i);
+        printk("%d", current->pid);
         if (i == 2500)
         {
             mutex.Lock();
@@ -207,7 +214,7 @@ void task_init()
 
     init_task->state = TASK_UNINTERRUPTIBLE;
     init_task->flags = PF_KTHREAD;
-    init_task->pid = 0;
+    init_task->pid = global_pid++;
     init_task->signal = 0;
     init_task->priority = 0;
 
@@ -260,7 +267,6 @@ extern "C" void __switch_to(struct task_struct *prev, struct task_struct *next)
         set_cr3(&pml4);
         flush_tlb();
     }
-    asm volatile("sti");
 }
 
 void task_sleep()
@@ -269,6 +275,14 @@ void task_sleep()
     asm volatile("cli");
     current->state = TASK_STOPPED;
     Scheduler::GetInstance()->Remove(current)->Schedule();
+    asm volatile("popf");
+}
+
+void task_yield()
+{
+    asm volatile("pushf");
+    asm volatile("cli");
+    Scheduler::GetInstance()->Schedule();
     asm volatile("popf");
 }
 
