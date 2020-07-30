@@ -2,6 +2,7 @@
 %macro IRQ 2
 [GLOBAL irq%1]
 irq%1:
+    cli
     push 0               ; push error_code (invalid)
     push %2              ; push isr
     push    rax ; original rax
