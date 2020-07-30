@@ -19,7 +19,7 @@ extern "C" void Kernel_Main(unsigned long addr)
   idt_init();
   syscall_init();
   kmalloc_init();
-  timer_init(1);
+  timer_init(1000);
   task_init();
   // sti();
 
