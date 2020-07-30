@@ -7,7 +7,7 @@ dump:
 	objdump -S build/user > build/user.dump
 
 qemu:
-	qemu-system-x86_64 -cdrom build/kernel.iso -serial stdio -m 64M -s -S 
+	qemu-system-x86_64 -hda build/kernel.iso -hdb hd80.img -m 64M -s -S 
 
 qemu-gdb:
 	nohup qemu-system-x86_64 -cdrom build/kernel.iso -serial stdio -m 64M -s -S & 

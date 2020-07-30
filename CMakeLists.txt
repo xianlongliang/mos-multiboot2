@@ -23,6 +23,8 @@ add_executable(kernel
         kernel/tss.cpp
         kernel/gdt.h
         kernel/gdt.cpp
+        kernel/device/ide.h
+        kernel/device/ide.cpp
         kernel/thread/regs.h
         kernel/thread/mutex.h
         kernel/thread/mutex.cpp
