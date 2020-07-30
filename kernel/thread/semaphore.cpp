@@ -5,9 +5,13 @@
 
 void Semaphore::Down()
 {
+    asm volatile("pushf");
     cli();
 
-    this->wait_list.push_back(current);
+    // task in wait_list can't wakeup by itself
+    // it must be waken up by other task or interrupt
+    if (this->value == 0)
+        this->wait_list.push_back(current);
 
     while (this->value == 0)
     {
@@ -16,22 +20,26 @@ void Semaphore::Down()
 
     this->value -= 1;
 
-    sti();
+    asm volatile("popf");
 }
 
 void Semaphore::Up()
 {
+    asm volatile("pushf");
     cli();
 
-    this->wait_list.remove(current);
     // if there's some task waiting, wake it
     if (!this->wait_list.empty())
     {
-        auto task_to_wake = this->wait_list.back();
-        task_wakeup(task_to_wake);
+        // we don't call this->wait_list.remove(current);
+        // because current must not being in the list
+        // you can't wake up yourself
+        auto task_to_wakeup = this->wait_list.back();
+        this->wait_list.pop_back();
+        task_wakeup(task_to_wakeup);
     }
     // this->value must be 0
     this->value += 1;
 
-    sti();
+    asm volatile("popf");
 }
