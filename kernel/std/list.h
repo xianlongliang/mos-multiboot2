@@ -43,6 +43,7 @@ inline void list_del(struct List *entry)
 {
     entry->next->prev = entry->prev;
     entry->prev->next = entry->next;
+    list_init(entry);
 }
 
 inline long list_is_empty(struct List *entry)
@@ -74,6 +75,7 @@ class list
 {
     struct list_node
     {
+        list_node() {}
         list_node(T &&val) : val(val), next(nullptr), prev(nullptr) {}
         T val;
         list_node *next;
@@ -81,73 +83,65 @@ class list
     };
 
 public:
-    list() : head(nullptr) {}
+    list()
+    {
+        this->head = new list_node();
+        this->head->next = this->head;
+        this->head->prev = this->head;
+        this->list_size = 0;
+    }
 
     bool empty()
     {
-        return this->head == nullptr;
+        return (this->head->next == this->head) && (this->head->prev == this->head);
     }
 
     void remove(T val)
     {
-        if (!head)
+        if (this->empty())
             panic("remove empty list");
 
-        auto p = this->head;
-        do
+        auto node = this->head->next;
+        auto end = this->head;
+        while (node != this->head)
         {
-            if (p->val == val)
+            if (node->val == val)
                 break;
-            p = p->next;
-        } while (p != this->head);
-
-        // if there's only node in list
-        if (p->next == p)
-        {
-            delete p;
-            this->head == nullptr;
+            node = node->next;
         }
-        p->prev->next = p->next;
-        p->next->prev = p->prev;
-        if (p == this->head) this->head = p->next;
-        delete p;
+        // if not found
+        if (node == end)
+            return;
+
+        node->prev->next = node->next;
+        node->next->prev = node->prev;
+
+        delete node;
+
+        this->list_size--;
     }
 
     void push_back(T &&val)
     {
         auto node = new list_node(forward<T>(val));
-        if (head == nullptr)
-        {
-            head = node;
-            head->prev = head->next = head;
-        }
-        else
-        {
-            auto last = head->prev;
-            head->prev = node;
-            last->next = node;
-            node->prev = last;
-            node->next = head;
-        }
+        auto last = head->prev;
+        head->prev = node;
+        last->next = node;
+        node->prev = last;
+        node->next = head;
+        this->list_size++;
     }
 
     void pop_back()
     {
-        if (!head)
-            panic("pop empty list");
+        if (this->empty())
+            panic("pop_back empty list");
 
         auto node_to_pop = head->prev;
-        if (head == node_to_pop)
-        {
-            head = nullptr;
-        }
-        else
-        {
-            node_to_pop->prev->next = head;
-            head->prev = node_to_pop->prev;
-        }
-
+        node_to_pop->prev->next = head;
+        head->prev = node_to_pop->prev;
         delete node_to_pop;
+        this->list_size--;
     }
 
     T &back()
@@ -158,6 +152,36 @@ public:
         return head->prev->val;
     }
 
+    uint64_t size()
+    {
+        this->list_size;
+    }
+
+    // Minimum required for range-for loop
+    template <typename IT>
+    struct Iterator
+    {
+        IT *p;
+        T &operator*() { return p->val; }
+        bool operator!=(const Iterator &rhs)
+        {
+            return p != rhs.p;
+        }
+        void operator++() { p = p->next; }
+    };
+
+    // auto return requires C++14
+    auto begin() const
+    { // const version
+        return Iterator<list_node>{this->head->next};
+    }
+
+    auto end() const
+    { // const version
+        return Iterator<list_node>{this->head};
+    }
+
 private:
     list_node *head;
+    uint64_t list_size;
 };
