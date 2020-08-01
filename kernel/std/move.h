@@ -33,3 +33,10 @@ forward(typename remove_reference<T>::type &&t) noexcept
     //                                                      " substituting T is an lvalue reference type");
     return static_cast<T &&>(t);
 }
+
+template <typename _Tp>
+constexpr typename remove_reference<_Tp>::type &&
+move(_Tp &&__t) noexcept
+{
+    return static_cast<typename remove_reference<_Tp>::type &&>(__t);
+}
