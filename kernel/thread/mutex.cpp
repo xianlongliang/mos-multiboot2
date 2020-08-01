@@ -1,7 +1,7 @@
 #include "mutex.h"
 Mutex::Mutex() : owner(nullptr), sem(1) {}
 
-void Mutex::Lock()
+void Mutex::lock()
 {
     if (this->owner == current)
     {
@@ -11,7 +11,7 @@ void Mutex::Lock()
     this->owner = current;
 }
 
-void Mutex::Unlock()
+void Mutex::unlock()
 {
     this->owner = nullptr;
     this->sem.Up();

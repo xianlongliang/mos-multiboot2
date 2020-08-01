@@ -8,9 +8,9 @@ class Mutex
 public:
     Mutex();
 
-    void Lock();
+    void lock();
 
-    void Unlock();
+    void unlock();
 
 private:
     task_struct *owner;
