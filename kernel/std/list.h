@@ -152,9 +152,41 @@ public:
         return head->prev->val;
     }
 
+    void push_front(T &&val)
+    {
+        auto node = new list_node(forward<T>(val));
+        this->head->next->prev = node;
+        node->next = this->head->next;
+        node->prev = this->head;
+        this->head->next = node;
+        this->list_size++;
+    }
+
+    void pop_front()
+    {
+        if (this->empty())
+            panic("pop_front empty list");
+
+        auto node_to_pop = head->next;
+
+        this->head->next = node_to_pop->next;
+        node_to_pop->next->prev = this->head;
+
+        delete node_to_pop;
+        this->list_size--;
+    }
+
     uint64_t size()
     {
-        this->list_size;
+        return this->list_size;
+    }
+
+    void clear() {
+        while(!this->empty()) {
+            auto back = this->back();
+            this->pop_back();
+            delete back;
+        }
     }
 
     // Minimum required for range-for loop
