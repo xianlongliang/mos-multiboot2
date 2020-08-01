@@ -59,13 +59,13 @@ GDT.DATA equ $ - KERNEL_TEXT_BASE
 
 GDT.Pointer equ $ - KERNEL_TEXT_BASE
     dw $ - KERNEL_TEXT_BASE - GDT - 1                    ; 16-bit Size (Limit) of GDT.
-    dd GDT                            ; 32-bit Base Address of GDT. (CPU will zero extend to 64-bit)
+    dq GDT                            ; 32-bit Base Address of GDT. (CPU will zero extend to 64-bit)
 
 align PAGE_SIZE
-STACK_END equ $ - KERNEL_TEXT_BASE
+STACK_END:
     times PAGE_SIZE * 4 db 0
 global STACK_START
-STACK_START equ $ - KERNEL_TEXT_BASE
+STACK_START:
 
 section .text
 bits 32
@@ -113,13 +113,13 @@ _start:
 
     lgdt [GDT.Pointer]
 
-    jmp CODE_SEG:_start64
+    jmp CODE_SEG:(_start64 - KERNEL_TEXT_BASE)
 
 section .text
 bits 64
 extern Kernel_Main
 global _start64
-_start64 equ $ - KERNEL_TEXT_BASE
+_start64:
     mov ax, 0x0
     mov ds, ax
     mov es, ax
@@ -127,11 +127,11 @@ _start64 equ $ - KERNEL_TEXT_BASE
     mov gs, ax
     mov ss, ax
 
-    mov rsp, STACK_START + KERNEL_TEXT_BASE
+    mov rsp, STACK_START
     mov rbp, rsp
 
     mov rdi, rbx
-
+    
     mov rax, Kernel_Main
     call rax
 
