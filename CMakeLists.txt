@@ -23,9 +23,11 @@ add_executable(kernel
         kernel/tss.cpp
         kernel/gdt.h
         kernel/gdt.cpp
-        kernel/device/ide.h
-        kernel/device/ide.cpp
+
         kernel/thread/regs.h
+        kernel/thread/condition_variable.h
+        kernel/thread/condition_variable.cpp
+        kernel/thread/io_queue.h
         kernel/thread/mutex.h
         kernel/thread/mutex.cpp
         kernel/thread/semaphore.h
@@ -37,6 +39,7 @@ add_executable(kernel
         kernel/thread/task.asm
         kernel/thread/userland.h
         kernel/thread/userland.cpp
+        kernel/std/singleton.h 
         kernel/std/msr.h 
         kernel/std/math.h 
         kernel/std/math.cpp
@@ -75,6 +78,8 @@ add_executable(kernel
         kernel/interrupt/timer.cpp
         kernel/interrupt/keyboard.h
         kernel/interrupt/keyboard.cpp
+        kernel/syscall/read.cpp
+        kernel/syscall/write.cpp
         )
 
 add_custom_command(TARGET kernel
