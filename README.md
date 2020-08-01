@@ -18,6 +18,7 @@ implementations :
 - [x] mutex
 - [x] spinlock
 - [x] semaphore
+- [x] condition variable
 - [x] task
 - [x] task sleep and wake
 - [x] userland task
