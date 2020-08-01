@@ -5,11 +5,15 @@
 #include <thread/regs.h>
 #include <tss.h>
 #include <memory/physical_page.h>
+extern "C" ssize_t sys_read(int fd, void *buf, size_t count);
 
-extern "C" uint64_t syscall_entry_c(uint64_t syscall_number)
+extern "C" uint64_t syscall_entry_c(uint64_t syscall_number, uint64_t rsi, uint64_t rdx, uint64_t rcx, uint64_t r8, uint64_t r9)
 {
     static uint64_t count = 0;
     printk("syscall %d times\n", count++);
+    if (syscall_number == 1) {
+        return sys_read(rsi, (void*)rdx, rcx);
+    }
     return 0;
 }
 
