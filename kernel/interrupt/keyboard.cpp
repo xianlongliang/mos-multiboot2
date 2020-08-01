@@ -1,5 +1,8 @@
+#include "keyboard.h"
+
 #include <std/printk.h>
 #include <std/port_ops.h>
+#include <std/move.h>
 
 static char keyboard_buffer[4096] = {0};
 static uint16_t keyboard_buffer_cursor = {0};
@@ -198,17 +201,15 @@ void keyboard_irq_handler(uint64_t error_code, uint64_t rsp, uint64_t rflags, ui
         /* 只处理ascii码不为0的键 */
         if (cur_char != 0)
         {
-            Kernel::VGA::console_putc_color(cur_char);
             keyboard_buffer[keyboard_buffer_cursor++] = cur_char;
             keyboard_buffer[keyboard_buffer_cursor] = '\0';
+            KeyboardIO::GetInstance()->Queue.Push(move(cur_char));
         }
         switch (cur_char)
         {
         case '\r':
         {
             keyboard_buffer_cursor = 0;
-            printk("cmd: %s", keyboard_buffer);
-            Kernel::VGA::console_putc_color('#');
             break;
         }
         case '\b':
