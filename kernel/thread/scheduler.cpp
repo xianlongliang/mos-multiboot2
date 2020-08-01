@@ -13,7 +13,7 @@ void Scheduler::Schedule()
 
 Scheduler *Scheduler::Add(task_struct *task)
 {
-    auto c = current;
+    if (this->next_task == nullptr) this->next_task = task;
     list_add_to_behind(&current->list, &task->list);
     return this;
 }
