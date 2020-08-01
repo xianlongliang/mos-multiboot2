@@ -10,6 +10,7 @@
 #include <memory/slab.h>
 #include <std/unique_ptr.h>
 #include <std/list.h>
+#include <std/vector.h>
 
 extern "C" void Kernel_Main(unsigned long addr)
 {
@@ -19,6 +20,10 @@ extern "C" void Kernel_Main(unsigned long addr)
   idt_init();
   syscall_init();
   kmalloc_init();
+  vector<SlabNode> vslab(1);
+  vslab.push_back(SlabNode());
+  vslab.push_back(SlabNode());
+  vslab.pop_back();
   timer_init(1000);
   task_init();
   // sti();
