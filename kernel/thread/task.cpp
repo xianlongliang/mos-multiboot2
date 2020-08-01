@@ -8,10 +8,9 @@
 #include <std/interrupt.h>
 #include <memory/mapping.h>
 #include <memory/kmalloc.h>
-#include <device/ide.h>
 #include "scheduler.h"
 #include "mutex.h"
-static Mutex mutex;
+#include "condition_variable.h"
 static uint64_t global_pid = 0;
 // we pop all pt_regs out
 // then restore the stack to rsp0(stack base)
@@ -21,7 +20,7 @@ extern "C" void kernel_thread_func();
 // if not kernel thread, return to userspace
 extern "C" void ret_syscall();
 
-static task_struct *init_task;
+task_struct *init_task;
 
 extern "C" unsigned long do_exit(unsigned long code)
 {
@@ -113,18 +112,11 @@ void userland_page_init(task_struct *task)
 
 void init2()
 {
-    mutex.Lock();
-    auto s = Scheduler::GetInstance();
     int i = 0;
     while (1)
     {
         ++i;
-        printk("%d", current->pid);
-        if (i == 100000)
-        {
-            mutex.Unlock();
-            printk("unlock\n");
-        }
+        // printk("%d", current->pid);
     }
     cli();
     printk("this is init 2\n");
@@ -155,13 +147,41 @@ void init2()
     asm volatile("retq");
 }
 
-void idle()
+extern "C" ssize_t sys_read(int fd, void *buf, size_t count);
+extern "C" ssize_t sys_write(int fd, void *buf, size_t count);
+
+void bash()
 {
+    clear();
+    printk("mos-kernel#");
+    int8_t bash_buffer[1024];
+    uint64_t bash_buffer_cur = 0;
     while (1)
     {
-        // task_sleep();
-        printk("%d", current->pid);
-        // asm volatile ("sti;hlt");
+        char ch = 0;
+        sys_read(1, &ch, 1);
+        switch (ch)
+        {
+        case '\r':
+            if (strcmp(bash_buffer, "clear") == 0)
+            {
+                clear();
+            }
+            else if (strcmp(bash_buffer, "help") == 0)
+                printk("\nthis is mos v0.0.1\n");
+            else
+                printk("\n");
+            printk("mos-kernel# ");
+            bzero(bash_buffer, bash_buffer_cur);
+            bash_buffer_cur = 0;
+            break;
+
+        default:
+        {
+            bash_buffer[bash_buffer_cur++] = ch;
+            sys_write(1, &ch, 1);
+        }
+        }
     }
 }
 
@@ -170,32 +190,25 @@ uint64_t init(uint64_t arg)
     printk("this is kernel thread\n");
 
     auto task_init2 = create_kernel_thread(&init2, 1, CLONE_FS | CLONE_FILES | CLONE_SIGNAL);
-    auto idle_task = create_kernel_thread(&idle, 1, CLONE_FS | CLONE_FILES | CLONE_SIGNAL);
+    auto bash_task = create_kernel_thread(&bash, 1, CLONE_FS | CLONE_FILES | CLONE_SIGNAL);
     printk("current rsp : %x\n", current->thread->rsp0);
     printk("task_init2 rsp : %x\n", task_init2->thread->rsp0);
 
-    Scheduler::GetInstance()->Add(current)->Add(task_init2)->Add(idle_task);
+    Scheduler::GetInstance()->Add(current)->Add(bash_task);
 
-    ide_init();
     // switch_to(current, next);
-    asm volatile("sti");
-
-    int i = 0;
+    sti();
     while (1)
     {
-        ++i;
-        printk("%d", current->pid);
-        if (i == 2500)
-        {
-            mutex.Lock();
-            printk("unlock\n");
-        }
+        // remove self from the scheduler when there are others tasks running
+        task_sleep();
+        asm volatile("sti; hlt");
+        // idle task will be added back when there's no task to run
     }
 }
 
 void task_init()
 {
-    mutex = Mutex();
     auto page = PhysicalMemory::GetInstance()->Allocate(1, PG_PTable_Maped | PG_Kernel | PG_Active);
 
     auto init_task_stack = (void *)(Phy_To_Virt(page->physical_address) + PAGE_4K_SIZE);
