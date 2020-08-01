@@ -41,20 +41,3 @@ public:
 private:
     volatile uint64_t lock_val = 1; // 1:unlock, 0:lock
 };
-
-template <typename LockType>
-class LockGuard : private noncopyable
-{
-public:
-    LockGuard(LockType &lock) : lock(lock)
-    {
-        lock.lock();
-    }
-    ~LockGuard()
-    {
-        lock.unlock();
-    }
-
-private:
-    LockType &lock;
-};
