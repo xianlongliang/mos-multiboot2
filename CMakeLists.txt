@@ -41,6 +41,8 @@ add_executable(kernel
         kernel/thread/userland.cpp
         kernel/std/singleton.h 
         kernel/std/msr.h 
+        kernel/std/vector.h 
+        kernel/std/list.h 
         kernel/std/math.h 
         kernel/std/math.cpp
         kernel/std/printk.h 
