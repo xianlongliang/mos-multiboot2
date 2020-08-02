@@ -71,6 +71,8 @@ add_executable(kernel
         kernel/memory/slab.cpp
         kernel/memory/kmalloc.h
         kernel/memory/kmalloc.cpp
+        kernel/interrupt/apic.h
+        kernel/interrupt/apic.cpp
         kernel/interrupt/idt.h
         kernel/interrupt/idt.cpp
         kernel/interrupt/isr.asm

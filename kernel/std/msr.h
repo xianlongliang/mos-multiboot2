@@ -11,6 +11,18 @@
 #define MSR_KERNEL_GS_BASE 0xc0000102 /* SwapGS GS shadow */
 #define MSR_TSC_AUX 0xc0000103        /* Auxiliary TSC */
 
+#define IA32_APIC_BASE 0x1b
+#define IA32_APIC_SVR 0x80f
+#define IA32_APIC_LOCAL_ID 0x802
+
+#define IA32_APIC_LVT_CMCI 0x82f
+#define IA32_APIC_LVT_TIMER 0x832
+#define IA32_APIC_LVT_THERMAL 0x833
+#define IA32_APIC_LVT_PERFORMANCE_MONITOR 0x834
+#define IA32_APIC_LVT_LINT0 0x835
+#define IA32_APIC_LVT_LINT1 0x836
+#define IA32_APIC_LVT_ERROR 0x837
+
 inline void wrmsr(unsigned long address, unsigned long value)
 {
     asm __volatile__("wrmsr	\n\t" ::"d"(value >> 32), "a"(value & 0xffffffff), "c"(address)

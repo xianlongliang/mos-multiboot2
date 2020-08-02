@@ -39,7 +39,7 @@ public:
 
     T &back()
     {
-        return this->pval[this->current_size]
+        return this->pval[this->current_size];
     }
 
     void push_front(T &&val)
