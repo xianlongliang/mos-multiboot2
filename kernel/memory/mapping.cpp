@@ -29,6 +29,48 @@ void vmap_init()
 
 extern "C" char pde;
 
+int vmap_frame_kernel(void *vaddr, void *paddr)
+{
+
+    auto ppde = &pde;
+    auto pde_offset = ((uint64_t)vaddr & 0x3fe00000) >> 21;
+    auto pte_offset = ((uint64_t)vaddr & 0x1ff000) >> 12;
+
+    Page_PDE *pde = (Page_PDE *)Phy_To_Virt(ppde);
+
+    Page_PTE *pte = (Page_PTE *)Phy_To_Virt(pde[pde_offset].NEXT << PAGE_4K_SHIFT);
+    bool swap_used = false;
+    if ((uint64_t)pte == PAGE_OFFSET)
+    {
+        pde[pde_offset].NEXT = swap_pte.paddr >> PAGE_4K_SHIFT;
+        *(uint64_t *)&pde[pde_offset] |= 0x3;
+        pte = (Page_PTE *)swap_pte.vaddr;
+        swap_used = true;
+    }
+
+    if (pte[pte_offset].P == 1)
+    {
+        return -1;
+    }
+
+    if (swap_used)
+    {
+        pte[pte_offset].PPBA = ((uint64_t)paddr) >> PAGE_4K_SHIFT;
+        *(uint64_t *)&pte[pte_offset] |= 0x3;
+
+        swap_pte.vaddr = (uint64_t)pte_alloc();
+        swap_pte.paddr = (uint64_t)Virt_To_Phy(swap_pte.vaddr);
+    }
+    else
+    {
+        pte[pte_offset].PPBA = ((uint64_t)paddr) >> PAGE_4K_SHIFT;
+        *(uint64_t *)&pte[pte_offset] |= 0x3;
+    }
+
+    flush_tlb();
+    return 0;
+}
+
 int vmap_frame_kernel(void *vaddr)
 {
 
@@ -64,7 +106,6 @@ int vmap_frame_kernel(void *vaddr)
         swap_pte.paddr = (uint64_t)Virt_To_Phy(swap_pte.vaddr);
 
         flush_tlb();
-
     }
     else
     {
