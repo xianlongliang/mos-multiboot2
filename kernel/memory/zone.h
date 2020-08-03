@@ -11,7 +11,7 @@ public:
 
     int64_t AllocatePages(uint64_t page_count);
     int64_t FreePages(uint64_t page_index);
-
+    bool Reserve(uint64_t page_index);
     uint64_t BuddySystemSize()
     {
         // printk("total_pages_count %d\n", this->total_pages_count);

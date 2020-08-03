@@ -25,7 +25,7 @@ Zone::Zone(multiboot_mmap_entry *mmap)
     this->physical_end_address = ((mmap->addr + mmap->len) >> PAGE_4K_SHIFT) << PAGE_4K_SHIFT;
     this->attribute = 0;
 
-    uint64_t pages_count = (this->physical_end_address - this->physical_start_address) >> PAGE_4K_SHIFT;
+    uint64_t pages_count = (this->physical_end_address - this->physical_start_address) / PAGE_4K_SIZE;
     printk("page size: 4k, avaliable pages: %d\n", pages_count);
 
     this->free_pages_count = pages_count;
@@ -57,7 +57,7 @@ Zone::Zone(multiboot_mmap_entry *mmap)
     for (int j = 0; j < this->FreePagesCount(); ++j)
     {
         pages[j].zone = this;
-        pages[j].physical_address = (void*)(this->physical_start_address + PAGE_4K_SIZE * j);
+        pages[j].physical_address = (void *)(this->physical_start_address + PAGE_4K_SIZE * j);
         pages[j].attributes = 0;
         pages[j].reference_count = 0;
         pages[j].age = 0;
@@ -81,11 +81,11 @@ int64_t Zone::AllocatePages(uint64_t pages_count)
         pages_count = round_up_pow_of_2(pages_count);
     unsigned index = 0;
     // if the first(largest) doesn't fit return error
-    if (this->nodes[index] < pages_count) {
+    if (this->nodes[index] < pages_count)
+    {
         printk("this->nodes[0] == %d < %d\n", this->nodes[0], pages_count);
         return -1;
     }
-        
 
     auto node_size = this->total_pages_count_rounded_up;
     for (; node_size != pages_count; node_size /= 2)
@@ -112,6 +112,23 @@ int64_t Zone::AllocatePages(uint64_t pages_count)
     }
 
     return offset;
+}
+bool Zone::Reserve(uint64_t page_offset)
+{
+    if (page_offset > this->total_pages_count)
+        return true;
+    // make sure the branch is free
+    auto page_index = ((page_offset + this->total_pages_count_rounded_up) / 1) - 1;
+    auto index = page_index;
+    do
+    {
+        if (this->nodes[index] == 0)
+            return false;
+        index = PARENT(index);
+    } while (index > 0);
+
+    this->nodes[page_index] = 0;
+    return true;
 }
 
 int64_t Zone::FreePages(uint64_t offset)
