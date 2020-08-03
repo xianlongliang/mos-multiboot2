@@ -4,11 +4,12 @@
 #include "physical.h"
 #include <std/debug.h>
 #include <std/new.h>
+#include <interrupt/apic.h>
 
 struct kmalloc_meta
 {
     SlabNode *slab_node;
-    void* padding;
+    void *padding;
 };
 
 static void *brk = (void *)0x800000 + PAGE_OFFSET;
@@ -26,6 +27,9 @@ static Slab kmalloc_cache[KMALLOC_CACHE_COUNT];
 
 void kmalloc_init()
 {
+    // reserve 1 page for apic
+    auto apic_vbase = brk_alloc(PAGE_4K_SIZE);
+
     int init_slab_size = 32;
     for (int i = 0; i < 10; ++i, init_slab_size *= 2)
     {
@@ -42,6 +46,8 @@ void kmalloc_init()
         slab_node->vaddr = brk_alloc(init_slab_size < PAGE_4K_SIZE ? PAGE_4K_SIZE : init_slab_size);
         kmalloc_cache[i].pool = slab_node;
     }
+
+    APIC::GetInstance()->Init(apic_vbase);
 }
 
 void kmalloc_create(int idx)
