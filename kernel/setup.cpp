@@ -62,8 +62,8 @@ void basic_init(void *mbi_addr)
         {
         case MULTIBOOT_TAG_TYPE_MODULE:
         {
-            auto module = (multiboot_tag_module*)tag;
-            auto elf_header = (Elf64_Ehdr*)module->mod_start;
+            auto module = (multiboot_tag_module *)tag;
+            auto elf_header = (Elf64_Ehdr *)module->mod_start;
             printk("elf: %d\n", elf_header->e_shnum);
             printk("find module: %x, %x\n", module->mod_start, module->mod_end);
             printk("size: %d\n", module->size);
@@ -84,6 +84,7 @@ void basic_init(void *mbi_addr)
                     PhysicalMemory::GetInstance()->Add(mmap);
                 }
             }
+            PhysicalMemory::GetInstance()->Reserve(0xfee00000);
             break;
         }
         case MULTIBOOT_TAG_TYPE_ELF_SECTIONS:
