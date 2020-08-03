@@ -28,13 +28,13 @@ implementations :
 - [x] syscall and sysret
 - [x] ide driver
 - [x] some stl c++ containers
-
+- [x] Shell
+- [x] APIC
 todos:
 
 - [ ] VFS
 - [ ] SFS Filesystem
-- [ ] Shell
-- [ ] APIC
+- [ ] IO-APIC
 - [ ] SMP
 
 ## Building
