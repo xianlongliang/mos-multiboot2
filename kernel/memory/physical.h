@@ -54,13 +54,14 @@ public:
 
     Page* Allocate(uint64_t count, uint64_t page_flags);
     void  Free(Page* page);
-    
+    bool Reserve(uint64_t physical_address);
+
     inline static void* ZONE_VIRTUAL_START = 0x0;
 
 private:
     friend void basic_init(void* mbi_addr);
     void Add(multiboot_mmap_entry *mmap);
 
-    // only recognize 1 zones, 1-End
+    // only recognize 1 zones, 1->End
     Zone *zones;
 };
