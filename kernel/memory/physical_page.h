@@ -13,11 +13,15 @@
 #define PAGE_2M_SIZE (1UL << PAGE_2M_SHIFT)
 #define PAGE_4K_SIZE (1UL << PAGE_4K_SHIFT)
 
-#define PAGE_2M_MASK (~(PAGE_2M_SIZE - 1))
-#define PAGE_4K_MASK (~(PAGE_4K_SIZE - 1))
+#define PAGE_2M_MASK_LOW (~(PAGE_2M_SIZE - 1))
+#define PAGE_4K_MASK_LOW (~(PAGE_4K_SIZE - 1))
 
-#define PAGE_2M_ALIGN(addr) (((unsigned long)(addr) + PAGE_2M_SIZE - 1) & PAGE_2M_MASK)
-#define PAGE_4K_ALIGN(addr) (((unsigned long)(addr) + PAGE_4K_SIZE - 1) & PAGE_4K_MASK)
+#define PAGE_2M_MASK_HIGH (~PAGE_2M_MASK_LOW)
+#define PAGE_4K_MASK_HIGH (~PAGE_4K_MASK_LOW)
+
+
+#define PAGE_2M_ALIGN(addr) (((unsigned long)(addr) + PAGE_2M_SIZE - 1) & PAGE_2M_MASK_LOW)
+#define PAGE_4K_ALIGN(addr) (((unsigned long)(addr) + PAGE_4K_SIZE - 1) & PAGE_4K_MASK_LOW)
 
 class Zone;
 struct Page
