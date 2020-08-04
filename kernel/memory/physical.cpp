@@ -11,6 +11,7 @@ void PhysicalMemory::Add(multiboot_mmap_entry *mmap)
     uint64_t start = PAGE_4K_ALIGN(mmap->addr);
     uint64_t end = ((mmap->addr + mmap->len) >> PAGE_4K_SHIFT) << PAGE_4K_SHIFT;
     printk("zone start: %p end: %p\n", start, end);
+    printk("actual end: %p\n", mmap->addr + mmap->len);
     if (start == 0x0)
         return;
     if (end <= start)
@@ -46,6 +47,6 @@ void PhysicalMemory::Free(Page *page)
 
 bool PhysicalMemory::Reserve(uint64_t physical_address)
 {
-    physical_address &= PAGE_4K_MASK;
+    physical_address &= PAGE_4K_MASK_LOW;
     this->zones->Reserve((physical_address - 0x100000) / PAGE_4K_SIZE);
 }
