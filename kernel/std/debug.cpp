@@ -12,7 +12,6 @@ static ELFDebugSymbol elf_symbol;
 void debug_init(ELFDebugSymbol symbol)
 {
     printk("debug_init. \n");
-    // printk("symtab %p, size %x, strtab %p, size %x\n", symbol.symtab, symbol.symtabsz,  symbol.strtab, symbol.strtabsz);
     elf_symbol = symbol;
 }
 
@@ -20,7 +19,7 @@ static const char *elf_lookup_symbol(uint64_t addr)
 {
     for (int i = 0; i < (elf_symbol.symtabsz); i++)
     {
-        if (ELF64_ST_TYPE(elf_symbol.symtab[i].st_info) != 0x2)
+        if (ELF64_ST_TYPE(elf_symbol.symtab[i].st_info) != STT_FUNC)
         {
             continue;
         }
@@ -47,7 +46,7 @@ static void print_stack_trace()
     asm volatile("mov %%rbp, %0"
                  : "=r"(rbp));
 
-    auto kernel_stack_start = (uint64_t)&STACK_START + PAGE_OFFSET;
+    auto kernel_stack_start = (uint64_t)&STACK_START;
     // we keep poping stack until reaching start_kernel_base
     for (int i = 0; i < 10 && *rbp != kernel_stack_start; ++i)
     // while (*rbp != start_kernel_base)
@@ -60,10 +59,6 @@ static void print_stack_trace()
         // mov rsp, rbp;
         rip = rbp + 1;
         // rip points to the stack which it's value *rip is the return address
-        // the symbol in elf is mapped at the start of 0x1500
-        // but we've shifted the address to kernel space
-        // and we now executing with virtual address like 0xffff800000001500
-        // so translation from *rip to it's original is needed
         auto symbol = elf_lookup_symbol(*rip);
         printk("   [%x] %s\n", *rip, symbol);
 
@@ -72,7 +67,6 @@ static void print_stack_trace()
         // we make rbp points to the previous one on stack
         rbp = (uint64_t *)*rbp;
     }
-    
 }
 
 void panic(const char *msg)
@@ -82,7 +76,10 @@ void panic(const char *msg)
     print_stack_trace();
     printk("***\n");
 
-    // 致命错误发生后打印栈信息后停止在这里
     while (1)
-        ;
+    {
+        asm volatile(
+            "cli \n\t"
+            "hlt \n\t");
+    };
 }

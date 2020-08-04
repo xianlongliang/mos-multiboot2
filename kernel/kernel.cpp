@@ -1,7 +1,6 @@
 #include <std/printk.h>
 #include <gdt.h>
 #include <interrupt/idt.h>
-#include <interrupt/timer.h>
 #include <setup.h>
 #include <thread/task.h>
 #include "syscall.h"
@@ -20,11 +19,6 @@ extern "C" void Kernel_Main(unsigned long addr)
   idt_init();
   syscall_init();
   kmalloc_init();
-  vector<SlabNode> vslab(1);
-  vslab.push_back(SlabNode());
-  vslab.push_back(SlabNode());
-  vslab.pop_back();
-  timer_init(1000);
   task_init();
   // sti();
 
