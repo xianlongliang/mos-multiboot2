@@ -24,6 +24,11 @@ add_executable(kernel
         kernel/gdt.h
         kernel/gdt.cpp
 
+        kernel/acpi/rsdp.h
+        kernel/acpi/rsdp.cpp
+        kernel/acpi/rsdt.h
+        kernel/acpi/rsdt.cpp
+        
         kernel/thread/regs.h
         kernel/thread/condition_variable.h
         kernel/thread/condition_variable.cpp
@@ -69,8 +74,14 @@ add_executable(kernel
         kernel/memory/mapping.h
         kernel/memory/mapping.cpp
         kernel/memory/slab.cpp
+        kernel/memory/heap.h
+        kernel/memory/heap.cpp
         kernel/memory/kmalloc.h
         kernel/memory/kmalloc.cpp
+        kernel/interrupt/pit.h
+        kernel/interrupt/pit.cpp
+        kernel/interrupt/io_apic.h
+        kernel/interrupt/io_apic.cpp
         kernel/interrupt/apic.h
         kernel/interrupt/apic.cpp
         kernel/interrupt/idt.h
