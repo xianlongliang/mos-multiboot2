@@ -26,16 +26,16 @@ implementations :
 - [x] task context switch (kernel and userland)
 - [x] round robin scheduler ???
 - [x] syscall and sysret
-- [x] ide driver
+- [x] ide driver (not commit yet)
 - [x] some stl c++ containers
 - [x] Shell
 - [x] APIC
+- [x] IO-APIC
 
 todos:
 
 - [ ] VFS
 - [ ] SFS Filesystem
-- [ ] IO-APIC
 - [ ] SMP
 
 ## Building
