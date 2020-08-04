@@ -5,7 +5,7 @@
 #include "idt.h"
 #include <thread/scheduler.h>
 
-void timer_callback(uint64_t error_code, uint64_t rsp, uint64_t rflags, uint64_t rip)
+void timer_callback_pic(uint64_t error_code, uint64_t rsp, uint64_t rflags, uint64_t rip)
 {
     static uint64_t tick = 0;
     Scheduler::GetInstance()->Schedule();
@@ -14,7 +14,7 @@ void timer_callback(uint64_t error_code, uint64_t rsp, uint64_t rflags, uint64_t
 void timer_init(uint32_t frequency)
 {
     // 注册时间相关的处理函数
-    register_interrupt_handler(IRQ0, timer_callback);
+    register_interrupt_handler(IRQ0, timer_callback_pic);
 
     // Intel 8253/8254 PIT芯片 I/O端口地址范围是40h~43h
     // 输入频率为 1193180，frequency 即每秒中断次数
