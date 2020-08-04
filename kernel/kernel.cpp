@@ -10,6 +10,10 @@
 #include <std/unique_ptr.h>
 #include <std/list.h>
 #include <std/vector.h>
+#include <interrupt/io_apic.h>
+#include <interrupt/apic.h>
+#include <acpi/rsdt.h>
+#include <acpi/rsdp.h>
 
 extern "C" void Kernel_Main(unsigned long addr)
 {
@@ -18,6 +22,8 @@ extern "C" void Kernel_Main(unsigned long addr)
   gdt_init();
   idt_init();
   syscall_init();
+  RSDT::GetInstance()->Init();
+  APIC::GetInstance()->Init();
   kmalloc_init();
   task_init();
   // sti();
