@@ -13,6 +13,8 @@ extern "C"
     void bzero(void *dest, uint64_t len);
 
     int strcmp(const char *s1, const char *s2);
+    
+    int strncmp(const char *s1, const char *s2, int n);
 
     char *strcpy(char *dest, const char *src);
 

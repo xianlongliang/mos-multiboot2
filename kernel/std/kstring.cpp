@@ -50,6 +50,22 @@ int strcmp(const char *s1, const char *s2)
     return res;
 }
 
+int strncmp(const char *s1, const char *s2, int n)
+{
+    int8_t res = 0;
+    while (n > 0 && *s1 && !(res = *(uint8_t *)s2 - *(uint8_t *)s1))
+    {
+        ++s1;
+        ++s2;
+        --n;
+    }
+    if (res < 0)
+        res = -1;
+    else if (res > 0)
+        res = 1;
+    return res;
+}
+
 char *strcpy(char *dst, const char *src)
 {
     char *tmp = dst;
