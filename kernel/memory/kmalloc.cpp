@@ -4,7 +4,7 @@
 #include "physical.h"
 #include <std/debug.h>
 #include <std/new.h>
-#include <interrupt/apic.h>
+#include "heap.h"
 
 struct kmalloc_meta
 {
@@ -12,15 +12,6 @@ struct kmalloc_meta
     void *padding;
 };
 
-static void *brk = (void *)0x800000 + PAGE_OFFSET;
-
-static void *brk_alloc(uint64_t size)
-{
-    printk("brk_alloc %d\n", size);
-    auto res = brk;
-    brk = brk + size;
-    return res;
-}
 #define KMALLOC_CACHE_COUNT 10
 
 static Slab kmalloc_cache[KMALLOC_CACHE_COUNT];
@@ -28,7 +19,7 @@ static Slab kmalloc_cache[KMALLOC_CACHE_COUNT];
 void kmalloc_init()
 {
     // reserve 1 page for apic
-    auto apic_vbase = brk_alloc(PAGE_4K_SIZE);
+    auto apic_vbase = brk_up(PAGE_4K_SIZE);
 
     int init_slab_size = 32;
     for (int i = 0; i < 10; ++i, init_slab_size *= 2)
@@ -36,30 +27,29 @@ void kmalloc_init()
         kmalloc_cache[i].object_size = init_slab_size;
         kmalloc_cache[i].total_used = 0;
         kmalloc_cache[i].total_free = PAGE_4K_SIZE / init_slab_size == 0 ? 1 : PAGE_4K_SIZE / init_slab_size;
-        auto slab_node = (SlabNode *)brk_alloc(sizeof(SlabNode));
+        auto slab_node = (SlabNode *)brk_up(sizeof(SlabNode));
         list_init(&slab_node->list);
         slab_node->slab = &kmalloc_cache[i];
         slab_node->used_count = 0;
         slab_node->free_count = kmalloc_cache[i].total_free;
         auto bitmap_size = (slab_node->free_count / 8) == 0 ? 1 : (slab_node->free_count / 8);
-        slab_node->bitmap = new (brk_alloc(PAGE_4K_SIZE - sizeof(SlabNode))) Bitmap(bitmap_size, true);
-        slab_node->vaddr = brk_alloc(init_slab_size < PAGE_4K_SIZE ? PAGE_4K_SIZE : init_slab_size);
+        slab_node->bitmap = new (brk_up(PAGE_4K_SIZE - sizeof(SlabNode))) Bitmap(bitmap_size, true);
+        slab_node->vaddr = brk_up(init_slab_size < PAGE_4K_SIZE ? PAGE_4K_SIZE : init_slab_size);
         kmalloc_cache[i].pool = slab_node;
     }
 
-    APIC::GetInstance()->Init(apic_vbase);
 }
 
 void kmalloc_create(int idx)
 {
     auto &cache = kmalloc_cache[idx];
-    auto slab_node = (SlabNode *)brk_alloc(sizeof(SlabNode));
+    auto slab_node = (SlabNode *)brk_up(sizeof(SlabNode));
 
     slab_node->used_count = 0;
     slab_node->free_count = PAGE_4K_SIZE / cache.object_size == 0 ? 1 : PAGE_4K_SIZE / cache.object_size;
-    slab_node->vaddr = brk_alloc(PAGE_4K_SIZE);
+    slab_node->vaddr = brk_up(PAGE_4K_SIZE);
     auto bitmap_size = (slab_node->free_count / 8) == 0 ? 1 : (slab_node->free_count / 8);
-    slab_node->bitmap = new (brk_alloc(PAGE_4K_SIZE - sizeof(SlabNode))) Bitmap(bitmap_size, true);
+    slab_node->bitmap = new (brk_up(PAGE_4K_SIZE - sizeof(SlabNode))) Bitmap(bitmap_size, true);
     slab_node->slab = &cache;
     list_init(&slab_node->list);
     list_add_to_behind(&cache.pool->list, &slab_node->list);
