@@ -31,7 +31,7 @@ extern "C" char pde;
 
 int vmap_frame_kernel(void *vaddr, void *paddr)
 {
-
+    printk("mapping %p -> %p\n", vaddr, paddr);
     auto ppde = &pde;
     auto pde_offset = ((uint64_t)vaddr & 0x3fe00000) >> 21;
     auto pte_offset = ((uint64_t)vaddr & 0x1ff000) >> 12;
@@ -69,6 +69,12 @@ int vmap_frame_kernel(void *vaddr, void *paddr)
 
     flush_tlb();
     return 0;
+}
+
+// overload
+int vmap_frame_kernel(uint64_t vaddr, uint64_t paddr)
+{
+    return vmap_frame_kernel((void *)vaddr, (void *)paddr);
 }
 
 int vmap_frame_kernel(void *vaddr)
