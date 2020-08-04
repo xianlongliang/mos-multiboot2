@@ -7,6 +7,7 @@
 #include <std/debug.h>
 #include <memory/virtual_page.h>
 #include <memory/mapping.h>
+#include <acpi/rsdp.h>
 
 extern "C" char pml4;
 extern "C" char pdpe;
@@ -49,17 +50,36 @@ void do_8mb_mapping()
 
 void basic_init(void *mbi_addr)
 {
+
+    do_8mb_mapping();
+    vmap_init();
+
+    mbi_addr = Phy_To_Virt(mbi_addr);
+
     auto addr = mbi_addr;
     auto mbi_size = *(uint64_t *)addr;
-    auto mbi_end = addr + mbi_size + KERNEL_VIRTUAL_START;
+    auto mbi_end = addr + mbi_size;
     PhysicalMemory::ZONE_VIRTUAL_START = (void *)mbi_end;
 
     for (auto tag = (struct multiboot_tag *)(addr + 8);
          tag->type != MULTIBOOT_TAG_TYPE_END;
          tag = (struct multiboot_tag *)((multiboot_uint8_t *)tag + ((tag->size + 7) & ~7)))
     {
+        printk("type: %d\n", tag->type);
         switch (tag->type)
         {
+        case MULTIBOOT_TAG_TYPE_ACPI_NEW:
+        {
+            printk("no support for MULTIBOOT_TAG_TYPE_ACPI_NEW\n");
+            break;
+        }
+        case MULTIBOOT_TAG_TYPE_ACPI_OLD:
+        {
+            auto rsdp_tag = (multiboot_tag_old_acpi *)tag;
+            printk("rsdp: %p, size: %d\n", rsdp_tag->rsdp, rsdp_tag->size);
+            RSDP::GetInstance()->Init(0, &rsdp_tag->rsdp);
+            break;
+        }
         case MULTIBOOT_TAG_TYPE_MODULE:
         {
             auto module = (multiboot_tag_module *)tag;
@@ -78,7 +98,6 @@ void basic_init(void *mbi_addr)
                  (multiboot_uint8_t *)mmap < (multiboot_uint8_t *)tag + tag->size;
                  mmap = (multiboot_mmap_entry *)((uint8_t *)mmap + ((multiboot_tag_mmap *)tag)->entry_size))
             {
-
                 if (mmap->type == MULTIBOOT_MEMORY_AVAILABLE)
                 {
                     PhysicalMemory::GetInstance()->Add(mmap);
@@ -111,7 +130,4 @@ void basic_init(void *mbi_addr)
         }
         }
     }
-
-    do_8mb_mapping();
-    vmap_init();
 }
