@@ -31,12 +31,12 @@ implementations :
 - [x] Shell
 - [x] APIC
 - [x] IO-APIC
+- [x] SMP
 
 todos:
 
 - [ ] VFS
 - [ ] SFS Filesystem
-- [ ] SMP
 
 ## Building
 
