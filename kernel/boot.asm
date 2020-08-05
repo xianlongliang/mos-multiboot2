@@ -63,13 +63,60 @@ GDT.Pointer equ $ - KERNEL_TEXT_BASE
 
 align PAGE_SIZE
 STACK_END:
-    times PAGE_SIZE * 4 db 0
+    times PAGE_SIZE db 0
 global STACK_START
 STACK_START:
 
+align PAGE_SIZE
+SMP_STACK_END:
+    times PAGE_SIZE db 0
+global SMP_STACK_START
+SMP_STACK_START:
+
+extern smp_callback
 section .text
-bits 32
+global SMP_JMP
+BITS 16
+SMP_JMP:
+    cli
+    
+    in al,0x92
+    or al,0000_0010B
+    out 0x92,al
+
+    mov eax, 10100000b                ; Set the PAE and PGE bit.
+    mov cr4, eax
+
+    mov eax, pml4
+    mov cr3, eax
+
+    mov ecx, 0xC0000080               ; Read from the EFER MSR. 
+    rdmsr    
+ 
+    or eax, 0x00000100                ; Set the LME bit.
+    wrmsr
+ 
+    mov ebx, cr0                      ; Activate long mode -
+    or ebx,0x80000001                 ; - by enabling paging and protection simultaneously.
+    mov cr0, ebx
+
+    lgdt [GDT.Pointer] 
+    
+    jmp CODE_SEG:(smp_protect_mode - KERNEL_TEXT_BASE)
+    
+BITS 64
+smp_protect_mode:
+    ; multiple apus share the same stack
+    ; we don't care because 
+    mov rsp, SMP_STACK_START
+    mov rbp, rsp
+        
+    mov rax, smp_callback
+    call rax
+
+section .text
 global _start
+bits 32
 _start:
 
     mov eax, pdpe_low
@@ -108,6 +155,7 @@ _start:
     rdmsr
     or eax, MSR_EFER_LME | MSR_EFER_SCE
     wrmsr
+
     mov eax, KERNEL_CR0
     mov cr0, eax
 
