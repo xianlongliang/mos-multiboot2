@@ -10,6 +10,8 @@ class vector
 {
 
 public:
+    vector() {}
+
     vector(uint64_t capacity) : capacity(capacity)
     {
         this->pval = (T *)kmalloc(sizeof(T) * capacity, 0);
@@ -33,13 +35,13 @@ public:
     {
         if (this->empty())
             panic("pop_back empty vector");
-        
+
         this->pval[this->current_size--].~T();
     }
 
     T &back()
     {
-        return this->pval[this->current_size];
+        return this->pval[this->current_size - 1];
     }
 
     void push_front(T &&val)
@@ -67,6 +69,9 @@ public:
         }
     }
 
+    T& operator[](uint64_t index) {
+        return this->pval[index];
+    }
     // // Minimum required for range-for loop
     // template <typename IT>
     // struct Iterator
@@ -99,12 +104,14 @@ private:
     void expand()
     {
         uint64_t target_capacity = capacity * 2;
-        auto new_pval = (T *)kmalloc(target_capacity, 0);
+        if (target_capacity == 0)
+            target_capacity = 1;
+        auto new_pval = (T *)kmalloc(target_capacity * sizeof(T), 0);
         for (int i = 0; i < this->current_size; ++i)
         {
             new (&new_pval[i]) T(move(this->pval[i]));
         }
-        kfree(this->pval);
+        if (this->pval) kfree(this->pval);
         this->pval = new_pval;
         this->capacity = target_capacity;
     }
