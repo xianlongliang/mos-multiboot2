@@ -1,4 +1,4 @@
-#include <std/stdint.h>
+#include "page_fault.h"
 #include <std/printk.h>
 #include <memory/mapping.h>
 
@@ -25,7 +25,7 @@ struct page_fault_error_code
     uint32_t RMP : 1;
 };
 
-extern "C" void page_fault_handler(uint64_t error_code, uint64_t rsp, uint64_t rflags, uint64_t rip)
+void page_fault_handler(uint64_t error_code, uint64_t rsp, uint64_t rflags, uint64_t rip)
 {
     auto pfec = (page_fault_error_code *)&error_code;
     auto pfaddr = GetCR2();
