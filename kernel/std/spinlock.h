@@ -1,10 +1,10 @@
 #pragma once
 #include <std/stdint.h>
-#include <std/noncopyable.h>
 
-class Spinlock : private noncopyable
+class Spinlock
 {
 public:
+
     inline void lock()
     {
         asm volatile("1:	\n\t"
@@ -20,6 +20,7 @@ public:
                      :
                      : "memory");
     }
+    
     inline void unlock()
     {
         asm volatile("movq	$1,	%0	\n\t"
