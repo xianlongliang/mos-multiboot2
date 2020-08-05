@@ -89,8 +89,6 @@ add_executable(kernel
         kernel/interrupt/isr.asm
         kernel/interrupt/irq.asm
         kernel/interrupt/page_fault.cpp
-        kernel/interrupt/timer.h
-        kernel/interrupt/timer.cpp
         kernel/interrupt/keyboard.h
         kernel/interrupt/keyboard.cpp
         kernel/syscall/read.cpp
