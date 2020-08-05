@@ -2,18 +2,19 @@
 #include <std/kstring.h>
 #include <std/printk.h>
 #include "tss.h"
+#include <std/singleton.h>
 
-static inline void load_gdt(struct GDTP *p)
+static inline void load_gdt(struct GDT::GDTPointer *p)
 {
-    __asm__("lgdt %0" ::"m"(*p));
+    asm("lgdt %0" ::"m"(*p));
 }
 
 static inline void load_tr(uint16_t tr)
 {
-    __asm__ __volatile("ltr %0" ::"m"(tr));
+    asm volatile("ltr %0" ::"m"(tr));
 }
 
-void set_gdt_tss(int n, void *tss_addr, uint16_t limit, uint16_t attr)
+void GDT::set_gdt_tss(int n, void *tss_addr, uint16_t limit, uint16_t attr)
 {
     auto addr = reinterpret_cast<uint64_t>(tss_addr);
     struct GDT_TSS *ts = (struct GDT_TSS *)(&gdt_table[n]);
@@ -30,7 +31,7 @@ void set_gdt_tss(int n, void *tss_addr, uint16_t limit, uint16_t attr)
     ts->high[4] = (uint8_t)(addr >> 56);
 }
 
-void gdt_init()
+void GDT::Init()
 {
     tss_init();
     set_gdt_tss(7, &get_tss(), 103, 0x89);
