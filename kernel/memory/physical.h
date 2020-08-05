@@ -9,7 +9,7 @@
     do                            \
     {                             \
         unsigned long tmpreg;     \
-        __asm__ __volatile__(     \
+        asm volatile(     \
             "movq	%%cr3,	%0	\n\t" \
             "movq	%0,	%%cr3	\n\t" \
             : "=r"(tmpreg)        \
@@ -20,7 +20,7 @@
 inline void *Get_CR3()
 {
     void *addr;
-    __asm__ __volatile__(
+    asm volatile(
         "movq	%%cr3,	%0	\n\t"
         : "=r"(addr)
         :

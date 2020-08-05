@@ -128,5 +128,5 @@ void APIC::timer_init()
     apic_write(APIC_LVT_TIMER, IRQ0 | APIC_TIMER_PERIODIC);
     apic_write(APIC_TIMER_ICR, ticks);
 
-    register_interrupt_handler(IRQ0, timer_callback);
+    IDT::GetInstance()->Register(IRQ0, timer_callback);
 }

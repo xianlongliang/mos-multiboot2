@@ -83,7 +83,7 @@ task_struct *get_current_task();
 inline struct task_struct *get_current()
 {
     struct task_struct *current = nullptr;
-    __asm__ __volatile__("andq %%rsp,%0	\n\t"
+    asm volatile("andq %%rsp,%0	\n\t"
                          : "=r"(current)
                          : "0"(~4095UL));
     return current;

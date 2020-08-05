@@ -34,7 +34,7 @@
 
 inline void wrmsr(unsigned long address, unsigned long value)
 {
-    asm __volatile__("wrmsr	\n\t" ::"d"(value >> 32), "a"(value & 0xffffffff), "c"(address)
+    asm volatile("wrmsr	\n\t" ::"d"(value >> 32), "a"(value & 0xffffffff), "c"(address)
                      : "memory");
 }
 

@@ -5,6 +5,9 @@
 #include <std/port_ops.h>
 #include "keyboard.h"
 #include "apic.h"
+#include "page_fault.h"
+
+static interrupt_handler_t interrupt_handlers[INTERRUPT_MAX] __attribute__((aligned(8)));
 
 #define IO_PIC1 (0x20) // Master (IRQs 0-7)
 #define IO_PIC2 (0xA0) // Slave  (IRQs 8-15)
@@ -12,23 +15,16 @@
 #define IO_PIC1C (IO_PIC1 + 1)
 #define IO_PIC2C (IO_PIC2 + 1)
 
-enum IDT_Descriptor_Type
-{
-    INTERRUPT = 0x8E,
-    TRAP = 0x8F,
-    SYSTEM = 0xEF
-};
 
-static interrupt_handler_t interrupt_handlers[INTERRUPT_MAX] __attribute__((aligned(8)));
 
-void register_interrupt_handler(uint8_t n, interrupt_handler_t h)
+void IDT::Register(uint8_t n, interrupt_handler_t handler)
 {
-    interrupt_handlers[n] = h;
+    interrupt_handlers[n] = handler;
 }
 
-static inline void load_idt(struct IDTR *idt_r)
+static inline void load_idt(struct IDT::IDTR *idt_r)
 {
-    __asm__("lidt %0" ::"m"(*idt_r));
+    asm volatile("lidt %0" ::"m"(*idt_r));
 }
 
 extern "C"
@@ -87,10 +83,14 @@ extern "C"
 #define CONVERT_ISR_ADDR(i) (void *)(&isr##i)
 #define CONVERT_IRQ_ADDR(i) (void *)(&irq##i)
 
-static inline void _set_gate(IDT_Descriptor_Type type, unsigned int n, unsigned char ist, void *addr)
+#define set_trap_gate(n, ist, addr) set_gate(TRAP, n, ist, addr);
+#define set_intr_gate(n, ist, addr) set_gate(INTERRUPT, n, ist, addr);
+#define set_system_gate(n, ist, addr) set_gate(SYSTEM, n, ist, addr);
+
+void IDT::set_gate(IDT_Descriptor_Type type, unsigned int n, unsigned char ist, void *addr)
 {
     uint64_t handler = reinterpret_cast<uint64_t>(addr);
-    auto &id = idt[n];
+    auto &id = this->idt[n];
     id.offset_low = (uint16_t)handler;
     id.selector = CODE_SEG;
     id.istack = 0;
@@ -100,17 +100,7 @@ static inline void _set_gate(IDT_Descriptor_Type type, unsigned int n, unsigned 
     id.zero = 0;
 }
 
-#define set_trap_gate(n, ist, addr) _set_gate(TRAP, n, ist, addr);
-#define set_intr_gate(n, ist, addr) _set_gate(INTERRUPT, n, ist, addr);
-#define set_system_gate(n, ist, addr) _set_gate(SYSTEM, n, ist, addr);
-
-extern "C"
-{
-    void page_fault_handler(uint64_t error_code, uint64_t rsp, uint64_t rflags, uint64_t rip);
-}
-
-
-void idt_init()
+void IDT::Init()
 {
     bzero(interrupt_handlers, INTERRUPT_MAX * sizeof(interrupt_handler_t));
 
@@ -208,8 +198,8 @@ void idt_init()
     set_intr_gate(46, 1, CONVERT_IRQ_ADDR(14));
     set_intr_gate(47, 1, CONVERT_IRQ_ADDR(15));
 
-    register_interrupt_handler(14, page_fault_handler);
-    register_interrupt_handler(33, keyboard_irq_handler);
+    this->Register(14, page_fault_handler);
+    this->Register(IRQ1, keyboard_irq_handler);
     load_idt(&idtr);
     printk("gdt_init IDT_PTR %x\n", &idtr);
 }
@@ -232,23 +222,23 @@ extern "C" void isr_handler(uint64_t isr_number, uint64_t error_code, uint64_t r
     }
 }
 
-static void clear_interrupt_chip(uint32_t intr_no)
-{
-    // 设置OCW3
-    // 发送中断结束信号给 PICs
-    // 按照我们的设置，从 32 号中断起为用户自定义中断
-    // 因为单片的 Intel 8259A 芯片只能处理 8 级中断
-    // 故大于等于 40 的中断号是由从片处理的
-    if (intr_no >= 40)
-    {
-        // printk("reset io_pic2");
-        // 发送重设信号给从片
-        outb(IO_PIC2, 0x20);
-    }
-    // printk("reset io_pic1");
-    // 发送重设信号给主片
-    outb(IO_PIC1, 0x20);
-}
+// static void clear_interrupt_chip(uint32_t intr_no)
+// {
+//     // 设置OCW3
+//     // 发送中断结束信号给 PICs
+//     // 按照我们的设置，从 32 号中断起为用户自定义中断
+//     // 因为单片的 Intel 8259A 芯片只能处理 8 级中断
+//     // 故大于等于 40 的中断号是由从片处理的
+//     if (intr_no >= 40)
+//     {
+//         // printk("reset io_pic2");
+//         // 发送重设信号给从片
+//         outb(IO_PIC2, 0x20);
+//     }
+//     // printk("reset io_pic1");
+//     // 发送重设信号给主片
+//     outb(IO_PIC1, 0x20);
+// }
 
 extern "C" void irq_handler(uint64_t irq_number, uint64_t error_code, uint64_t rsp, uint64_t rflags, uint64_t rip)
 {
@@ -260,7 +250,7 @@ extern "C" void irq_handler(uint64_t irq_number, uint64_t error_code, uint64_t r
     }
     else
     {
-        // cpu_hlt();
+        panic("!interrupt_handlers[irq_number]");
     }
     // printk("irq: %d error_code: %d\n", irq_number, error_code);
 }
