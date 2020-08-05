@@ -29,12 +29,13 @@ public:
     void Init();
     void Register(uint8_t n, interrupt_handler_t handler);
 
-    struct NO_ALIGNMENT IDTR
+    struct NO_ALIGNMENT DescriptorPointer
     {
         uint16_t limit;
         void *idt_address;
     };
-    struct NO_ALIGNMENT IDT_Descriptor
+
+    struct NO_ALIGNMENT Descriptor
     {
         uint16_t offset_low;    // offset bits 0..15
         uint16_t selector;      // a code segment selector in GDT or LDT
@@ -44,7 +45,8 @@ public:
         uint32_t offset_high;   // offset bits 32..63
         uint32_t zero;          // reserved
     };
-    enum IDT_Descriptor_Type
+
+    enum DescriptorType
     {
         INTERRUPT = 0x8E,
         TRAP = 0x8F,
@@ -52,8 +54,8 @@ public:
     };
 
 private:
-    IDT_Descriptor idt[INTERRUPT_MAX];
-    IDTR idtr = {uint16_t(INTERRUPT_MAX * sizeof(IDT_Descriptor) - 1), idt};
+    Descriptor idt[INTERRUPT_MAX];
+    DescriptorPointer idtr = {uint16_t(INTERRUPT_MAX * sizeof(Descriptor) - 1), idt};
 
-    void set_gate(IDT_Descriptor_Type type, unsigned int n, unsigned char ist, void *addr);
+    void set_gate(DescriptorType type, unsigned int n, unsigned char ist, void *addr);
 };

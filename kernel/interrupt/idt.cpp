@@ -9,20 +9,12 @@
 
 static interrupt_handler_t interrupt_handlers[INTERRUPT_MAX] __attribute__((aligned(8)));
 
-#define IO_PIC1 (0x20) // Master (IRQs 0-7)
-#define IO_PIC2 (0xA0) // Slave  (IRQs 8-15)
-
-#define IO_PIC1C (IO_PIC1 + 1)
-#define IO_PIC2C (IO_PIC2 + 1)
-
-
-
 void IDT::Register(uint8_t n, interrupt_handler_t handler)
 {
     interrupt_handlers[n] = handler;
 }
 
-static inline void load_idt(struct IDT::IDTR *idt_r)
+static inline void load_idt(struct IDT::DescriptorPointer *idt_r)
 {
     asm volatile("lidt %0" ::"m"(*idt_r));
 }
@@ -87,7 +79,7 @@ extern "C"
 #define set_intr_gate(n, ist, addr) set_gate(INTERRUPT, n, ist, addr);
 #define set_system_gate(n, ist, addr) set_gate(SYSTEM, n, ist, addr);
 
-void IDT::set_gate(IDT_Descriptor_Type type, unsigned int n, unsigned char ist, void *addr)
+void IDT::set_gate(IDT::DescriptorType type, unsigned int n, unsigned char ist, void *addr)
 {
     uint64_t handler = reinterpret_cast<uint64_t>(addr);
     auto &id = this->idt[n];
@@ -103,49 +95,6 @@ void IDT::set_gate(IDT_Descriptor_Type type, unsigned int n, unsigned char ist, 
 void IDT::Init()
 {
     bzero(interrupt_handlers, INTERRUPT_MAX * sizeof(interrupt_handler_t));
-
-    // /*                   ____________                          ____________
-    // Real Time Clock --> |            |   Timer -------------> |            |
-    // ACPI -------------> |            |   Keyboard-----------> |            |      _____
-    // Available --------> | Secondary  |----------------------> | Primary    |     |     |
-    // Available --------> | Interrupt  |   Serial Port 2 -----> | Interrupt  |---> | CPU |
-    // Mouse ------------> | Controller |   Serial Port 1 -----> | Controller |     |_____|
-    // Co-Processor -----> |            |   Parallel Port 2/3 -> |            |
-    // Primary ATA ------> |            |   Floppy disk -------> |            |
-    // Secondary ATA ----> |____________|   Parallel Port 1----> |____________|
-    // */
-    // // 初始化主片、从片的ICW1
-    // // 0001 0001
-    // outb(0x20, 0x11);
-    // outb(0xA0, 0x11);
-
-    // // 设置主片ICW2 IRQ 从 0x20(32) 号中断开始
-    // outb(0x21, 0x20);
-
-    // // 设置从片ICW2 IRQ 从 0x28(40) 号中断开始
-    // outb(0xA1, 0x28);
-
-    // // 设置主片ICW3 IR2 引脚连接从片
-    // outb(0x21, 0x04);
-
-    // // 设置从片ICW3 告诉从片输出引脚和主片 IR2 号相连
-    // outb(0xA1, 0x02);
-
-    // // 设置ICW4 设置主片和从片按照 x86 的方式工作
-    // outb(0x21, 0x01);
-    // outb(0xA1, 0x01);
-
-    // // 设置OCW1 设置主从片允许中断
-    // // outb(0x21, 0xfd);
-    // // outb(0xA1, 0xff);
-
-    // // outb(0x21, 0x0);
-    // // outb(0xA1, 0x0);
-
-    // // master irq0(clock) irq1(keyboard) irq2(cascade)
-    // outb(0x21, 0xf8);
-    // // slave irq 14
-    // outb(0xA1, 0xbf);
 
     set_intr_gate(0, 1, CONVERT_ISR_ADDR(0));
     set_intr_gate(1, 1, CONVERT_ISR_ADDR(1));
