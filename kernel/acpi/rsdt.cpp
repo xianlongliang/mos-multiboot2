@@ -5,6 +5,7 @@
 #include <std/kstring.h>
 #include <memory/physical_page.h>
 #include <interrupt/io_apic.h>
+#include <smp/cpu.h>
 
 struct acpi_rsdt_header_t
 {
@@ -118,6 +119,15 @@ void RSDT::Init()
                 case 0:
                 {
                     auto plae = (acpi_apic_t::processor_local_apic_entry *)ent;
+                    if (plae->flags == 0)
+                    {
+                        printk("cpu: %d disabled\n", plae->apic_processor_id);
+                    }
+                    else
+                    {
+                        CPU::GetInstance()->Add(plae->apic_id);
+                    }
+
                     break;
                 }
                 // I/O APIC
@@ -154,4 +164,5 @@ void RSDT::Init()
             printk("find\n");
         }
     }
+
 }
