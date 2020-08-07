@@ -1,5 +1,8 @@
 #pragma once
+
 #include <std/stdint.h>
+#include <std/vector.h>
+#include <std/singleton.h>
 
 // place it in gdt
 struct NO_ALIGNMENT GDT_TSS
@@ -30,6 +33,18 @@ struct NO_ALIGNMENT tss_struct
     uint16_t io_map_base_addr;
 };
 
+class TSS : public Singleton<TSS>
+{
+public:
+    void Add()
+    {
+        ap_tss.push_back(tss_struct{0});
+    }
+
+private:
+    vector<tss_struct> ap_tss;
+};
+
 extern "C"
 {
     void tss_init();
@@ -37,4 +52,6 @@ extern "C"
     void set_tss(tss_struct &tss);
 
     tss_struct &get_tss();
+
+    void set_gdt_tss(void *entry, void *tss_addr, uint16_t limit, uint16_t attr);
 }
