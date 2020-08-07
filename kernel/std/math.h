@@ -24,3 +24,8 @@ inline int64_t pow(int64_t base, int64_t exp)
     }
     return result;
 }
+
+template<class L, class R>
+L& max(L a, R b) {
+    return (a > b) ? a : b;
+}
