@@ -17,29 +17,7 @@ static inline void load_tr(uint16_t tr)
     asm volatile("ltr %0" ::"m"(tr));
 }
 
-struct cpuid_struct
-{
-    uint32_t rax;
-    uint32_t rbx;
-    uint32_t rcx;
-    uint32_t rdx;
-};
 
-static cpuid_struct cpuid(uint32_t main_op)
-{
-    int a, b, c, d;
-    asm volatile(
-        "mov %0, %%eax \n\t"
-        "cpuid      \n\t"
-        "mov %%eax, %0\n\t"
-        "mov %%ebx, %1\n\t"
-        "mov %%ecx, %2\n\t"
-        "mov %%edx, %3\n\t"
-        : "=r"(a), "=r"(b), "=r"(c), "=r"(d)
-        : "0"(main_op)
-        : "rax", "rbx", "rcx", "rdx");
-    return {a, b, c, d};
-}
 
 // void GDT::Init()
 // {
@@ -52,9 +30,7 @@ static cpuid_struct cpuid(uint32_t main_op)
 
 void GDT::Init()
 {
-    auto cpuid_struct = cpuid(0x1);
-    auto local_apic_id = cpuid_struct.rbx >> 24;
-    auto cpu_struct = CPU::GetInstance()->Get(local_apic_id);
+    auto cpu_struct = CPU::GetInstance()->Get();
     load_gdt(&cpu_struct.gdt.gdt_ptr);
     load_tr(0x38);
     printk("gdt_init GDT_PTR %x\n", &gdt_ptr);
