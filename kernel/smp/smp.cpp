@@ -2,13 +2,15 @@
 #include <std/spinlock.h>
 #include <interrupt/apic.h>
 #include <interrupt/idt.h>
+#include <interrupt/pit.h>
 #include <gdt.h>
+#include <thread/task.h>
 
 static Spinlock smp_lock;
 
 void SMP::Init()
 {
-        GDT::GetInstance()->Init();
+    GDT::GetInstance()->Init();
 
     smp_lock = Spinlock();
 
@@ -23,15 +25,34 @@ void SMP::Init()
     void *smp_entry_address = &SMP_JMP;
     printk("smp entry: %p\n", Virt_To_Phy(smp_entry_address));
 
-    // DSH: 0x3 all excluding self
-    // MT: 110b INIT
-    // L: 1
-    APIC::ICR_Register startup_ipi = {0};
-    startup_ipi.DSH = 0x3;
-    startup_ipi.MT = 0x6;
-    startup_ipi.VEC = (uint64_t)Virt_To_Phy(smp_entry_address) >> PAGE_4K_SHIFT;
-    apic->ICR_Write((APIC::ICR_Register *)&startup_ipi);
-    printk("Startup IPI 1 Send\n");
+    auto cpus = CPU::GetInstance()->GetAll();
+    for (int i = 1; i < cpus.size(); ++i)
+    {
+        auto &cpu = cpus[i];
+        // DSH: 0x3 all excluding self
+        // MT: 110b INIT
+        // L: 1
+        APIC::ICR_Register startup_ipi = {0};
+        startup_ipi.DES = i;
+        startup_ipi.DSH = 0x0;
+        startup_ipi.MT = 0x6;
+        startup_ipi.VEC = (uint64_t)Virt_To_Phy(smp_entry_address) >> PAGE_4K_SHIFT;
+        // try startup apu twice if the first try failed
+        for (int j = 0; j < 2; ++j)
+        {
+            apic->ICR_Write((APIC::ICR_Register *)&startup_ipi);
+            printk("Startup IPI %d Send\n", i);
+            // give 1000ms for smp_callback to setup stack
+            pit_spin(1000);
+            if (cpu.online)
+                break;
+        }
+        if (!cpu.online)
+        {
+            printk("cpu %d startup failed\n", i);
+        }
+    }
+
     while (1)
     {
         asm volatile("cli");
@@ -39,18 +60,29 @@ void SMP::Init()
     }
 }
 
-static void smp_apu_init()
-{
-}
-
-extern "C" void smp_callback()
+extern "C" void smp_apu_init()
 {
     smp_lock.lock();
     GDT::GetInstance()->Init();
     IDT::GetInstance()->Init();
+    APIC::GetInstance()->Init();
 
-    smp_apu_init();
+    CPU::GetInstance()->SetOnline();
+    printk("AP CPU %d online\n", CPU::GetInstance()->Get().apic_id);
     smp_lock.unlock();
+    asm volatile("sti");
     while (1)
-        ;
+    {
+        asm volatile("hlt");
+    }
+}
+
+extern "C" void smp_callback()
+{
+    auto stack = CPU::GetInstance()->Get().cpu_stack + PAGE_4K_SIZE - 0x10;
+    // setup the stack
+    asm volatile("movq %0, %%rsp \n\t"
+                 "movq %%rsp, %%rbp \n\t" ::"m"(stack));
+    //no return
+    asm volatile("jmp smp_apu_init");
 }
