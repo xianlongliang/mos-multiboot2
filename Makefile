@@ -4,10 +4,10 @@ all:
 
 dump: 
 	objdump -S build/kernel > build/kernel.dump
-	objdump -S build/user > build/user.dump
+	# objdump -S build/user > build/user.dump
 
 qemu:
-	qemu-system-x86_64 -display sdl  -smp 2 -monitor stdio -hda build/kernel.iso -hdb hd80.img -m 64M -s -S 
+	qemu-system-x86_64 -display sdl  -smp 1 -monitor stdio -hda build/kernel.iso -hdb hd80.img -m 64M -s -S 
 
 qemu-gdb:
 	nohup qemu-system-x86_64 -cdrom build/kernel.iso -serial stdio -m 64M -s -S & 

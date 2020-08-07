@@ -16,21 +16,24 @@ public:
         uint32_t height;
     };
 
-    void Insert(uint64_t key, T *val)
+    void insert(uint64_t key, T *val)
     {
         this->root = this->insert_node(this->root, key, val);
     }
 
-    void Delete(uint64_t key)
+    void erase(uint64_t key)
     {
         this->root = this->delete_node(this->root, key);
     }
 
-    Node *Find(uint64_t key)
+    Node *find(uint64_t key)
     {
         return this->find_node(this->root, key);
     }
 
+    bool empty() {
+        return this->root == nullptr;
+    }
 private:
     Node *root;
 
@@ -173,7 +176,7 @@ private:
                 }
                 else
                     *root = *temp;
-                // free(temp);
+                    delete temp;
             }
             else
             {

@@ -15,7 +15,17 @@ SECTIONS
 
   . += 0xFFFFFFFF80000000;
   _kernel_virtual_start = .;
-  .text : AT(_boot_end)
+
+  . = ALIGN(0x1000);
+  .data : AT(_boot_end)
+	{
+		_kernel_data_start = .;
+		*(.data)
+		_kernel_data_end = .;
+	}
+
+  . = ALIGN(0x1000);
+  .text :
   {
     *(.multiboot)
     *(.text)
@@ -24,21 +34,10 @@ SECTIONS
   . = ALIGN(0x1000);
   .rodata : 
 	{
-		_kernel_rodata_start = .;
 		*(.rodata)
-		_kernel_rodata_end = .;
 	}
-
+  
   . = ALIGN(0x1000);
-  .data :
-	{
-		_kernel_data_start = .;
-		*(.data)
-		_kernel_data_end = .;
-	}
-
-  . = ALIGN(0x1000);
-
   .bss :
 	{
 		_kernel_bss_start = .;

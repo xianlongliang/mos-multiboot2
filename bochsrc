@@ -3,7 +3,6 @@ plugin_ctrl: unmapped=1, biosdev=1, speaker=1, extfpuirq=1, parallel=1, serial=1
 config_interface: textconfig
 memory: host=2048, guest=2048
 boot: disk
-display_library: sdl
 # no floppyb
 ata0: enabled=1, ioaddr1=0x1f0, ioaddr2=0x3f0, irq=14
 ata0-master: type=disk, path="build/kernel.iso", mode=flat
@@ -12,8 +11,8 @@ ata0-slave: type=disk, path="hd64.img", mode=flat, cylinders=130, heads=16, spt=
 pci: enabled=1, chipset=i440fx
 vga: extension=vbe, update_freq=5
 
-cpu: ips=20000000
-cpuid: x86_64=1,level=6, mmx=1, sep=1, simd=avx2, aes=1, movbe=1, xsave=1,apic=x2apic,sha=1,movbe=1,adx=1,xsaveopt=1,avx_f16c=1,avx_fma=1,bmi=bmi2,1g_pages=1,pcid=1,fsgsbase=1,smep=1,smap=1,mwait=1,vmx=1
+cpu: ips=20000000, count=1:1:4
+cpuid: x86_64=1,level=6, mmx=1, sep=1, simd=avx2, aes=1, movbe=1, xsave=1,apic=xapic,sha=1,movbe=1,adx=1,xsaveopt=1,avx_f16c=1,avx_fma=1,bmi=bmi2,1g_pages=1,pcid=1,fsgsbase=1,smep=1,smap=1,mwait=1,vmx=1
 # cpuid: family=6, model=0x1a, stepping=5, vendor_string="GenuineIntel", brand_string="Intel(R) Core(TM) i7-4770 CPU (Haswell)"
 
 print_timestamps: enabled=0

@@ -27,7 +27,6 @@ void do_8mb_mapping()
     bzero(pte_base, 0x1000 * 3);
     auto physical_base = 0x200000;
     auto step = 0x1000;
-
     for (int i = 1; i <= 3; ++i)
     {
         pde_base[i] = pde_base[0];
@@ -42,10 +41,6 @@ void do_8mb_mapping()
         // switch to next pte base
         pte_base = (Page_PTE *)(uint64_t(pte_base) + 0x1000);
     }
-
-    auto cr3 = Get_CR3();
-    *(uint64_t *)cr3 = 0UL;
-    flush_tlb();
 }
 
 void basic_init(void *mbi_addr)
