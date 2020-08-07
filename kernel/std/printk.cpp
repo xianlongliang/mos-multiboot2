@@ -231,6 +231,7 @@ void clear()
 
 void printk(const char *format, ...)
 {
+        printk_spinlock.lock();
         asm volatile("pushf");
         asm volatile("cli");
         static const auto peek = [](char *current, uint64_t count = 1) {
@@ -296,4 +297,5 @@ void printk(const char *format, ...)
         va_end(args);
 
         asm volatile("popf");
+        printk_spinlock.unlock();
 }
