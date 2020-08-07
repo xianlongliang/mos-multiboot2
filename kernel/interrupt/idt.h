@@ -54,6 +54,7 @@ public:
     };
 
 private:
+    bool inited = false;
     Descriptor idt[INTERRUPT_MAX];
     DescriptorPointer idtr = {uint16_t(INTERRUPT_MAX * sizeof(Descriptor) - 1), idt};
 
