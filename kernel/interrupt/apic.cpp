@@ -9,13 +9,14 @@
 #include <std/interrupt.h>
 #include <interrupt/idt.h>
 #include <thread/scheduler.h>
+#include <smp/cpu.h>
 
 static void timer_callback(uint64_t error_code, uint64_t rsp, uint64_t rflags, uint64_t rip)
 {
     static uint64_t tick = 0;
-    printk("tick: %d\n", tick++);
+    printk("[%d] tick: %d\n", CPU::GetInstance()->Get().apic_id, tick++);
     static auto scheduler = Scheduler::GetInstance();
-    scheduler->Schedule();
+    // scheduler->Schedule();
 }
 
 struct APIC_BASE_ADDR_REGISTER
@@ -49,27 +50,15 @@ APIC::APIC()
 
 void APIC::Init()
 {
-    auto apic_base = brk_up(PAGE_4K_SIZE);
-    this->local_apic_base = (uint32_t *)apic_base;
+    if (!this->inited)
+    {
+        this->inited = true;
+        this->local_apic_base = (uint32_t *)brk_up(PAGE_4K_SIZE);
+    }
 
     // mask all 8259a
     outb(0x21, 0xff);
     outb(0xA1, 0xff);
-
-    unsigned int x, y;
-    unsigned int a, b, c, d;
-
-    //check APIC & x2APIC support
-    get_cpuid(1, 0, &a, &b, &c, &d);
-    if ((1 << 9) & d)
-        printk("HW support APIC&xAPIC\t");
-    else
-        printk("HW NO support APIC&xAPIC\t");
-
-    if ((1 << 21) & c)
-        printk("HW support x2APIC\n");
-    else
-        printk("HW NO support x2APIC\n");
 
     // read IA32_APIC_BASE register
     auto apic_base_val = rdmsr(IA32_APIC_BASE);
@@ -80,8 +69,8 @@ void APIC::Init()
     apic_base_addr_reg->MBZ2 = 0;
     apic_base_addr_reg->MBZ3 = 0;
     printk("APIC BASE: %x\n", apic_base_val);
-    vmap_frame_kernel(apic_base, (void *)(apic_base_addr_reg->ABA << PAGE_4K_SHIFT));
-    
+    vmap_frame_kernel(this->local_apic_base, (void *)(apic_base_addr_reg->ABA << PAGE_4K_SHIFT));
+
     wrmsr(IA32_APIC_BASE, apic_base_val);
     apic_base_val = rdmsr(IA32_APIC_BASE);
     // now apic is enabled
@@ -110,7 +99,7 @@ void APIC::Init()
 
     apic_write(APIC_TPR, 1);
 
-    // timer_init();
+    timer_init();
 }
 
 void APIC::EOI()
@@ -122,8 +111,11 @@ void APIC::timer_init()
 {
     apic_write(APIC_TIMER_DCR, 0x0);
     apic_write(APIC_TIMER_ICR, 0xFFFFFFFF);
-    pit_spin(10);
-    uint32_t ticks = 0xFFFFFFFF - apic_read(APIC_TIMER_CCR);
+    static uint32_t ticks = 0xFFFFFFFF - apic_read(APIC_TIMER_CCR);
+    if (!this->inited)
+    {
+        pit_spin(10);
+    }
     // Start timer as periodic on IRQ 0, divider 16, with the number of ticks we counted
     apic_write(APIC_LVT_TIMER, IRQ0 | APIC_TIMER_PERIODIC);
     apic_write(APIC_TIMER_ICR, ticks);
