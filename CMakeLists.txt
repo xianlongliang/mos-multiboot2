@@ -24,6 +24,11 @@ add_executable(kernel
         kernel/gdt.h
         kernel/gdt.cpp
 
+        kernel/smp/cpu.h
+        kernel/smp/cpu.cpp
+        kernel/smp/smp.h
+        kernel/smp/smp.cpp
+
         kernel/acpi/rsdp.h
         kernel/acpi/rsdp.cpp
         kernel/acpi/rsdt.h
