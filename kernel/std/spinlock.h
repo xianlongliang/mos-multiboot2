@@ -7,7 +7,6 @@ class Spinlock
 public:
     inline void lock()
     {
-        auto addr = &this->lock_val;
         asm volatile("movq $1, %rcx	            \n\t");
         asm volatile("spin_lock_retry:          \n\t");
         asm volatile("lock; cmpxchgq %%rcx, %0  \n\t"
@@ -19,12 +18,9 @@ public:
 
     inline void unlock()
     {
-        asm volatile("lock; movq	$0,	%0	\n\t"
-                     : "=m"(this->lock_val)
-                     :
-                     : "memory");
+        this->lock_val = 0;
     }
 
 private:
-    volatile uint64_t lock_val = 0; // 1:unlock, 0:lock
+    volatile uint64_t lock_val = 0; // 0:unlock, 1:lock
 };
