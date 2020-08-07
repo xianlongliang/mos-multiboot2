@@ -6,6 +6,8 @@
 #include <tss.h>
 #include <gdt.h>
 #include <memory/physical_page.h>
+#include <std/cpuid.h>
+#include <std/kstring.h>
 
 class CPU : public Singleton<CPU>
 {
@@ -20,6 +22,7 @@ public:
         auto cs = &this->cpus.back();
         cs->apic_id = id;
         cs->cpu_stack = kmalloc(PAGE_4K_SIZE, 0);
+        bzero(cs->cpu_stack, PAGE_4K_SIZE);
         cs->tss = {0};
         cs->tss.rsp0 = (uint64_t)cs->cpu_stack;
         cs->gdt = gdt_struct();
@@ -34,17 +37,31 @@ public:
         void * cpu_stack;
         tss_struct tss;
         gdt_struct gdt;
+        bool online;
     };
 
-    cpu_struct &Get(uint64_t id)
-    {
-        for (int i = 0; i < this->cpus.size(); ++i)
-        {
-            if (this->cpus[i].apic_id == id)
-                return this->cpus[i];
-        }
+    vector<cpu_struct>& GetAll() {
+        return this->cpus;
     }
 
+    cpu_struct &Get()
+    {
+        auto cpuid_struct = cpuid(0x1);
+        auto local_apic_id = cpuid_struct.rbx >> 24;
+        return this->cpus[local_apic_id];
+    }
+
+    cpu_struct &Get(uint64_t index)
+    {
+        return this->cpus[index];
+    }
+
+    void SetOnline() {
+        auto cpuid_struct = cpuid(0x1);
+        auto local_apic_id = cpuid_struct.rbx >> 24;
+        this->cpus[local_apic_id].online = true;
+    }
+    
 private:
     vector<cpu_struct> cpus;
 };
