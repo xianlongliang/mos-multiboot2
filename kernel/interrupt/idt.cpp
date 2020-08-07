@@ -11,7 +11,8 @@ static interrupt_handler_t interrupt_handlers[INTERRUPT_MAX] __attribute__((alig
 
 void IDT::Register(uint8_t n, interrupt_handler_t handler)
 {
-    interrupt_handlers[n] = handler;
+    if (!interrupt_handlers[n])
+        interrupt_handlers[n] = handler;
 }
 
 static inline void load_idt(struct IDT::DescriptorPointer *idt_r)
@@ -94,61 +95,100 @@ void IDT::set_gate(IDT::DescriptorType type, unsigned int n, unsigned char ist, 
 
 void IDT::Init()
 {
-    bzero(interrupt_handlers, INTERRUPT_MAX * sizeof(interrupt_handler_t));
+    if (!this->inited)
+    {
+        this->inited = true;
+        bzero(interrupt_handlers, INTERRUPT_MAX * sizeof(interrupt_handler_t));
 
-    set_intr_gate(0, 1, CONVERT_ISR_ADDR(0));
-    set_intr_gate(1, 1, CONVERT_ISR_ADDR(1));
-    set_intr_gate(2, 1, CONVERT_ISR_ADDR(2));
-    set_intr_gate(3, 1, CONVERT_ISR_ADDR(3));
-    set_intr_gate(4, 1, CONVERT_ISR_ADDR(4));
-    set_intr_gate(5, 1, CONVERT_ISR_ADDR(5));
-    set_intr_gate(6, 1, CONVERT_ISR_ADDR(6));
-    set_intr_gate(7, 1, CONVERT_ISR_ADDR(7));
-    set_intr_gate(8, 1, CONVERT_ISR_ADDR(8));
-    set_intr_gate(9, 1, CONVERT_ISR_ADDR(9));
-    set_intr_gate(10, 1, CONVERT_ISR_ADDR(10));
-    set_intr_gate(11, 1, CONVERT_ISR_ADDR(11));
-    set_intr_gate(12, 1, CONVERT_ISR_ADDR(12));
-    set_intr_gate(13, 1, CONVERT_ISR_ADDR(13));
-    set_intr_gate(14, 1, CONVERT_ISR_ADDR(14));
-    set_intr_gate(15, 1, CONVERT_ISR_ADDR(15));
-    set_intr_gate(16, 1, CONVERT_ISR_ADDR(16));
-    set_intr_gate(17, 1, CONVERT_ISR_ADDR(17));
-    set_intr_gate(18, 1, CONVERT_ISR_ADDR(18));
-    set_intr_gate(19, 1, CONVERT_ISR_ADDR(19));
-    set_intr_gate(20, 1, CONVERT_ISR_ADDR(20));
-    set_intr_gate(21, 1, CONVERT_ISR_ADDR(21));
-    set_intr_gate(22, 1, CONVERT_ISR_ADDR(22));
-    set_intr_gate(23, 1, CONVERT_ISR_ADDR(23));
-    set_intr_gate(24, 1, CONVERT_ISR_ADDR(24));
-    set_intr_gate(25, 1, CONVERT_ISR_ADDR(25));
-    set_intr_gate(26, 1, CONVERT_ISR_ADDR(26));
-    set_intr_gate(27, 1, CONVERT_ISR_ADDR(27));
-    set_intr_gate(28, 1, CONVERT_ISR_ADDR(28));
-    set_intr_gate(29, 1, CONVERT_ISR_ADDR(29));
-    set_intr_gate(30, 1, CONVERT_ISR_ADDR(30));
-    set_intr_gate(31, 1, CONVERT_ISR_ADDR(31));
+        set_intr_gate(0, 1, CONVERT_ISR_ADDR(0));
+        set_intr_gate(1, 1, CONVERT_ISR_ADDR(1));
+        set_intr_gate(2, 1, CONVERT_ISR_ADDR(2));
+        set_intr_gate(3, 1, CONVERT_ISR_ADDR(3));
+        set_intr_gate(4, 1, CONVERT_ISR_ADDR(4));
+        set_intr_gate(5, 1, CONVERT_ISR_ADDR(5));
+        set_intr_gate(6, 1, CONVERT_ISR_ADDR(6));
+        set_intr_gate(7, 1, CONVERT_ISR_ADDR(7));
+        set_intr_gate(8, 1, CONVERT_ISR_ADDR(8));
+        set_intr_gate(9, 1, CONVERT_ISR_ADDR(9));
+        set_intr_gate(10, 1, CONVERT_ISR_ADDR(10));
+        set_intr_gate(11, 1, CONVERT_ISR_ADDR(11));
+        set_intr_gate(12, 1, CONVERT_ISR_ADDR(12));
+        set_intr_gate(13, 1, CONVERT_ISR_ADDR(13));
+        set_intr_gate(14, 1, CONVERT_ISR_ADDR(14));
+        set_intr_gate(15, 1, CONVERT_ISR_ADDR(15));
+        set_intr_gate(16, 1, CONVERT_ISR_ADDR(16));
+        set_intr_gate(17, 1, CONVERT_ISR_ADDR(17));
+        set_intr_gate(18, 1, CONVERT_ISR_ADDR(18));
+        set_intr_gate(19, 1, CONVERT_ISR_ADDR(19));
+        set_intr_gate(20, 1, CONVERT_ISR_ADDR(20));
+        set_intr_gate(21, 1, CONVERT_ISR_ADDR(21));
+        set_intr_gate(22, 1, CONVERT_ISR_ADDR(22));
+        set_intr_gate(23, 1, CONVERT_ISR_ADDR(23));
+        set_intr_gate(24, 1, CONVERT_ISR_ADDR(24));
+        set_intr_gate(25, 1, CONVERT_ISR_ADDR(25));
+        set_intr_gate(26, 1, CONVERT_ISR_ADDR(26));
+        set_intr_gate(27, 1, CONVERT_ISR_ADDR(27));
+        set_intr_gate(28, 1, CONVERT_ISR_ADDR(28));
+        set_intr_gate(29, 1, CONVERT_ISR_ADDR(29));
+        set_intr_gate(30, 1, CONVERT_ISR_ADDR(30));
+        set_intr_gate(31, 1, CONVERT_ISR_ADDR(31));
 
-    set_intr_gate(32, 1, CONVERT_IRQ_ADDR(0));
-    set_intr_gate(33, 1, CONVERT_IRQ_ADDR(1));
-    set_intr_gate(34, 1, CONVERT_IRQ_ADDR(2));
-    set_intr_gate(35, 1, CONVERT_IRQ_ADDR(3));
-    set_intr_gate(36, 1, CONVERT_IRQ_ADDR(4));
-    set_intr_gate(37, 1, CONVERT_IRQ_ADDR(5));
-    set_intr_gate(38, 1, CONVERT_IRQ_ADDR(6));
-    set_intr_gate(39, 1, CONVERT_IRQ_ADDR(7));
+        set_intr_gate(32, 1, CONVERT_IRQ_ADDR(0));
+        set_intr_gate(33, 1, CONVERT_IRQ_ADDR(1));
+        set_intr_gate(34, 1, CONVERT_IRQ_ADDR(2));
+        set_intr_gate(35, 1, CONVERT_IRQ_ADDR(3));
+        set_intr_gate(36, 1, CONVERT_IRQ_ADDR(4));
+        set_intr_gate(37, 1, CONVERT_IRQ_ADDR(5));
+        set_intr_gate(38, 1, CONVERT_IRQ_ADDR(6));
+        set_intr_gate(39, 1, CONVERT_IRQ_ADDR(7));
 
-    set_intr_gate(40, 1, CONVERT_IRQ_ADDR(8));
-    set_intr_gate(41, 1, CONVERT_IRQ_ADDR(9));
-    set_intr_gate(42, 1, CONVERT_IRQ_ADDR(10));
-    set_intr_gate(43, 1, CONVERT_IRQ_ADDR(11));
-    set_intr_gate(44, 1, CONVERT_IRQ_ADDR(12));
-    set_intr_gate(45, 1, CONVERT_IRQ_ADDR(13));
-    set_intr_gate(46, 1, CONVERT_IRQ_ADDR(14));
-    set_intr_gate(47, 1, CONVERT_IRQ_ADDR(15));
+        set_intr_gate(40, 1, CONVERT_IRQ_ADDR(8));
+        set_intr_gate(41, 1, CONVERT_IRQ_ADDR(9));
+        set_intr_gate(42, 1, CONVERT_IRQ_ADDR(10));
+        set_intr_gate(43, 1, CONVERT_IRQ_ADDR(11));
+        set_intr_gate(44, 1, CONVERT_IRQ_ADDR(12));
+        set_intr_gate(45, 1, CONVERT_IRQ_ADDR(13));
+        set_intr_gate(46, 1, CONVERT_IRQ_ADDR(14));
+        set_intr_gate(47, 1, CONVERT_IRQ_ADDR(15));
 
-    this->Register(14, page_fault_handler);
-    this->Register(IRQ1, keyboard_irq_handler);
+        this->Register(14, page_fault_handler);
+        this->Register(IRQ1, keyboard_irq_handler);
+    }
+
+    /*                   ____________                          ____________
+    Real Time Clock --> |            |   Timer -------------> |            |
+    ACPI -------------> |            |   Keyboard-----------> |            |      _____
+    Available --------> | Secondary  |----------------------> | Primary    |     |     |
+    Available --------> | Interrupt  |   Serial Port 2 -----> | Interrupt  |---> | CPU |
+    Mouse ------------> | Controller |   Serial Port 1 -----> | Controller |     |_____|
+    Co-Processor -----> |            |   Parallel Port 2/3 -> |            |
+    Primary ATA ------> |            |   Floppy disk -------> |            |
+    Secondary ATA ----> |____________|   Parallel Port 1----> |____________|
+    */
+    // 初始化主片、从片的ICW1
+    // 0001 0001
+    outb(0x20, 0x11);
+    outb(0xA0, 0x11);
+
+    // 设置主片ICW2 IRQ 从 0x20(32) 号中断开始
+    outb(0x21, 0x20);
+
+    // 设置从片ICW2 IRQ 从 0x28(40) 号中断开始
+    outb(0xA1, 0x28);
+
+    // 设置主片ICW3 IR2 引脚连接从片
+    outb(0x21, 0x04);
+
+    // 设置从片ICW3 告诉从片输出引脚和主片 IR2 号相连
+    outb(0xA1, 0x02);
+
+    // 设置ICW4 设置主片和从片按照 x86 的方式工作
+    outb(0x21, 0x01);
+    outb(0xA1, 0x01);
+
+    outb(0x21, 0xff);
+    outb(0xA1, 0xff);
+
     load_idt(&idtr);
     printk("gdt_init IDT_PTR %x\n", &idtr);
 }

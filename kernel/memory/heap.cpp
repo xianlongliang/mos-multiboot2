@@ -1,7 +1,7 @@
 #include "heap.h"
 #include "physical_page.h"
 
-static void *brk = (void *)0x1000000 + PAGE_OFFSET;
+static void *brk = (void *)0x800000 + PAGE_OFFSET;
 
 void *brk_up(uint64_t size)
 {
