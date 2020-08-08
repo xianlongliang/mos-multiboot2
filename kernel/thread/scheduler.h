@@ -7,11 +7,7 @@
 class Scheduler
 {
 public:
-    static Scheduler *GetInstance()
-    {
-        static Scheduler instance;
-        return &instance;
-    }
+
     void Schedule();
 
     Scheduler* Add(task_struct* task);

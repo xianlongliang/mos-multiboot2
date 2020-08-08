@@ -5,6 +5,8 @@ extern task_struct *init_task;
 
 void Scheduler::Schedule()
 {
+    if (this->next_task == nullptr) return;
+    
     auto next = this->next_task;
     this->next_task = (task_struct *)list_next(&next->list);
     // next == current only when idle task is running
