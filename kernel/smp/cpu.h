@@ -8,6 +8,7 @@
 #include <memory/physical_page.h>
 #include <std/cpuid.h>
 #include <std/kstring.h>
+#include <thread/scheduler.h>
 
 class CPU : public Singleton<CPU>
 {
@@ -33,14 +34,16 @@ public:
 
     struct cpu_struct
     {
+        bool online;
         uint64_t apic_id;
-        void * cpu_stack;
+        void *cpu_stack;
         tss_struct tss;
         gdt_struct gdt;
-        bool online;
+        Scheduler scheduler;
     };
 
-    vector<cpu_struct>& GetAll() {
+    vector<cpu_struct> &GetAll()
+    {
         return this->cpus;
     }
 
@@ -56,12 +59,13 @@ public:
         return this->cpus[index];
     }
 
-    void SetOnline() {
+    void SetOnline()
+    {
         auto cpuid_struct = cpuid(0x1);
         auto local_apic_id = cpuid_struct.rbx >> 24;
         this->cpus[local_apic_id].online = true;
     }
-    
+
 private:
     vector<cpu_struct> cpus;
 };
