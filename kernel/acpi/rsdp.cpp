@@ -31,7 +31,7 @@ void RSDP::Init(uint8_t rsdp_version, void *rsdp_address)
 {
     switch (rsdp_version)
     {
-    case 0:
+    case 1:
     {
         auto rsdp = (acpi_rsdp_t *)rsdp_address;
         printk("rsdt addr: %p\n", rsdp->rsdt_address);
@@ -39,7 +39,14 @@ void RSDP::Init(uint8_t rsdp_version, void *rsdp_address)
         this->rsdt_vaddr = Phy_To_Virt((void *)(rsdp->rsdt_address));
         break;
     }
-
+    case 2:
+    {
+        auto rsdp = (acpi_rsdp_t *)rsdp_address;
+        printk("rsdt addr: %p\n", rsdp->rsdt_address);
+        PhysicalMemory::GetInstance()->Reserve(rsdp->rsdt_address);
+        this->rsdt_vaddr = Phy_To_Virt((void *)(rsdp->rsdt_address));
+        break;
+    }
     default:
     {
         panic("unknown rsdp_version\n");
