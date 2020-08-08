@@ -11,6 +11,8 @@
 #include "scheduler.h"
 #include "mutex.h"
 #include "condition_variable.h"
+#include <smp/cpu.h>
+
 static uint64_t global_pid = 0;
 // we pop all pt_regs out
 // then restore the stack to rsp0(stack base)
@@ -21,6 +23,8 @@ extern "C" void kernel_thread_func();
 extern "C" void ret_syscall();
 
 task_struct *init_task;
+
+static CPU* cpus;
 
 extern "C" unsigned long do_exit(unsigned long code)
 {
@@ -194,7 +198,7 @@ uint64_t init(uint64_t arg)
     printk("current rsp : %x\n", current->thread->rsp0);
     printk("task_init2 rsp : %x\n", task_init2->thread->rsp0);
 
-    Scheduler::GetInstance()->Add(current)->Add(bash_task);
+    cpus->Get().scheduler.Add(current)->Add(bash_task);
 
     // switch_to(current, next);
     sti();
@@ -209,6 +213,8 @@ uint64_t init(uint64_t arg)
 
 void task_init()
 {
+    cpus = CPU::GetInstance();
+
     auto page = PhysicalMemory::GetInstance()->Allocate(1, PG_PTable_Maped | PG_Kernel | PG_Active);
 
     auto init_task_stack = (void *)(Phy_To_Virt(page->physical_address) + PAGE_4K_SIZE);
@@ -287,7 +293,7 @@ void task_sleep()
     asm volatile("pushf");
     asm volatile("cli");
     current->state = TASK_STOPPED;
-    Scheduler::GetInstance()->Remove(current)->Schedule();
+    cpus->Get().scheduler.Remove(current)->Schedule();
     asm volatile("popf");
 }
 
@@ -295,7 +301,7 @@ void task_yield()
 {
     asm volatile("pushf");
     asm volatile("cli");
-    Scheduler::GetInstance()->Schedule();
+    cpus->Get().scheduler.Schedule();
     asm volatile("popf");
 }
 
@@ -304,6 +310,6 @@ void task_wakeup(task_struct *task)
     asm volatile("pushf");
     asm volatile("cli");
     task->state = TASK_RUNNING;
-    Scheduler::GetInstance()->Add(task);
+    cpus->Get().scheduler.Add(task);
     asm volatile("popf");
 }
