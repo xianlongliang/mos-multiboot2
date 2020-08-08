@@ -14,9 +14,9 @@
 static void timer_callback(uint64_t error_code, uint64_t rsp, uint64_t rflags, uint64_t rip)
 {
     static uint64_t tick = 0;
-    printk("[%d] tick: %d\n", CPU::GetInstance()->Get().apic_id, tick++);
-    static auto scheduler = Scheduler::GetInstance();
-    // scheduler->Schedule();
+    // printk("[%d] tick: %d\n", CPU::GetInstance()->Get().apic_id, tick++);
+    static auto cpus = CPU::GetInstance();
+    cpus->Get().scheduler.Schedule();
 }
 
 struct APIC_BASE_ADDR_REGISTER
@@ -69,7 +69,8 @@ void APIC::Init()
     apic_base_addr_reg->MBZ2 = 0;
     apic_base_addr_reg->MBZ3 = 0;
     printk("APIC BASE: %x\n", apic_base_val);
-    vmap_frame_kernel(this->local_apic_base, (void *)(apic_base_addr_reg->ABA << PAGE_4K_SHIFT));
+    this->local_apic_base = (uint32_t *)Phy_To_Virt(apic_base_addr_reg->ABA << PAGE_4K_SHIFT);
+    // vmap_frame_kernel(this->local_apic_base, (void *)(apic_base_addr_reg->ABA << PAGE_4K_SHIFT));
 
     wrmsr(IA32_APIC_BASE, apic_base_val);
     apic_base_val = rdmsr(IA32_APIC_BASE);

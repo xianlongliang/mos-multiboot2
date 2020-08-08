@@ -5,13 +5,14 @@
 #include <interrupt/pit.h>
 #include <gdt.h>
 #include <thread/task.h>
+#include <syscall.h>
 
 static Spinlock smp_lock;
 
 void SMP::Init()
 {
     GDT::GetInstance()->Init();
-
+    Syscall::GetInstance()->Init();
     smp_lock = Spinlock();
 
     auto apic = APIC::GetInstance();
@@ -29,9 +30,10 @@ void SMP::Init()
     for (int i = 1; i < cpus.size(); ++i)
     {
         auto &cpu = cpus[i];
-        // DSH: 0x3 all excluding self
+        // DSH: 0x0 not broadcast
         // MT: 110b INIT
         // L: 1
+        // VEC: cpu id to be waken up
         APIC::ICR_Register startup_ipi = {0};
         startup_ipi.DES = i;
         startup_ipi.DSH = 0x0;
@@ -42,21 +44,16 @@ void SMP::Init()
         {
             apic->ICR_Write((APIC::ICR_Register *)&startup_ipi);
             printk("Startup IPI %d Send\n", i);
-            // give 1000ms for smp_callback to setup stack
-            pit_spin(1000);
+            // give 100 ms for smp_callback to setup stack
+            pit_spin(100);
             if (cpu.online)
                 break;
         }
+
         if (!cpu.online)
         {
-            printk("cpu %d startup failed\n", i);
+            printk("CPU %d startup failed\n", i);
         }
-    }
-
-    while (1)
-    {
-        asm volatile("cli");
-        asm volatile("hlt");
     }
 }
 
@@ -64,6 +61,7 @@ extern "C" void smp_apu_init()
 {
     smp_lock.lock();
     GDT::GetInstance()->Init();
+    Syscall::GetInstance()->Init();
     IDT::GetInstance()->Init();
     APIC::GetInstance()->Init();
 
