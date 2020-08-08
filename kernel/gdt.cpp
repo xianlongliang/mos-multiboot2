@@ -33,5 +33,5 @@ void GDT::Init()
     auto cpu_struct = CPU::GetInstance()->Get();
     load_gdt(&cpu_struct.gdt.gdt_ptr);
     load_tr(0x38);
-    printk("gdt_init GDT_PTR %x\n", &gdt_ptr);
+    printk("CPU: %d GDT_PTR %p\n", cpu_struct.apic_id, &cpu_struct.gdt.gdt_ptr);
 }

@@ -40,18 +40,4 @@ public:
         void *gdt_address;
     };
 
-private:
-    uint64_t gdt_table[10] = {
-        0x0000000000000000,
-        0x0020980000000000, // KERNEL CODE
-        0x0000920000000000, // KERNEL DATA
-        0x0000000000000000,
-        0x0000000000000000,
-        0x0000f20000000000, // USER DATA
-        0x0020f80000000000, // USER CODE
-        // ... tss (16 bytes)
-    };
-
-    gdt_struct::GDTPointer gdt_ptr = {uint16_t(80 - 1), gdt_table};
-
 };
