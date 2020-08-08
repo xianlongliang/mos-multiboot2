@@ -30,7 +30,7 @@ struct Page_PDPE
     uint64_t PCD : 1;        // Page-Level Cache Disable
     uint64_t A : 1;          // whether it has been accessed ?
     uint64_t IGN : 1;        // IGNORED
-    uint64_t SIZE : 1;       // 0 for 4k
+    uint64_t SIZE : 1;       // 1 for 1G
     uint64_t IGN2 : 1;       // IGNORED
     uint64_t AVL : 3;        // Available to Software, just set it to 0
     uint64_t NEXT : 40;      // the next level address

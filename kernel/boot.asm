@@ -1,8 +1,9 @@
 PAGE_SIZE equ 0x1000
-KERNEL_TEXT_BASE equ 0xffffffff80000000
+KERNEL_TEXT_BASE equ 0xFFFFFFFF00000000
 %define PAGE_PRESENT    (1 << 0)
 %define PAGE_WRITE      (1 << 1)
 %define PAGE_USER       (1 << 2)
+%define PAGE_1GB       (1 << 7)
 %define CONTROL_REGISTER4_PHYSICAL_ADDRESS_EXTENSION (1 << 5)
 %define KERNEL_CR4 (CONTROL_REGISTER4_PHYSICAL_ADDRESS_EXTENSION)
 %define MSR_EFER 0xC0000080
@@ -130,7 +131,10 @@ _start:
     mov eax, pde
     or  eax, (PAGE_PRESENT | PAGE_WRITE)
     mov [pdpe_low], eax
-    mov [pdpe + 0xff0], eax
+
+    mov eax, 0x0
+    or  eax, (PAGE_PRESENT | PAGE_WRITE | PAGE_1GB)
+    mov [pdpe + 0xfe0], eax
     
     mov eax, pte
     or  eax, (PAGE_PRESENT | PAGE_WRITE)
@@ -160,7 +164,6 @@ _start:
     mov cr0, eax
 
     lgdt [GDT.Pointer]
-
     jmp CODE_SEG:(_start64 - KERNEL_TEXT_BASE)
 
 section .text
@@ -179,7 +182,7 @@ _start64:
     mov rbp, rsp
 
     mov rdi, rbx
-    
+
     mov rax, Kernel_Main
     call rax
 

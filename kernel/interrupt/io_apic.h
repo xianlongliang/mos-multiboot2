@@ -82,8 +82,7 @@ public:
         void Init(uint64_t io_apic_paddr, uint64_t apicId, uint64_t gsib)
         {
                 this->physRegs = io_apic_paddr;
-                this->virtAddr = (uint64_t)brk_up(PAGE_4K_SIZE);
-                vmap_frame_kernel(this->virtAddr, io_apic_paddr);
+                this->virtAddr = (uint64_t)Phy_To_Virt(io_apic_paddr);
 
                 apicId = (read(IOAPICID) >> 24) & 0xF0;
                 apicVer = read(IOAPICVER); // cast to uint8_t (uint8_t) hides upper bits
