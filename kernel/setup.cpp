@@ -15,6 +15,28 @@ extern "C" char pde;
 
 static __attribute__((aligned(0x1000))) Page_PTE pte2_8[512 * 3];
 
+void do_1gb_mapping()
+{
+    auto pdpe_base = ((Page_PDPE *)&pdpe);
+    pdpe_base[0x1fd].P = 1;
+    pdpe_base[0x1fd].R_W = 1;
+    pdpe_base[0x1fd].SIZE = 1;
+    pdpe_base[0x1fd].NEXT = (0x40000000) >> PAGE_4K_SHIFT;
+
+    pdpe_base[0x1fe].P = 1;
+    pdpe_base[0x1fe].R_W = 1;
+    pdpe_base[0x1fe].SIZE = 1;
+    pdpe_base[0x1fe].NEXT = (0x80000000) >> PAGE_4K_SHIFT;
+
+    pdpe_base[0x1ff].P = 1;
+    pdpe_base[0x1ff].R_W = 1;
+    pdpe_base[0x1ff].SIZE = 1;
+    pdpe_base[0x1ff].NEXT = (0xc0000000) >> PAGE_4K_SHIFT;
+
+    flush_tlb();
+
+}
+
 void do_8mb_mapping()
 {
 
@@ -46,7 +68,7 @@ void do_8mb_mapping()
 void basic_init(void *mbi_addr)
 {
 
-    do_8mb_mapping();
+    do_1gb_mapping();
     vmap_init();
 
     mbi_addr = Phy_To_Virt(mbi_addr);

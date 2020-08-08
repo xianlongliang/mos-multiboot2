@@ -14,19 +14,20 @@
 #include <interrupt/apic.h>
 #include <acpi/rsdt.h>
 #include <acpi/rsdp.h>
+#include <smp/smp.h>
+#include <std/map.h>
+#include <std/spinlock.h>
 
 extern "C" void Kernel_Main(unsigned long addr)
 {
   clear();
+  IDT::GetInstance()->Init();
   basic_init((void *)addr);
-  gdt_init();
-  idt_init();
-  syscall_init();
+  kmalloc_init();
   RSDT::GetInstance()->Init();
   APIC::GetInstance()->Init();
-  kmalloc_init();
+  SMP::GetInstance()->Init();
   task_init();
-  // sti();
 
   while (1)
   {

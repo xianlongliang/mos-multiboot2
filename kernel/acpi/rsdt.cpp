@@ -96,11 +96,11 @@ void RSDT::Init()
     {
         panic("rsdt checksum error\n");
     }
-    auto rsdt_vbase = rsdp->RSDTAddressBase();
+    auto rsdt_addr = rsdp->RSDTAddress();
     auto entry_len = (rsdt->header.length - sizeof(acpi_rsdt_t)) / 4;
     for (int i = 0; i < entry_len; ++i)
     {
-        auto other = (acpi_rsdt_t *)((uint64_t)rsdt_vbase + (rsdt->other_sdt[i] & PAGE_4K_MASK_HIGH));
+        auto other = (acpi_rsdt_t *)(Phy_To_Virt(rsdt->other_sdt[i]));
         // parse madt
         // check https://wiki.osdev.org/MADT
         if (!strncmp(other->header.signature, "APIC", 4))
@@ -112,7 +112,7 @@ void RSDT::Init()
             while (start_addr < end_addr)
             {
                 auto ent = (acpi_apic_t::entry *)start_addr;
-                printk("type: %d, len: %d\n", ent->type, ent->length);
+                // printk("type: %d, len: %d\n", ent->type, ent->length);
                 switch (ent->type)
                 {
                 // Processor Local APIC

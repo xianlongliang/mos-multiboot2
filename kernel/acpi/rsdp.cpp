@@ -36,9 +36,7 @@ void RSDP::Init(uint8_t rsdp_version, void *rsdp_address)
         auto rsdp = (acpi_rsdp_t *)rsdp_address;
         printk("rsdt addr: %p\n", rsdp->rsdt_address);
         PhysicalMemory::GetInstance()->Reserve(rsdp->rsdt_address);
-        this->rsdt_vaddr_base = brk_up(PAGE_4K_SIZE);
-        vmap_frame_kernel(this->rsdt_vaddr_base, (void *)(rsdp->rsdt_address & PAGE_4K_MASK_LOW));
-        this->rsdt_vaddr = (void *)((uint64_t)this->rsdt_vaddr_base + (rsdp->rsdt_address & PAGE_4K_MASK_HIGH));
+        this->rsdt_vaddr = Phy_To_Virt((void *)(rsdp->rsdt_address));
         break;
     }
 
