@@ -1,3 +1,9 @@
 #pragma once
 
-void syscall_init();
+#include <std/singleton.h>
+
+class Syscall : public Singleton<Syscall>
+{
+public:
+    void Init();
+};
