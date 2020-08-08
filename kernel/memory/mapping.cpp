@@ -33,6 +33,8 @@ int vmap_frame_kernel(void *vaddr, void *paddr)
 {
     printk("mapping %p -> %p\n", vaddr, paddr);
     auto ppde = &pde;
+    auto pml4_offset = ((uint64_t)vaddr & 0xff8000000000) >> 39;
+    auto pdpe_offset = ((uint64_t)vaddr & 0x7fc0000000) >> 30;
     auto pde_offset = ((uint64_t)vaddr & 0x3fe00000) >> 21;
     auto pte_offset = ((uint64_t)vaddr & 0x1ff000) >> 12;
 
@@ -48,10 +50,10 @@ int vmap_frame_kernel(void *vaddr, void *paddr)
         swap_used = true;
     }
 
-    if (pte[pte_offset].P == 1)
-    {
-        return -1;
-    }
+    // if (pte[pte_offset].P == 1)
+    // {
+    //     return -1;
+    // }
 
     if (swap_used)
     {
