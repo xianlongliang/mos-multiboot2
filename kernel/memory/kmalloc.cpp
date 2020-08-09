@@ -16,11 +16,25 @@ struct kmalloc_meta
 
 static Slab kmalloc_cache[KMALLOC_CACHE_COUNT];
 
+
+struct big_page_pool_node {
+    uint64_t size;
+    void* start;
+    void* end;
+    list<void*> free_list;
+    list<void*> used_list;
+};
+
+
+struct big_page_pool {
+    uint64_t size;
+    list<big_page_pool_node> nodes;
+};
+
+static big_page_pool bpp[8];
+
 void kmalloc_init()
 {
-    // reserve 1 page for apic
-    auto apic_vbase = brk_up(PAGE_4K_SIZE);
-
     int init_slab_size = 32;
     for (int i = 0; i < 10; ++i, init_slab_size *= 2)
     {
@@ -37,6 +51,9 @@ void kmalloc_init()
         slab_node->vaddr = brk_up(init_slab_size < PAGE_4K_SIZE ? PAGE_4K_SIZE : init_slab_size);
         kmalloc_cache[i].pool = slab_node;
     }
+
+    bpp[0].size = 4096;
+
 
 }
 
@@ -116,4 +133,8 @@ void kfree(const void *ptr)
     slab_node->used_count--;
     slab_node->slab->total_free++;
     slab_node->slab->total_used--;
+}
+
+void *kmalloc_big_page(uint64_t size, uint64_t flags) {
+    
 }

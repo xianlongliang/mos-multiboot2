@@ -1,6 +1,13 @@
 #pragma once
 
 #include "stdint.h"
+#include "debug.h"
+
+inline int roundup_pow_of_2_to(int numToRound, int multiple) 
+{
+    assert(multiple && ((multiple & (multiple - 1)) == 0));
+    return (numToRound + multiple - 1) & -multiple;
+}
 
 #define CHECK_BIT(var, pos) ((var) & (1 << (pos)))
 #define SET_BIT(var, pos) ((var) |= (1 << (pos)))

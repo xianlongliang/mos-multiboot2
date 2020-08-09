@@ -1,14 +1,14 @@
 #include "printk.h"
 #include "port_ops.h"
-#include "string.h"
 #include "spinlock.h"
+#include <memory/physical.h>
 
 static Spinlock printk_spinlock;
 
 namespace Kernel::VGA
 {
         // VGA 的显示缓冲的起点是 0xB8000
-        static uint16_t *video_memory = (uint16_t *)(0xFFFFFFFF00000000 + 0xb8000);
+        static uint16_t *video_memory = (uint16_t *)(Phy_To_Virt(0xb8000));
 
         // 屏幕"光标"的坐标
         static uint8_t cursor_x = 0;

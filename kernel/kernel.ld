@@ -11,25 +11,41 @@ SECTIONS
     *(.multiboot_header)
   }
   . = ALIGN(0x1000);
+  .page :
+  {
+    *(.page)
+  }
+  . = ALIGN(0x1000);
+  .smp :
+  {
+    *(.smp)
+  }
+  .boot_text :
+  {
+    *(.boot_text)
+  }
+  . = ALIGN(0x1000);
+
   _boot_end = .;
+
+  . = 0x100000;
+  _kernel_physical_start = .;
 
   . += 0xFFFFFFFF00000000;
   _kernel_virtual_start = .;
 
   . = ALIGN(0x1000);
-  .data : AT(_boot_end)
-	{
-		_kernel_data_start = .;
-		*(.data)
-		_kernel_data_end = .;
-	}
-
-  . = ALIGN(0x1000);
-  .text :
+  .text : AT(_kernel_physical_start)
   {
-    *(.multiboot)
     *(.text)
   }
+
+  . = ALIGN(0x1000);
+  _kernel_data_start = .;
+  .data : 
+	{
+		*(.data)
+	}
 
   . = ALIGN(0x1000);
   .rodata : 
@@ -40,11 +56,8 @@ SECTIONS
   . = ALIGN(0x1000);
   .bss :
 	{
-		_kernel_bss_start = .;
 		*(.bss)
-		*(COMMON)
-		_kernel_bss_end = .;
 	}
-
-	_kernel_end = .;
+	_kernel_data_end = .;
+	_kernel_virtual_end = .;
 }

@@ -8,6 +8,8 @@
 #include <memory/virtual_page.h>
 #include <memory/mapping.h>
 #include <acpi/rsdp.h>
+#include <memory/heap.h>
+#include <std/math.h>
 
 extern "C" char pml4;
 extern "C" char pdpe;
@@ -34,7 +36,6 @@ void do_1gb_mapping()
     pdpe_base[0x1ff].NEXT = (0xc0000000) >> PAGE_4K_SHIFT;
 
     flush_tlb();
-
 }
 
 void do_8mb_mapping()
@@ -76,8 +77,10 @@ void basic_init(void *mbi_addr)
     auto addr = mbi_addr;
     auto mbi_size = *(uint64_t *)addr;
     auto mbi_end = addr + mbi_size;
-    PhysicalMemory::ZONE_VIRTUAL_START = (void *)mbi_end;
-
+    auto free_vstart = (void *)PAGE_4K_ROUND_UP((uint64_t)mbi_end);
+    
+    heap_init(free_vstart);
+    
     for (auto tag = (struct multiboot_tag *)(addr + 8);
          tag->type != MULTIBOOT_TAG_TYPE_END;
          tag = (struct multiboot_tag *)((multiboot_uint8_t *)tag + ((tag->size + 7) & ~7)))
@@ -87,14 +90,17 @@ void basic_init(void *mbi_addr)
         {
         case MULTIBOOT_TAG_TYPE_ACPI_NEW:
         {
-            printk("no support for MULTIBOOT_TAG_TYPE_ACPI_NEW\n");
+            auto rsdp_tag = (multiboot_tag_old_acpi *)tag;
+            printk("rsdp: %p, size: %d\n", rsdp_tag->rsdp, rsdp_tag->size);
+            RSDP::GetInstance()->Init(2, &rsdp_tag->rsdp);
+            panic("no support for MULTIBOOT_TAG_TYPE_ACPI_NEW\n");
             break;
         }
         case MULTIBOOT_TAG_TYPE_ACPI_OLD:
         {
             auto rsdp_tag = (multiboot_tag_old_acpi *)tag;
             printk("rsdp: %p, size: %d\n", rsdp_tag->rsdp, rsdp_tag->size);
-            RSDP::GetInstance()->Init(0, &rsdp_tag->rsdp);
+            RSDP::GetInstance()->Init(1, &rsdp_tag->rsdp);
             break;
         }
         case MULTIBOOT_TAG_TYPE_MODULE:

@@ -17,15 +17,6 @@ extern "C"
     void panic(const char *msg);
 }
 
-#define assert(x, info)  \
-    do                   \
-    {                    \
-        if (!(x))        \
-        {                \
-            panic(info); \
-        }                \
-    } while (0)
-
 // 编译期间静态检测
 #define static_assert(x) \
     switch (x)           \
@@ -33,3 +24,9 @@ extern "C"
     case 0:              \
     case (x):;           \
     }
+
+
+#define assert(x) \
+    do {    \
+        if (x == false) panic(#x); \
+    } while(0);
