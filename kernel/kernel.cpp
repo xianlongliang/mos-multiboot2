@@ -18,11 +18,12 @@
 #include <std/map.h>
 #include <std/spinlock.h>
 
-extern "C" void Kernel_Main(unsigned long addr)
+
+extern "C" void Kernel_Main(void* mbi_addr)
 {
+
   clear();
-  IDT::GetInstance()->Init();
-  basic_init((void *)addr);
+  basic_init(mbi_addr);
   kmalloc_init();
   RSDT::GetInstance()->Init();
   APIC::GetInstance()->Init();

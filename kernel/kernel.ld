@@ -11,13 +11,30 @@ SECTIONS
     *(.multiboot_header)
   }
   . = ALIGN(0x1000);
+  .page :
+  {
+    *(.page)
+  }
+  . = ALIGN(0x1000);
+  .smp :
+  {
+    *(.smp)
+  }
+  .boot_text :
+  {
+    *(.boot_text)
+  }
+  . = ALIGN(0x1000);
   _boot_end = .;
+
+  . = 0x100000;
+  _kernel_physical_start = .;
 
   . += 0xFFFFFFFF00000000;
   _kernel_virtual_start = .;
 
   . = ALIGN(0x1000);
-  .data : AT(_boot_end)
+  .data : AT(_kernel_physical_start)
 	{
 		_kernel_data_start = .;
 		*(.data)
@@ -46,5 +63,5 @@ SECTIONS
 		_kernel_bss_end = .;
 	}
 
-	_kernel_end = .;
+	_kernel_virtual_end = .;
 }

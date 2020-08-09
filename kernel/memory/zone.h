@@ -7,7 +7,7 @@ class multiboot_mmap_entry;
 class Zone
 {
 public:
-    Zone(multiboot_mmap_entry *mmap);
+    Zone(void* pstart, void* pend);
 
     int64_t AllocatePages(uint64_t page_count);
     int64_t FreePages(uint64_t page_index);
@@ -43,6 +43,7 @@ public:
     }
 
 private:
+    Zone* next;
     uint64_t free_pages_count;
     uint64_t total_pages_count;
     uint64_t total_pages_count_rounded_up;

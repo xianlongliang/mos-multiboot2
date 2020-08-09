@@ -12,6 +12,7 @@ static Spinlock smp_lock;
 void SMP::Init()
 {
     GDT::GetInstance()->Init();
+    IDT::GetInstance()->Init();
     Syscall::GetInstance()->Init();
     smp_lock = Spinlock();
 
@@ -61,8 +62,8 @@ extern "C" void smp_apu_init()
 {
     smp_lock.lock();
     GDT::GetInstance()->Init();
-    Syscall::GetInstance()->Init();
     IDT::GetInstance()->Init();
+    Syscall::GetInstance()->Init();
     APIC::GetInstance()->Init();
 
     CPU::GetInstance()->SetOnline();

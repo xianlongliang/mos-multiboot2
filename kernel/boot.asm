@@ -32,34 +32,34 @@ header_start:
     dd 8    ; size
 header_end:
 
-section .data
+section .page
 global pml4
 global pdpe
 global pde
 global pdpe_low
 global pte
 align PAGE_SIZE
-pml4 equ $ - KERNEL_TEXT_BASE
+pml4:
     times 512 dq 0
-pdpe equ $ - KERNEL_TEXT_BASE
+pdpe:
     times 512 dq 0
-pde equ $ - KERNEL_TEXT_BASE
+pde:
     times 512 dq 0
-pte equ $ - KERNEL_TEXT_BASE
+pte:
     times 512 dq 0
-pdpe_low equ $ - KERNEL_TEXT_BASE
+pdpe_low:
     times 512 dq 0
     
 align 16
-GDT equ $ - KERNEL_TEXT_BASE
+GDT:
     dq 0x0000000000000000             ; Null Descriptor - should be present.
-GDT.CODE equ $ - KERNEL_TEXT_BASE
+GDT.CODE:
     dq 0x00209A0000000000             ; 64-bit code descriptor (exec/read).
-GDT.DATA equ $ - KERNEL_TEXT_BASE
+GDT.DATA:
     dq 0x0000920000000000             ; 64-bit data descriptor (read/write).
 
-GDT.Pointer equ $ - KERNEL_TEXT_BASE
-    dw $ - KERNEL_TEXT_BASE - GDT - 1                    ; 16-bit Size (Limit) of GDT.
+GDT.Pointer:
+    dw $ - GDT - 1                    ; 16-bit Size (Limit) of GDT.
     dq GDT                            ; 32-bit Base Address of GDT. (CPU will zero extend to 64-bit)
 
 align PAGE_SIZE
@@ -75,7 +75,7 @@ global SMP_STACK_START
 SMP_STACK_START:
 
 extern smp_callback
-section .text
+section .smp
 global SMP_JMP
 BITS 16
 SMP_JMP:
@@ -103,7 +103,7 @@ SMP_JMP:
 
     lgdt [GDT.Pointer] 
     
-    jmp CODE_SEG:(smp_protect_mode - KERNEL_TEXT_BASE)
+    jmp CODE_SEG:smp_protect_mode
     
 BITS 64
 smp_protect_mode:
@@ -115,11 +115,10 @@ smp_protect_mode:
     mov rax, smp_callback
     call rax
 
-section .text
+section .boot_text
 global _start
 bits 32
 _start:
-
     mov eax, pdpe_low
     or  eax, (PAGE_PRESENT | PAGE_WRITE)
     mov dword [pml4], eax
@@ -164,9 +163,10 @@ _start:
     mov cr0, eax
 
     lgdt [GDT.Pointer]
-    jmp CODE_SEG:(_start64 - KERNEL_TEXT_BASE)
 
-section .text
+    jmp CODE_SEG:_start64
+
+section .boot_text
 bits 64
 extern Kernel_Main
 global _start64

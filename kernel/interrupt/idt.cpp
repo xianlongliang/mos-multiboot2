@@ -153,44 +153,44 @@ void IDT::Init()
 
         this->Register(14, page_fault_handler);
         this->Register(IRQ1, keyboard_irq_handler);
+
+        /*                   ____________                          ____________
+        Real Time Clock --> |            |   Timer -------------> |            |
+        ACPI -------------> |            |   Keyboard-----------> |            |      _____
+        Available --------> | Secondary  |----------------------> | Primary    |     |     |
+        Available --------> | Interrupt  |   Serial Port 2 -----> | Interrupt  |---> | CPU |
+        Mouse ------------> | Controller |   Serial Port 1 -----> | Controller |     |_____|
+        Co-Processor -----> |            |   Parallel Port 2/3 -> |            |
+        Primary ATA ------> |            |   Floppy disk -------> |            |
+        Secondary ATA ----> |____________|   Parallel Port 1----> |____________|
+        */
+        // 初始化主片、从片的ICW1
+        // 0001 0001
+        outb(0x20, 0x11);
+        outb(0xA0, 0x11);
+
+        // 设置主片ICW2 IRQ 从 0x20(32) 号中断开始
+        outb(0x21, 0x20);
+
+        // 设置从片ICW2 IRQ 从 0x28(40) 号中断开始
+        outb(0xA1, 0x28);
+
+        // 设置主片ICW3 IR2 引脚连接从片
+        outb(0x21, 0x04);
+
+        // 设置从片ICW3 告诉从片输出引脚和主片 IR2 号相连
+        outb(0xA1, 0x02);
+
+        // 设置ICW4 设置主片和从片按照 x86 的方式工作
+        outb(0x21, 0x01);
+        outb(0xA1, 0x01);
+
+        outb(0x21, 0xff);
+        outb(0xA1, 0xff);
     }
 
-    /*                   ____________                          ____________
-    Real Time Clock --> |            |   Timer -------------> |            |
-    ACPI -------------> |            |   Keyboard-----------> |            |      _____
-    Available --------> | Secondary  |----------------------> | Primary    |     |     |
-    Available --------> | Interrupt  |   Serial Port 2 -----> | Interrupt  |---> | CPU |
-    Mouse ------------> | Controller |   Serial Port 1 -----> | Controller |     |_____|
-    Co-Processor -----> |            |   Parallel Port 2/3 -> |            |
-    Primary ATA ------> |            |   Floppy disk -------> |            |
-    Secondary ATA ----> |____________|   Parallel Port 1----> |____________|
-    */
-    // 初始化主片、从片的ICW1
-    // 0001 0001
-    outb(0x20, 0x11);
-    outb(0xA0, 0x11);
-
-    // 设置主片ICW2 IRQ 从 0x20(32) 号中断开始
-    outb(0x21, 0x20);
-
-    // 设置从片ICW2 IRQ 从 0x28(40) 号中断开始
-    outb(0xA1, 0x28);
-
-    // 设置主片ICW3 IR2 引脚连接从片
-    outb(0x21, 0x04);
-
-    // 设置从片ICW3 告诉从片输出引脚和主片 IR2 号相连
-    outb(0xA1, 0x02);
-
-    // 设置ICW4 设置主片和从片按照 x86 的方式工作
-    outb(0x21, 0x01);
-    outb(0xA1, 0x01);
-
-    outb(0x21, 0xff);
-    outb(0xA1, 0xff);
-
     load_idt(&idtr);
-    printk("gdt_init IDT_PTR %x\n", &idtr);
+    printk("IDT IDT_PTR %x\n", &idtr);
 }
 
 extern "C" void isr_handler(uint64_t isr_number, uint64_t error_code, uint64_t rsp, uint64_t rflags, uint64_t rip)

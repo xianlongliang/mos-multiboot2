@@ -19,10 +19,10 @@ uint64_t Zone::PageSize()
     return this->total_pages_count * sizeof(Page);
 }
 
-Zone::Zone(multiboot_mmap_entry *mmap)
+Zone::Zone(void* pstart, void* pend)
 {
-    this->physical_start_address = PAGE_4K_ALIGN(mmap->addr);
-    this->physical_end_address = ((mmap->addr + mmap->len) >> PAGE_4K_SHIFT) << PAGE_4K_SHIFT;
+    this->physical_start_address = (uint64_t)pstart;
+    this->physical_end_address = (uint64_t)pend;
     this->attribute = 0;
 
     uint64_t pages_count = (this->physical_end_address - this->physical_start_address) / PAGE_4K_SIZE;

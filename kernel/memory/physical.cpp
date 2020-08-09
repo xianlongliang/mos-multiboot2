@@ -19,7 +19,7 @@ void PhysicalMemory::Add(multiboot_mmap_entry *mmap)
         printk("mmap end <= start, drop\n");
         return;
     }
-    this->zones = new ((void *)this->ZONE_VIRTUAL_START) Zone(mmap);
+    this->zones = new ((void *)this->ZONE_VIRTUAL_START) Zone((void*)start, (void*)end);
 }
 
 Page *PhysicalMemory::Allocate(uint64_t count, uint64_t page_flags)

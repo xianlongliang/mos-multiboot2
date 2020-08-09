@@ -4,12 +4,13 @@
 #include <std/kstring.h>
 #include "physical_page.h"
 #include <std/printk.h>
+#include <std/singleton.h>
 
 #define flush_tlb()               \
     do                            \
     {                             \
         unsigned long tmpreg;     \
-        asm volatile(     \
+        asm volatile(             \
             "movq	%%cr3,	%0	\n\t" \
             "movq	%0,	%%cr3	\n\t" \
             : "=r"(tmpreg)        \
@@ -28,13 +29,12 @@ inline void *Get_CR3()
     return addr;
 }
 
-inline void set_cr3(void* pml4)
+inline void set_cr3(void *pml4)
 {
     // printk("setting: %p\n", pml4);
     asm volatile(
         "movq   %0,    %%rax   \n\t"
-        "movq	%%rax, %%cr3   \n\t"
-        :: "m"(pml4)
+        "movq	%%rax, %%cr3   \n\t" ::"m"(pml4)
         : "memory");
 }
 
@@ -42,26 +42,20 @@ class multiboot_mmap_entry;
 
 constexpr uint64_t ZONES_RESERVED = 8;
 
-class PhysicalMemory
+extern char _kernel_virtual_end;
+
+class PhysicalMemory : public Singleton<PhysicalMemory>
 {
 public:
-
-    static PhysicalMemory *GetInstance()
-    {
-        static PhysicalMemory instance;
-        return &instance;
-    }
-
-    Page* Allocate(uint64_t count, uint64_t page_flags);
-    void  Free(Page* page);
+    Page *Allocate(uint64_t count, uint64_t page_flags);
+    void Free(Page *page);
     bool Reserve(uint64_t physical_address);
 
-    inline static void* ZONE_VIRTUAL_START = 0x0;
+    inline static void *ZONE_VIRTUAL_START = 0x0;
 
 private:
-    friend void basic_init(void* mbi_addr);
+    friend void basic_init(void *mbi_addr);
     void Add(multiboot_mmap_entry *mmap);
 
-    // only recognize 1 zones, 1->End
     Zone *zones;
 };
