@@ -39,11 +39,13 @@ public:
     {
         // memory layout:
         // Zone : nodes : pages
-        return sizeof(Zone) + this->total_pages_count_rounded_up * 2 * sizeof(uint64_t) + this->total_pages_count_rounded_up * sizeof(Page);
+        return sizeof(Zone) + this->total_pages_count_rounded_up * 2 * sizeof(uint32_t) + this->total_pages_count_rounded_up * sizeof(Page);
     }
+    
+    List list_node;
 
 private:
-    Zone* next;
+    
     uint64_t free_pages_count;
     uint64_t total_pages_count;
     uint64_t total_pages_count_rounded_up;

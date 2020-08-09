@@ -8,6 +8,8 @@
 #include <memory/virtual_page.h>
 #include <memory/mapping.h>
 #include <acpi/rsdp.h>
+#include <memory/heap.h>
+#include <std/math.h>
 
 extern "C" char pml4;
 extern "C" char pdpe;
@@ -75,8 +77,10 @@ void basic_init(void *mbi_addr)
     auto addr = mbi_addr;
     auto mbi_size = *(uint64_t *)addr;
     auto mbi_end = addr + mbi_size;
-    PhysicalMemory::ZONE_VIRTUAL_START = (void *)mbi_end;
-    auto endd = &_kernel_virtual_end;
+    auto free_vstart = (void *)PAGE_4K_ROUND_UP((uint64_t)mbi_end);
+    
+    heap_init(free_vstart);
+    
     for (auto tag = (struct multiboot_tag *)(addr + 8);
          tag->type != MULTIBOOT_TAG_TYPE_END;
          tag = (struct multiboot_tag *)((multiboot_uint8_t *)tag + ((tag->size + 7) & ~7)))

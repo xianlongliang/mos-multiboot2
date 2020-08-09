@@ -46,6 +46,11 @@ inline void list_del(struct List *entry)
     list_init(entry);
 }
 
+inline bool list_is_uninit(struct List *entry)
+{
+    return (entry->next == 0x0 && entry->prev == 0x0);
+}
+
 inline long list_is_empty(struct List *entry)
 {
     if (entry == entry->next && entry->prev == entry)

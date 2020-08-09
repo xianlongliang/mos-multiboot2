@@ -13,6 +13,7 @@ void SMP::Init()
 {
     GDT::GetInstance()->Init();
     IDT::GetInstance()->Init();
+    APIC::GetInstance()->Init();
     Syscall::GetInstance()->Init();
     smp_lock = Spinlock();
 

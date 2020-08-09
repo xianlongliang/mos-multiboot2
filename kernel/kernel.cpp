@@ -16,17 +16,16 @@
 #include <acpi/rsdp.h>
 #include <smp/smp.h>
 #include <std/map.h>
+#include <std/math.h>
 #include <std/spinlock.h>
 
 
 extern "C" void Kernel_Main(void* mbi_addr)
 {
-
   clear();
   basic_init(mbi_addr);
   kmalloc_init();
   RSDT::GetInstance()->Init();
-  APIC::GetInstance()->Init();
   SMP::GetInstance()->Init();
   task_init();
 

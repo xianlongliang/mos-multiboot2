@@ -24,7 +24,7 @@ extern "C" void ret_syscall();
 
 task_struct *init_task;
 
-static CPU* cpus;
+static CPU *cpus;
 
 extern "C" unsigned long do_exit(unsigned long code)
 {
@@ -51,6 +51,7 @@ static task_struct *do_fork(struct Regs *regs, unsigned long clone_flags)
 
     // place thread_struct after task_struct
     auto thread = (struct thread_struct *)(task + 1);
+    bzero(thread, sizeof(struct thread_struct));
     task->thread = thread;
 
     regs->rsp = (uint64_t)task + STACK_SIZE;
@@ -156,8 +157,7 @@ extern "C" ssize_t sys_write(int fd, void *buf, size_t count);
 
 void bash()
 {
-    clear();
-    printk("mos-kernel#");
+    printk("mos-kernel# ");
     int8_t bash_buffer[1024];
     uint64_t bash_buffer_cur = 0;
     while (1)
@@ -172,14 +172,23 @@ void bash()
                 clear();
             }
             else if (strcmp(bash_buffer, "help") == 0)
-                printk("\nthis is mos v0.0.1\n");
-            else
-                printk("\n");
+                printk("\nmos kernel v0.0.1\n");
+            else if (bash_buffer_cur != 0)
+            {
+                printk("\n%s: command not found\n", bash_buffer);
+            }
             printk("mos-kernel# ");
             bzero(bash_buffer, bash_buffer_cur);
             bash_buffer_cur = 0;
             break;
-
+        case '\b':
+        {
+            if (bash_buffer_cur == 0)
+                break;
+            bash_buffer[--bash_buffer_cur] = 0;
+            sys_write(1, &ch, 1);
+            break;
+        }
         default:
         {
             bash_buffer[bash_buffer_cur++] = ch;
@@ -201,11 +210,10 @@ uint64_t init(uint64_t arg)
     cpus->Get().scheduler.Add(current)->Add(bash_task);
 
     // switch_to(current, next);
-    sti();
+    // sti();
     while (1)
     {
         // remove self from the scheduler when there are others tasks running
-        task_sleep();
         asm volatile("sti; hlt");
         // idle task will be added back when there's no task to run
     }

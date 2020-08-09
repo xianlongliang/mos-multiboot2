@@ -161,7 +161,7 @@ void RSDT::Init()
         }
         if (!strncmp(other->header.signature, "FACP", 4))
         {
-            printk("find\n");
+            printk("find FACP\n");
         }
     }
 

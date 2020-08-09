@@ -6,6 +6,7 @@
 #include "physical_page.h"
 #include "flags.h"
 #include <std/math.h>
+#include <memory/heap.h>
 
 #define LEFT_LEAF(index) ((index)*2 + 1)
 #define RIGHT_LEAF(index) ((index)*2 + 2)
@@ -19,8 +20,11 @@ uint64_t Zone::PageSize()
     return this->total_pages_count * sizeof(Page);
 }
 
-Zone::Zone(void* pstart, void* pend)
+Zone::Zone(void *pstart, void *pend)
 {
+
+    list_init(&this->list_node);
+
     this->physical_start_address = (uint64_t)pstart;
     this->physical_end_address = (uint64_t)pend;
     this->attribute = 0;
@@ -40,9 +44,9 @@ Zone::Zone(void* pstart, void* pend)
     // node number is size * 2 - 1, we alloc size * 2
     auto node_size = this->total_pages_count_rounded_up * 2;
     // nodes placed at the end of the zone
-    this->nodes = (uint32_t *)(uint64_t(this) + sizeof(Zone));
+    this->nodes = (uint32_t *)brk_up(node_size * sizeof(uint32_t));
     // nodes placed at the end of the nodes
-    this->pages = (Page *)(uint64_t(this) + sizeof(Zone) + node_size * sizeof(uint32_t));
+    this->pages = (Page *)brk_up(pages_count * sizeof(Page));
     printk("nodes start at %p -> %p\n", nodes, uint64_t(this->nodes) + node_size * sizeof(uint32_t));
     printk("pages start at %p -> %p\n", pages, uint64_t(pages) + this->total_pages_count * sizeof(Page));
 
@@ -62,7 +66,7 @@ Zone::Zone(void* pstart, void* pend)
         pages[j].reference_count = 0;
     }
 
-    auto reserved_pages = (PAGE_4K_ALIGN(uint64_t(this) + this->Span()) - KERNEL_VIRTUAL_START) / PAGE_4K_SIZE;
+    auto reserved_pages = PAGE_4K_ROUND_UP(this->Span()) / PAGE_4K_SIZE;
     printk("reserved pages %d\n", reserved_pages);
     printk("zone init, start at: %p span: %x\n", this, this->Span());
     auto pidx = this->AllocatePages(reserved_pages);
@@ -71,7 +75,7 @@ Zone::Zone(void* pstart, void* pend)
 
 int64_t Zone::AllocatePages(uint64_t pages_count)
 {
-    assert(pages_count >= 1, "pages_count < 1");
+    assert(pages_count >= 1);
 
     if (!IS_POWER_OF_2(pages_count))
         pages_count = round_up_pow_of_2(pages_count);
@@ -132,7 +136,7 @@ int64_t Zone::FreePages(uint64_t offset)
     unsigned node_size, index = 0;
     unsigned left_longest, right_longest;
 
-    assert(offset >= 0 && offset < this->total_pages_count, "self && offset >= 0 && offset < self->size");
+    assert(offset >= 0 && offset < this->total_pages_count);
 
     node_size = 1;
     index = offset + this->total_pages_count - 1;

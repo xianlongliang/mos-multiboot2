@@ -47,6 +47,7 @@ extern char _kernel_virtual_end;
 class PhysicalMemory : public Singleton<PhysicalMemory>
 {
 public:
+
     Page *Allocate(uint64_t count, uint64_t page_flags);
     void Free(Page *page);
     bool Reserve(uint64_t physical_address);
@@ -57,5 +58,5 @@ private:
     friend void basic_init(void *mbi_addr);
     void Add(multiboot_mmap_entry *mmap);
 
-    Zone *zones;
+    List* zones_list;
 };

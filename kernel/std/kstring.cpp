@@ -38,7 +38,7 @@ void bzero(void *dest, uint64_t len)
 int strcmp(const char *s1, const char *s2)
 {
     int8_t res = 0;
-    while (*s1 && !(res = *(uint8_t *)s2 - *(uint8_t *)s1))
+    while (!(res = *(uint8_t *)s2 - *(uint8_t *)s1) && *s1 != '\0')
     {
         ++s1;
         ++s2;
