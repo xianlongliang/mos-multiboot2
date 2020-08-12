@@ -51,6 +51,7 @@ add_executable(kernel
         kernel/thread/userland.cpp
         kernel/std/singleton.h 
         kernel/std/map.h 
+        kernel/std/atomic.h 
         kernel/std/avl_tree.h 
         kernel/std/msr.h 
         kernel/std/vector.h 
