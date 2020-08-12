@@ -177,6 +177,10 @@ void bash()
             {
                 printk("\n%s: command not found\n", bash_buffer);
             }
+            else
+            {
+                printk("\n");
+            }
             printk("mos-kernel# ");
             bzero(bash_buffer, bash_buffer_cur);
             bash_buffer_cur = 0;
