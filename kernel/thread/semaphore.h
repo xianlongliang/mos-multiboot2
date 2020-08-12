@@ -3,6 +3,7 @@
 #include <std/stdint.h>
 #include <std/list.h>
 #include <thread/task.h>
+#include <std/atomic.h>
 
 class Semaphore
 {
@@ -12,6 +13,6 @@ public:
     void Down();
     void Up();
 private:
-    volatile uint8_t value;
+    atomic<uint8_t> value;
     list<task_struct *> wait_list;
 };
