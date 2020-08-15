@@ -126,7 +126,6 @@ void basic_init(void *mbi_addr)
                     PhysicalMemory::GetInstance()->Add(mmap);
                 }
             }
-            PhysicalMemory::GetInstance()->Reserve(0xfee00000);
             break;
         }
         case MULTIBOOT_TAG_TYPE_ELF_SECTIONS:
