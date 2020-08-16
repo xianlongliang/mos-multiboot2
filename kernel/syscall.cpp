@@ -6,7 +6,7 @@
 #include <tss.h>
 #include <memory/physical_page.h>
 
-extern "C" ssize_t sys_read(int fd, void *buf, size_t count);
+extern "C" ssize_t sys_read(int fd, uint8_t*buf, size_t count);
 
 extern "C" uint64_t syscall_entry_c(uint64_t syscall_number, uint64_t rsi, uint64_t rdx, uint64_t rcx, uint64_t r8, uint64_t r9)
 {
@@ -14,7 +14,7 @@ extern "C" uint64_t syscall_entry_c(uint64_t syscall_number, uint64_t rsi, uint6
     printk("syscall %d times\n", count++);
     if (syscall_number == 1)
     {
-        return sys_read(rsi, (void *)rdx, rcx);
+        return sys_read(rsi, (uint8_t*)rdx, rcx);
     }
     return 0;
 }
@@ -32,8 +32,8 @@ extern "C" char pdpe_low;
 
 struct CPU_STRUCT
 {
-    void *syscall_stack;
-    void *syscall_old_stack;
+    uint8_t*syscall_stack;
+    uint8_t*syscall_old_stack;
 };
 
 void Syscall::Init()

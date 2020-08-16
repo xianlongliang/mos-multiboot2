@@ -2,9 +2,13 @@ cmake_minimum_required(VERSION 3.16)
 project(kernel)
 
 set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_FLAGS  "-fno-pie -no-pie -g -fno-builtin -fno-exceptions -fno-rtti -fno-threadsafe-statics -nostdlib -ffreestanding -g -Wall -Wextra -MMD -mno-red-zone -mcmodel=large -Wl,--build-id=none -T ${CMAKE_SOURCE_DIR}/kernel/kernel.ld")
-set(CMAKE_C_FLAGS "-fno-pie -no-pie -g -mcmodel=large")
-
+set(BUILD_FLAG "-g -fno-builtin -fno-exceptions -fno-rtti -fno-threadsafe-statics -nostdlib -ffreestanding -g -Wall -Wextra -MMD -mno-red-zone -mcmodel=large")
+if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+        set(CMAKE_CXX_FLAGS "${BUILD_FLAG}")
+        set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fuse-ld=lld ${CMAKE_SOURCE_DIR}/kernel/kernel.ld")
+elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+        set(CMAKE_CXX_FLAGS  "-no-pie ${BUILD_FLAG} -T ${CMAKE_SOURCE_DIR}/kernel/kernel.ld")
+endif()
 set(CMAKE_ASM_NASM_SOURCE_FILE_EXTENSIONS nasm asm)
 set(CMAKE_ASM_NASM_OBJECT_FORMAT elf64)
 ENABLE_LANGUAGE(ASM_NASM)
@@ -50,6 +54,8 @@ add_executable(kernel
         kernel/thread/userland.h
         kernel/thread/userland.cpp
         kernel/std/singleton.h 
+        kernel/std/new.h 
+        kernel/std/new.cpp 
         kernel/std/map.h 
         kernel/std/atomic.h 
         kernel/std/avl_tree.h 

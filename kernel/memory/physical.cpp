@@ -21,7 +21,7 @@ void PhysicalMemory::Add(multiboot_mmap_entry *mmap)
         return;
     }
     auto zone_addr = brk_up(sizeof(Zone));
-    auto zone = new (zone_addr) Zone((void *)start, (void *)end);
+    auto zone = new (zone_addr) Zone((uint8_t*)start, (uint8_t*)end);
     if (!zones_list)
     {
         this->zones_list = &zone->list_node;
@@ -62,4 +62,5 @@ bool PhysicalMemory::Reserve(uint64_t physical_address)
     auto zone = (Zone *)(this->zones_list);
     physical_address &= PAGE_4K_MASK_LOW;
     zone->Reserve((physical_address - 0x100000) / PAGE_4K_SIZE);
+    return true;
 }

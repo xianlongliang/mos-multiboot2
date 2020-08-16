@@ -98,7 +98,7 @@ void RSDT::Init()
     }
     auto rsdt_addr = rsdp->RSDTAddress();
     auto entry_len = (rsdt->header.length - sizeof(acpi_rsdt_t)) / 4;
-    for (int i = 0; i < entry_len; ++i)
+    for (uint64_t i = 0; i < entry_len; ++i)
     {
         auto other = (acpi_rsdt_t *)(Phy_To_Virt(rsdt->other_sdt[i]));
         // parse madt
@@ -140,17 +140,17 @@ void RSDT::Init()
                 }
                 case 2:
                 {
-                    auto isoe = (acpi_apic_t::interrupt_source_override_entry *)ent;
+                    // auto isoe = (acpi_apic_t::interrupt_source_override_entry *)ent;
                     break;
                 }
                 case 4:
                 {
-                    auto nmie = (acpi_apic_t::non_maskable_interrupts_entry *)ent;
+                    // auto nmie = (acpi_apic_t::non_maskable_interrupts_entry *)ent;
                     break;
                 }
                 case 5:
                 {
-                    auto laaoe = (acpi_apic_t::local_apic_address_override_entry *)ent;
+                    // auto laaoe = (acpi_apic_t::local_apic_address_override_entry *)ent;
                     break;
                 }
                 default:

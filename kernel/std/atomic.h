@@ -59,6 +59,7 @@ public:
                      : "=m"(this->val)
                      : "r"((uint64_t)v)
                      : "memory");
+        return (T)this->val;
     }
 
     T fetch_sub(T v)
@@ -67,6 +68,7 @@ public:
                      : "=m"(this->val)
                      : "r"((uint64_t)v)
                      : "memory");
+        return (T)this->val;
     }
 
     bool operator==(T v)

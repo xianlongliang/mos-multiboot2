@@ -5,6 +5,7 @@
 #include <memory/heap.h>
 #include <memory/mapping.h>
 #include <memory/physical_page.h>
+#include <std/kstring.h>
 
 #define IOAPICID 0x00
 #define IOAPICVER 0x01
@@ -87,12 +88,16 @@ public:
                 apicId = (read(IOAPICID) >> 24) & 0xF0;
                 apicVer = read(IOAPICVER); // cast to uint8_t (uint8_t) hides upper bits
 
+                printk("apicID: %x\n", apicId);
+                printk("apicVer: %x\n", apicVer);
+                
                 //< max. redir entry is given IOAPICVER[16:24]
                 redirEntryCnt = (read(IOAPICVER) >> 16) + 1; // cast to uint8_t occuring ok!
                 globalIntrBase = gsib;
 
                 
-                RedirectionEntry keyboard = {0};
+                RedirectionEntry keyboard;
+                bzero(&keyboard, sizeof(RedirectionEntry));
                 keyboard.vector = 33;
                 writeRedirEntry(1, &keyboard);
         }
@@ -113,8 +118,8 @@ public:
         {
                 if (entNo >= redirectionEntries())
                         panic("entNo < redirectionEntries");
-                auto low = read(entNo);
-                auto high = read(entNo + 1);
+                uint64_t low = read(entNo);
+                uint64_t high = read(entNo + 1);
                 auto full = (high << 32) | low;
                 return *(RedirectionEntry*)&full;
         }

@@ -4,9 +4,9 @@
 #include "flags.h"
 
 // kernel reserve 0x600000 ~ 0x800000 2M virtual address for storing 512 PTE
-static void *kernel_pte_reserved = (void *)0x600000 + PAGE_OFFSET;
+static uint8_t*kernel_pte_reserved = (uint8_t*)0x600000 + PAGE_OFFSET;
 
-static void *pte_alloc()
+static uint8_t*pte_alloc()
 {
     printk("pte_alloc\n");
     auto res = kernel_pte_reserved;
@@ -24,12 +24,13 @@ static SwapPTE swap_pte;
 
 void vmap_init()
 {
+    printk("%p\n", &swap_pte);
     swap_pte = {(uint64_t)Virt_To_Phy(kernel_pte_reserved), (uint64_t)kernel_pte_reserved};
 }
 
 extern "C" char pde;
 
-int vmap_frame_kernel(void *vaddr, void *paddr)
+int vmap_frame_kernel(uint8_t*vaddr, uint8_t*paddr)
 {
     printk("mapping %p -> %p\n", vaddr, paddr);
     auto ppde = &pde;
@@ -76,10 +77,10 @@ int vmap_frame_kernel(void *vaddr, void *paddr)
 // overload
 int vmap_frame_kernel(uint64_t vaddr, uint64_t paddr)
 {
-    return vmap_frame_kernel((void *)vaddr, (void *)paddr);
+    return vmap_frame_kernel((uint8_t*)vaddr, (uint8_t*)paddr);
 }
 
-int vmap_frame_kernel(void *vaddr)
+int vmap_frame_kernel(uint8_t*vaddr)
 {
 
     auto ppde = &pde;
@@ -128,7 +129,7 @@ int vmap_frame_kernel(void *vaddr)
 int vmap_frame(task_struct *task, uint64_t vstart, uint64_t attributes)
 {
     if (!task->mm)
-        return vmap_frame_kernel((void *)vstart);
+        return vmap_frame_kernel((uint8_t*)vstart);
 
     auto pml4_offset = (vstart & 0xff8000000000) >> 39;
     auto pdpe_offset = (vstart & 0x7fc0000000) >> 30;

@@ -1,14 +1,15 @@
 #include "heap.h"
 #include "physical_page.h"
 
-static void *brk;
+static uint8_t *brk;
 
-void *heap_init(void *addr)
+void heap_init(void *addr)
 {
-    brk = addr;
+    brk = (uint8_t *)addr;
 }
 
-void* brk_get() {
+void *brk_get()
+{
     return brk;
 }
 

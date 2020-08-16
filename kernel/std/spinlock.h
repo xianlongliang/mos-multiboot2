@@ -5,16 +5,15 @@
 class Spinlock
 {
 public:
-    inline void lock()  
+    inline void lock()
     {
-        asm volatile("movq $1, %rcx	            \n\t");
-        asm volatile("spin_lock_retry:          \n\t");
-        asm volatile("movq $0, %rax	            \n\t");
-        asm volatile("lock; cmpxchgq %%rcx, %0  \n\t"
+        asm volatile("movq $1, %%rcx	            \n\t"
+                     "spin_lock_retry:              \n\t"
+                     "xorq %%rax, %%rax	            \n\t"
+                     "lock; cmpxchgq %%rcx, %0      \n\t"
+                     "pause                         \n\t"
                      : "=m"(this->lock_val)
-                     : "a"(0)
-                     : "memory");
-        asm volatile("pause");
+                     :: "memory", "rcx", "rax");
         asm volatile("jnz    spin_lock_retry    \n\t");
     }
 

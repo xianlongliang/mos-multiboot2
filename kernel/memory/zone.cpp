@@ -20,7 +20,7 @@ uint64_t Zone::PageSize()
     return this->total_pages_count * sizeof(Page);
 }
 
-Zone::Zone(void *pstart, void *pend)
+Zone::Zone(uint8_t *pstart, uint8_t *pend)
 {
 
     list_init(&this->list_node);
@@ -61,7 +61,7 @@ Zone::Zone(void *pstart, void *pend)
     for (int j = 0; j < this->FreePagesCount(); ++j)
     {
         pages[j].zone = this;
-        pages[j].physical_address = (void *)(this->physical_start_address + PAGE_4K_SIZE * j);
+        pages[j].physical_address = (uint8_t *)(this->physical_start_address + PAGE_4K_SIZE * j);
         pages[j].attributes = 0;
         pages[j].reference_count = 0;
     }

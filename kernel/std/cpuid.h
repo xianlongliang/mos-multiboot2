@@ -7,7 +7,6 @@ inline void get_cpuid(unsigned int Mop, unsigned int Sop, unsigned int *a, unsig
                  : "0"(Mop), "2"(Sop));
 }
 
-
 struct cpuid_struct
 {
     uint32_t rax;
@@ -18,7 +17,7 @@ struct cpuid_struct
 
 inline cpuid_struct cpuid(uint32_t main_op)
 {
-    int a, b, c, d;
+    cpuid_struct ans;
     asm volatile(
         "mov %0, %%eax \n\t"
         "cpuid      \n\t"
@@ -26,8 +25,8 @@ inline cpuid_struct cpuid(uint32_t main_op)
         "mov %%ebx, %1\n\t"
         "mov %%ecx, %2\n\t"
         "mov %%edx, %3\n\t"
-        : "=r"(a), "=r"(b), "=r"(c), "=r"(d)
+        : "=r"(ans.rax), "=r"(ans.rbx), "=r"(ans.rcx), "=r"(ans.rdx)
         : "0"(main_op)
         : "rax", "rbx", "rcx", "rdx");
-    return {a, b, c, d};
+    return ans;
 }

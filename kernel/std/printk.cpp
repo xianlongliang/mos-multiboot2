@@ -207,7 +207,7 @@ void putvalue(int64_t val)
         putvalue(uint64_t(val));
 }
 
-void putvalue(void *val)
+void putvalue(uint8_t*val)
 {
         int end_idx;
         auto buff = int2hexstr(uint64_t(val), end_idx);
@@ -278,7 +278,7 @@ void printk(const char *format, ...)
                         case 'p':
                         {
                                 ++pformat;
-                                putvalue(va_arg(args, void *));
+                                putvalue(va_arg(args, uint8_t*));
                                 break;
                         }
                         default:

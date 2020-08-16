@@ -9,24 +9,24 @@
 struct kmalloc_meta
 {
     SlabNode *slab_node;
-    void *padding;
+    uint8_t *padding;
 };
 
 #define KMALLOC_CACHE_COUNT 10
 
 static Slab kmalloc_cache[KMALLOC_CACHE_COUNT];
 
-
-struct big_page_pool_node {
+struct big_page_pool_node
+{
     uint64_t size;
-    void* start;
-    void* end;
-    list<void*> free_list;
-    list<void*> used_list;
+    void *start;
+    void *end;
+    list<void *> free_list;
+    list<void *> used_list;
 };
 
-
-struct big_page_pool {
+struct big_page_pool
+{
     uint64_t size;
     list<big_page_pool_node> nodes;
 };
@@ -48,13 +48,11 @@ void kmalloc_init()
         slab_node->free_count = kmalloc_cache[i].total_free;
         auto bitmap_size = (slab_node->free_count / 8) == 0 ? 1 : (slab_node->free_count / 8);
         slab_node->bitmap = new (brk_up(PAGE_4K_SIZE - sizeof(SlabNode))) Bitmap(bitmap_size, true);
-        slab_node->vaddr = brk_up(init_slab_size < PAGE_4K_SIZE ? PAGE_4K_SIZE : init_slab_size);
+        slab_node->vaddr = (uint8_t*)brk_up(init_slab_size < PAGE_4K_SIZE ? PAGE_4K_SIZE : init_slab_size);
         kmalloc_cache[i].pool = slab_node;
     }
 
     bpp[0].size = 4096;
-
-
 }
 
 void kmalloc_create(int idx)
@@ -64,7 +62,7 @@ void kmalloc_create(int idx)
 
     slab_node->used_count = 0;
     slab_node->free_count = PAGE_4K_SIZE / cache.object_size == 0 ? 1 : PAGE_4K_SIZE / cache.object_size;
-    slab_node->vaddr = brk_up(PAGE_4K_SIZE);
+    slab_node->vaddr = (uint8_t*)brk_up(PAGE_4K_SIZE);
     auto bitmap_size = (slab_node->free_count / 8) == 0 ? 1 : (slab_node->free_count / 8);
     slab_node->bitmap = new (brk_up(PAGE_4K_SIZE - sizeof(SlabNode))) Bitmap(bitmap_size, true);
     slab_node->slab = &cache;
@@ -115,7 +113,7 @@ void *kmalloc(uint64_t size, uint64_t flags)
                 selected_node->bitmap->Set(i);
                 auto meta = (kmalloc_meta *)(selected_node->vaddr + cache.object_size * i);
                 meta->slab_node = selected_node;
-                return (void *)meta + 16;
+                return (uint8_t *)meta + 16;
             }
         }
     } while (selected_node != cache.pool);
@@ -123,7 +121,7 @@ void *kmalloc(uint64_t size, uint64_t flags)
 
 void kfree(const void *ptr)
 {
-    auto meta = (kmalloc_meta *)(ptr - 16);
+    auto meta = (kmalloc_meta *)((uint8_t*)ptr - 16);
     auto slab_node = meta->slab_node;
     auto bit_offset = ((int8_t *)meta - (int8_t *)slab_node->vaddr) / slab_node->slab->object_size;
 
@@ -135,6 +133,6 @@ void kfree(const void *ptr)
     slab_node->slab->total_used--;
 }
 
-void *kmalloc_big_page(uint64_t size, uint64_t flags) {
-    
+uint8_t *kmalloc_big_page(uint64_t size, uint64_t flags)
+{
 }

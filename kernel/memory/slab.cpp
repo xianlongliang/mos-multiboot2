@@ -79,7 +79,7 @@ int slab_free(Slab *slab)
     }
 }
 
-void *Slab::Alloc()
+uint8_t*Slab::Alloc()
 {
     SlabNode *selected_node = this->pool;
 
@@ -115,7 +115,7 @@ void *Slab::Alloc()
                 this->total_free--;
                 this->total_used++;
                 selected_node->bitmap->Set(i);
-                return (void *)selected_node->vaddr + this->object_size * i;
+                return (uint8_t*)selected_node->vaddr + this->object_size * i;
             }
             panic("selected_node bit not found\n");
         }
@@ -123,7 +123,7 @@ void *Slab::Alloc()
     } while (selected_node != this->pool);
 }
 
-void Slab::Free(const void *ptr)
+void Slab::Free(const uint8_t*ptr)
 {
     auto selected_node = this->pool;
     do

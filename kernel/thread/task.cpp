@@ -58,7 +58,7 @@ static task_struct *do_fork(struct Regs *regs, unsigned long clone_flags)
     regs->rbp = regs->rsp;
 
     // copy to regs to the stack end
-    memcpy((void *)((uint8_t *)task + STACK_SIZE - sizeof(Regs)), regs, sizeof(Regs));
+    memcpy((uint8_t *)((uint8_t *)task + STACK_SIZE - sizeof(Regs)), regs, sizeof(Regs));
 
     // stack end is equal to stack base
     thread->rsp0 = regs->rsp;
@@ -111,8 +111,8 @@ void userland_page_init(task_struct *task)
 {
     vmap_frame(current, 0x400000, 0x07);
     vmap_copy_kernel(current);
-    task->mm->start_code = (void *)0x400000;
-    task->mm->end_code = (void *)0x400000 + PAGE_4K_SIZE;
+    task->mm->start_code = (uint8_t *)0x400000;
+    task->mm->end_code = (uint8_t *)0x400000 + PAGE_4K_SIZE;
 }
 
 void init2()
@@ -131,7 +131,7 @@ void init2()
     bzero(task->mm, sizeof(mm_struct));
     userland_page_init(task);
     set_cr3(Virt_To_Phy(task->mm->pml4));
-    memcpy((void *)task->mm->start_code, (uint8_t *)&userland_entry, 1024);
+    memcpy((uint8_t *)task->mm->start_code, (uint8_t *)&userland_entry, 1024);
     auto ret_syscall_addr = uint64_t(&ret_syscall);
     auto ret_stack = uint64_t((uint8_t *)task + STACK_SIZE - sizeof(Regs));
     asm volatile("movq	%0,	%%rsp	\n\t"
@@ -152,8 +152,8 @@ void init2()
     asm volatile("retq");
 }
 
-extern "C" ssize_t sys_read(int fd, void *buf, size_t count);
-extern "C" ssize_t sys_write(int fd, void *buf, size_t count);
+extern "C" ssize_t sys_read(int fd, uint8_t *buf, size_t count);
+extern "C" ssize_t sys_write(int fd, uint8_t *buf, size_t count);
 
 void bash()
 {
@@ -162,7 +162,7 @@ void bash()
     uint64_t bash_buffer_cur = 0;
     while (1)
     {
-        char ch = 0;
+        uint8_t ch = 0;
         sys_read(1, &ch, 1);
         switch (ch)
         {
@@ -229,7 +229,7 @@ void task_init()
 
     auto page = PhysicalMemory::GetInstance()->Allocate(1, PG_PTable_Maped | PG_Kernel | PG_Active);
 
-    auto init_task_stack = (void *)(Phy_To_Virt(page->physical_address) + PAGE_4K_SIZE);
+    auto init_task_stack = (uint8_t *)(Phy_To_Virt(page->physical_address) + PAGE_4K_SIZE);
 
     tss_struct init_task_tss;
     bzero(&init_task_tss, sizeof(tss_struct));
@@ -258,16 +258,17 @@ void task_init()
     thread->fs = KERNEL_DS;
     thread->gs = KERNEL_DS;
     thread->rsp0 = (uint64_t)init_task + STACK_SIZE;
-    thread->rsp = (uint64_t)init_task + STACK_SIZE - sizeof(Regs);
+    thread->rsp = (uint64_t)init_task + STACK_SIZE - sizeof(Regs) - 0x8;
     thread->rip = uint64_t(&init);
     // the real stack points stack end - Regs
     init_task->state = TASK_RUNNING;
 
-    asm volatile("movq	%0,	%%fs \n\t" ::"a"(init_task->thread->fs));
-    asm volatile("movq	%0,	%%gs \n\t" ::"a"(init_task->thread->gs));
+    asm volatile("movq  %0, %%r15   \n\t"  ::"a"(init_task->thread->rip));
+    asm volatile("movq	%0,	%%fs  \n\t"  ::"a"(init_task->thread->fs));
+    asm volatile("movq	%0,	%%gs  \n\t"  ::"a"(init_task->thread->gs));
     asm volatile("movq	%0,	%%rsp \n\t" ::"a"(init_task->thread->rsp));
     asm volatile("movq	%0,	%%rbp \n\t" ::"a"(init_task->thread->rsp0));
-    asm volatile("push  %0 \n\t" ::"a"(init_task->thread->rip));
+    asm volatile("push  %r15 \n\t");
     asm volatile("retq");
 }
 

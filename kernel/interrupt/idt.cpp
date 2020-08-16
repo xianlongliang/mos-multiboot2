@@ -73,14 +73,14 @@ extern "C"
     void irq15(); // IDE1 传输控制使用
 }
 
-#define CONVERT_ISR_ADDR(i) (void *)(&isr##i)
-#define CONVERT_IRQ_ADDR(i) (void *)(&irq##i)
+#define CONVERT_ISR_ADDR(i) (uint8_t*)(&isr##i)
+#define CONVERT_IRQ_ADDR(i) (uint8_t*)(&irq##i)
 
 #define set_trap_gate(n, ist, addr) set_gate(TRAP, n, ist, addr);
 #define set_intr_gate(n, ist, addr) set_gate(INTERRUPT, n, ist, addr);
 #define set_system_gate(n, ist, addr) set_gate(SYSTEM, n, ist, addr);
 
-void IDT::set_gate(IDT::DescriptorType type, unsigned int n, unsigned char ist, void *addr)
+void IDT::set_gate(IDT::DescriptorType type, unsigned int n, unsigned char ist, uint8_t*addr)
 {
     uint64_t handler = reinterpret_cast<uint64_t>(addr);
     auto &id = this->idt[n];

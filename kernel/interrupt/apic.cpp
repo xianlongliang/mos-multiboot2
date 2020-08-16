@@ -13,7 +13,6 @@
 
 static void timer_callback(uint64_t error_code, uint64_t rsp, uint64_t rflags, uint64_t rip)
 {
-    static uint64_t tick = 0;
     // printk("[%d] tick: %d\n", CPU::GetInstance()->Get().apic_id, tick++);
     static auto cpus = CPU::GetInstance();
     cpus->Get().scheduler.Schedule();
@@ -52,7 +51,6 @@ void APIC::Init()
 {
     if (!this->inited)
     {
-        this->inited = true;
         this->local_apic_base = (uint32_t *)brk_up(PAGE_4K_SIZE);
     }
 
@@ -70,7 +68,7 @@ void APIC::Init()
     apic_base_addr_reg->MBZ3 = 0;
     printk("APIC BASE: %x\n", apic_base_val);
     this->local_apic_base = (uint32_t *)Phy_To_Virt(apic_base_addr_reg->ABA << PAGE_4K_SHIFT);
-    // vmap_frame_kernel(this->local_apic_base, (void *)(apic_base_addr_reg->ABA << PAGE_4K_SHIFT));
+    // vmap_frame_kernel(this->local_apic_base, (uint8_t*)(apic_base_addr_reg->ABA << PAGE_4K_SHIFT));
 
     wrmsr(IA32_APIC_BASE, apic_base_val);
     apic_base_val = rdmsr(IA32_APIC_BASE);
@@ -101,6 +99,8 @@ void APIC::Init()
     apic_write(APIC_TPR, 1);
 
     timer_init();
+
+    this->inited = true;
 }
 
 void APIC::EOI()
@@ -115,8 +115,9 @@ void APIC::timer_init()
     static uint32_t ticks = 0xFFFFFFFF - apic_read(APIC_TIMER_CCR);
     if (!this->inited)
     {
-        pit_spin(10);
+        pit_spin(50);
     }
+
     // Start timer as periodic on IRQ 0, divider 16, with the number of ticks we counted
     apic_write(APIC_LVT_TIMER, IRQ0 | APIC_TIMER_PERIODIC);
     apic_write(APIC_TIMER_ICR, ticks);

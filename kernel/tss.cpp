@@ -9,7 +9,8 @@ void set_tss(tss_struct &tss)
     global_task_tss = tss;
 }
 
-tss_struct& get_tss() {
+tss_struct &get_tss()
+{
     return global_task_tss;
 }
 
@@ -29,7 +30,7 @@ void tss_init()
     tss.ist7 = 0;
 }
 
-void set_gdt_tss(void* entry, void *tss_addr, uint16_t limit, uint16_t attr)
+void set_gdt_tss(void *entry, void *tss_addr, uint16_t limit, uint16_t attr)
 {
     auto addr = reinterpret_cast<uint64_t>(tss_addr);
     struct GDT_TSS *ts = (struct GDT_TSS *)(entry);

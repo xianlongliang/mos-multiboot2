@@ -17,17 +17,17 @@ struct acpi_rsdp_t
     char reserved[3];
 } __attribute__((__packed__));
 
-void *RSDP::RSDTAddress()
+uint8_t*RSDP::RSDTAddress()
 {
     return this->rsdt_vaddr;
 }
 
-void *RSDP::RSDTAddressBase()
+uint8_t*RSDP::RSDTAddressBase()
 {
     return this->rsdt_vaddr_base;
 }
 
-void RSDP::Init(uint8_t rsdp_version, void *rsdp_address)
+void RSDP::Init(uint8_t rsdp_version, uint8_t*rsdp_address)
 {
     switch (rsdp_version)
     {
@@ -36,7 +36,7 @@ void RSDP::Init(uint8_t rsdp_version, void *rsdp_address)
         auto rsdp = (acpi_rsdp_t *)rsdp_address;
         printk("rsdt addr: %p\n", rsdp->rsdt_address);
         PhysicalMemory::GetInstance()->Reserve(rsdp->rsdt_address);
-        this->rsdt_vaddr = Phy_To_Virt((void *)(rsdp->rsdt_address));
+        this->rsdt_vaddr = Phy_To_Virt((uint8_t*)(rsdp->rsdt_address));
         break;
     }
     case 2:
@@ -44,7 +44,7 @@ void RSDP::Init(uint8_t rsdp_version, void *rsdp_address)
         auto rsdp = (acpi_rsdp_t *)rsdp_address;
         printk("rsdt addr: %p\n", rsdp->rsdt_address);
         PhysicalMemory::GetInstance()->Reserve(rsdp->rsdt_address);
-        this->rsdt_vaddr = Phy_To_Virt((void *)(rsdp->rsdt_address));
+        this->rsdt_vaddr = Phy_To_Virt((uint8_t*)(rsdp->rsdt_address));
         break;
     }
     default:

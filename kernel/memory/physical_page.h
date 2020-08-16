@@ -31,7 +31,7 @@ class Zone;
 struct Page
 {
     Zone *zone;
-    void *physical_address;
+    uint8_t*physical_address;
     List list;
     uint16_t reference_count;
     uint16_t attributes;

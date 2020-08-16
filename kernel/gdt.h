@@ -12,9 +12,9 @@ struct gdt_struct
     struct NO_ALIGNMENT GDTPointer
     {
         uint16_t limit;
-        void *gdt_address;
+        uint8_t *gdt_address;
     };
-    
+
     uint64_t gdt_table[10] = {
         0x0000000000000000,
         0x0020980000000000, // KERNEL CODE
@@ -26,7 +26,7 @@ struct gdt_struct
         // ... tss (16 bytes)
     };
 
-    GDTPointer gdt_ptr = {uint16_t(80 - 1), gdt_table};
+    GDTPointer gdt_ptr = {uint16_t(80 - 1), (uint8_t*)gdt_table};
 };
 
 class GDT : public Singleton<GDT>
@@ -37,7 +37,6 @@ public:
     struct NO_ALIGNMENT GDTPointer
     {
         uint16_t limit;
-        void *gdt_address;
+        uint8_t *gdt_address;
     };
-
 };

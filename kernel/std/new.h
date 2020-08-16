@@ -2,10 +2,12 @@
 #include "stdint.h"
 #include <memory/kmalloc.h>
 
-inline void *operator new(size_t size) { return kmalloc(size, 0); }
-inline void operator delete(void *p, size_t size) { kfree(p); }
+void *operator new(size_t count);
+void *operator new[](size_t count);
+
+void operator delete(void *ptr, size_t sz);
+void operator delete[](void *ptr, size_t sz);
+
 // placement new
-inline void *operator new(size_t, void *p) { return p; }
-inline void *operator new[](size_t size, void *p) { return kmalloc(size, 0); }
-inline void operator delete(void *, void *){};
-inline void operator delete[](void *p, void *) { kfree(p); };
+void *operator new(size_t count, void *ptr);
+void *operator new[](size_t count, void *ptr);

@@ -12,7 +12,7 @@ struct SlabNode
     List list;
     
     Slab *slab;
-    void *vaddr;
+    uint8_t*vaddr;
 
     uint32_t used_count;
     uint32_t free_count;
@@ -27,8 +27,8 @@ struct Slab
     uint32_t total_free;
     SlabNode *pool;
 
-    void *Alloc();
-    void Free(const void *ptr);
+    uint8_t*Alloc();
+    void Free(const uint8_t*ptr);
 };
 
 extern "C"

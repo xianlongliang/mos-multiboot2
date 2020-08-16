@@ -32,7 +32,7 @@ public:
     struct NO_ALIGNMENT DescriptorPointer
     {
         uint16_t limit;
-        void *idt_address;
+        uint8_t *idt_address;
     };
 
     struct NO_ALIGNMENT Descriptor
@@ -56,7 +56,7 @@ public:
 private:
     bool inited = false;
     Descriptor idt[INTERRUPT_MAX];
-    DescriptorPointer idtr = {uint16_t(INTERRUPT_MAX * sizeof(Descriptor) - 1), idt};
+    DescriptorPointer idtr = {uint16_t(INTERRUPT_MAX * sizeof(Descriptor) - 1), (uint8_t *)idt};
 
-    void set_gate(DescriptorType type, unsigned int n, unsigned char ist, void *addr);
+    void set_gate(DescriptorType type, unsigned int n, unsigned char ist, uint8_t *addr);
 };

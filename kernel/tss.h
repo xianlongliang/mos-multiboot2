@@ -38,7 +38,7 @@ class TSS : public Singleton<TSS>
 public:
     void Add()
     {
-        ap_tss.push_back(tss_struct{0});
+        ap_tss.push_back(tss_struct());
     }
 
 private:

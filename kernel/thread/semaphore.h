@@ -8,10 +8,7 @@
 class Semaphore
 {
 public:
-    Semaphore(uint8_t value) : value(value) {
-        printk("%p\n", &this->value);
-        int j = 1;
-    }
+    Semaphore(uint8_t value) : value(value) {}
 
     void Down();
     void Up();

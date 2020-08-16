@@ -31,7 +31,7 @@ inline uint16_t inw(uint16_t port)
     return ret;
 }
 
-inline void insw(uint16_t port, void *addr, uint32_t word_cnt)
+inline void insw(uint16_t port, uint8_t*addr, uint32_t word_cnt)
 {
     asm volatile("cld; rep insw"
                  : "+D"(addr), "+c"(word_cnt)
@@ -39,7 +39,7 @@ inline void insw(uint16_t port, void *addr, uint32_t word_cnt)
                  : "memory");
 }
 
-inline void outsw(uint16_t port, const void *addr, uint32_t word_cnt)
+inline void outsw(uint16_t port, const uint8_t*addr, uint32_t word_cnt)
 {
     asm volatile("cld; rep outsw"
                  : "+S"(addr), "+c"(word_cnt)

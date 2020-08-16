@@ -44,9 +44,7 @@ public:
         return this->pval[this->current_size - 1];
     }
 
-    void push_front(T &&val)
-    {
-    }
+    void push_front(T &&val);
 
     void pop_front()
     {
@@ -107,7 +105,7 @@ private:
         if (target_capacity == 0)
             target_capacity = 1;
         auto new_pval = (T *)kmalloc(target_capacity * sizeof(T), 0);
-        for (int i = 0; i < this->current_size; ++i)
+        for (uint64_t i = 0; i < this->current_size; ++i)
         {
             new (&new_pval[i]) T(move(this->pval[i]));
         }

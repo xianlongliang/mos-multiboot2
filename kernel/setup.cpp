@@ -15,6 +15,8 @@ extern "C" char pml4;
 extern "C" char pdpe;
 extern "C" char pde;
 
+extern char _kernel_virtual_end;
+
 static __attribute__((aligned(0x1000))) Page_PTE pte2_8[512 * 3];
 
 void do_1gb_mapping()
@@ -75,24 +77,30 @@ void basic_init(void *mbi_addr)
     mbi_addr = Phy_To_Virt(mbi_addr);
 
     auto addr = mbi_addr;
-    auto mbi_size = *(uint64_t *)addr;
-    auto mbi_end = addr + mbi_size;
-    auto free_vstart = (void *)PAGE_4K_ROUND_UP((uint64_t)mbi_end);
-    
-    heap_init(free_vstart);
-    
-    for (auto tag = (struct multiboot_tag *)(addr + 8);
+    auto mbi_size = *(unsigned *)addr;
+    auto mbi_end = (uint8_t *)addr + mbi_size;
+    auto free_vstart = (uint8_t *)PAGE_4K_ROUND_UP((uint64_t)mbi_end);
+    auto free_vstart_2 = (uint8_t *)PAGE_4K_ROUND_UP((uint64_t)&_kernel_virtual_end);
+    heap_init(max(free_vstart, free_vstart_2));
+    for (auto tag = (struct multiboot_tag *)((uint8_t *)addr + 8);
          tag->type != MULTIBOOT_TAG_TYPE_END;
          tag = (struct multiboot_tag *)((multiboot_uint8_t *)tag + ((tag->size + 7) & ~7)))
     {
         printk("type: %d\n", tag->type);
         switch (tag->type)
         {
+        case MULTIBOOT_HEADER_TAG_ADDRESS:
+        {
+            auto address_tag = (multiboot_header_tag_address *)tag;
+            printk("image load %p, end %p\n", address_tag->load_addr, address_tag->load_end_addr);
+            printk("bss load end %p\n", address_tag->bss_end_addr);
+            break;
+        }
         case MULTIBOOT_TAG_TYPE_ACPI_NEW:
         {
             auto rsdp_tag = (multiboot_tag_old_acpi *)tag;
             printk("rsdp: %p, size: %d\n", rsdp_tag->rsdp, rsdp_tag->size);
-            RSDP::GetInstance()->Init(2, &rsdp_tag->rsdp);
+            RSDP::GetInstance()->Init(2, (uint8_t *)&rsdp_tag->rsdp);
             panic("no support for MULTIBOOT_TAG_TYPE_ACPI_NEW\n");
             break;
         }
@@ -100,7 +108,12 @@ void basic_init(void *mbi_addr)
         {
             auto rsdp_tag = (multiboot_tag_old_acpi *)tag;
             printk("rsdp: %p, size: %d\n", rsdp_tag->rsdp, rsdp_tag->size);
-            RSDP::GetInstance()->Init(1, &rsdp_tag->rsdp);
+            RSDP::GetInstance()->Init(1, (uint8_t *)&rsdp_tag->rsdp);
+            break;
+        }
+        case MULTIBOOT_TAG_TYPE_LOAD_BASE_ADDR: {
+            auto rsdp_tag = (multiboot_tag_load_base_addr *)tag;
+            rsdp_tag->load_base_addr;
             break;
         }
         case MULTIBOOT_TAG_TYPE_MODULE:
