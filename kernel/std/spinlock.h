@@ -20,6 +20,7 @@ public:
     inline void unlock()
     {
         this->lock_val = 0;
+        asm volatile("mfence");
     }
 
 private:
