@@ -18,9 +18,9 @@
 #include <std/map.h>
 #include <std/math.h>
 #include <std/spinlock.h>
+#include <std/string.h>
 
-
-extern "C" void Kernel_Main(void* mbi_addr)
+extern "C" void Kernel_Main(void *mbi_addr)
 {
   clear();
   basic_init(mbi_addr);
@@ -28,9 +28,4 @@ extern "C" void Kernel_Main(void* mbi_addr)
   RSDT::GetInstance()->Init();
   SMP::GetInstance()->Init();
   task_init();
-
-  while (1)
-  {
-    hlt();
-  }
 }

@@ -5,6 +5,9 @@
 void *operator new(size_t count);
 void *operator new[](size_t count);
 
+void operator delete(void *ptr);
+void operator delete[](void *ptr);
+
 void operator delete(void *ptr, size_t sz);
 void operator delete[](void *ptr, size_t sz);
 

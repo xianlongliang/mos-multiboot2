@@ -54,6 +54,7 @@ add_executable(kernel
         kernel/thread/userland.h
         kernel/thread/userland.cpp
         kernel/std/singleton.h 
+        kernel/std/string.h 
         kernel/std/new.h 
         kernel/std/new.cpp 
         kernel/std/map.h 

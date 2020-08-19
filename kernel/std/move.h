@@ -1,6 +1,14 @@
 #pragma once
 
 template <typename T>
+void swap(T &a, T &b) noexcept
+{
+    auto tmp = a;
+    a = b;
+    b = tmp;
+}
+
+template <typename T>
 struct remove_reference
 {
     typedef T type;
