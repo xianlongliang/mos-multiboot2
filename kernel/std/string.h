@@ -30,6 +30,7 @@ public:
     {
         swap(this->ptr, other.ptr);
         swap(this->len, other.len);
+        return *this;
     }
 
     string(string &&other) : ptr(other.ptr), len(other.len)

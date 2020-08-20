@@ -4,15 +4,19 @@
 #include <std/vector.h>
 
 template <class T>
-uint64_t hash(T &key);
+struct hash;
 
 template<>
-uint64_t hash(uint64_t& key) { return key; }
+struct hash<uint64_t> {
+    uint64_t operator()(uint64_t& key) { return key; }
+};
 
 template<>
-uint64_t hash(int& key) { return key; }
+struct hash<int> {
+    int operator()(int& key) { return key; }
+};
 
-template <class T>
+template <class T, class HashFunc = hash<T>>
 class unordered_set
 {
 
@@ -43,7 +47,7 @@ public:
 
         if (find(key)) return false;
 
-        auto hash_idx = hash(key);
+        auto hash_idx = HashFunc()(key);
         list<T>& list = this->buckets[hash_mod(hash_idx)];
         list.push_back(move(key));
         load_count++;
@@ -51,7 +55,7 @@ public:
     }
 
     T* find(T& key) {
-        auto hash_idx = hash(key);
+        auto hash_idx = HashFunc()(key);
         list<T>& list = this->buckets[hash_mod(hash_idx)];
         for (auto& node : list) {
             if (node == key) return &node;
@@ -65,7 +69,7 @@ private:
     uint32_t current_bucket_size_prime_idx;
     uint32_t load_count;
 
-    // dynamic array of bucket_list_node*, pointing to the list node
+    // dynamic array of list<T>
     vector<list<T>> buckets;
 
     inline float load_factor() {
@@ -94,7 +98,7 @@ private:
             {
                 auto back = p.back();
                 p.pop_back();
-                auto hash_idx = hash(back);
+                auto hash_idx = HashFunc()(back);
                 auto idx = hash_mod(hash_idx);
                 new_buckets[hash_mod(hash_idx)].push_back(move(back));
             }
