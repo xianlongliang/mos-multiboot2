@@ -62,6 +62,12 @@ public:
         this->len = len;
     }
 
+    string operator+(string& other) {
+        string tmp = *this;
+        tmp += other;
+        return tmp;
+    }
+
     uint64_t length() { return this->len; }
 
     char *c_str() { return this->ptr; }
