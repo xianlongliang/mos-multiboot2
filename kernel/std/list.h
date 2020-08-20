@@ -96,9 +96,23 @@ public:
         this->list_size = 0;
     }
 
+    list(list&& rval) {
+        this->head = rval.head;
+        rval.head = nullptr;
+        this->list_size = rval.list_size;
+        rval.list_size = 0;
+    }
+
+    ~list() {
+        while(!this->empty()) {
+            this->pop_back();
+        }
+        delete this->head;
+    }
+
     bool empty()
     {
-        return (this->head->next == this->head) && (this->head->prev == this->head);
+        return this->list_size == 0;
     }
 
     void remove(T val)
@@ -135,6 +149,11 @@ public:
         node->prev = last;
         node->next = head;
         this->list_size++;
+    }
+
+    void push_back(T &val)
+    {
+        this->push_back(T(val));
     }
 
     void pop_back()
