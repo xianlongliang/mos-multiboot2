@@ -5,7 +5,7 @@
 
 #include "physical_page.h"
 
-class Slab;
+struct Slab;
 
 struct SlabNode
 {

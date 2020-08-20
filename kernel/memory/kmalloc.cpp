@@ -82,15 +82,15 @@ void *kmalloc(uint64_t size, uint64_t flags)
     size = size <= 16 ? 32 : size;
     int fit_index = 0;
     int fit_size = 32;
-    while (fit_size != size)
+    while (fit_size < size)
     {
         fit_size *= 2;
         fit_index++;
     }
 
-    auto &cache = kmalloc_cache[fit_index];
-    auto selected_node = cache.pool;
-    if (cache.total_free == 0)
+    auto cache = &kmalloc_cache[fit_index];
+    auto selected_node = cache->pool;
+    if (cache->total_free == 0)
     {
         kmalloc_create(fit_index);
     }
@@ -108,19 +108,21 @@ void *kmalloc(uint64_t size, uint64_t flags)
             {
                 selected_node->free_count--;
                 selected_node->used_count++;
-                cache.total_free--;
-                cache.total_used++;
+                cache->total_free--;
+                cache->total_used++;
                 selected_node->bitmap->Set(i);
-                auto meta = (kmalloc_meta *)(selected_node->vaddr + cache.object_size * i);
+                auto meta = (kmalloc_meta *)(selected_node->vaddr + cache->object_size * i);
                 meta->slab_node = selected_node;
+                printk("alloc %d bytes at %p\n", cache->object_size, (uint8_t *)meta + 16);
                 return (uint8_t *)meta + 16;
             }
         }
-    } while (selected_node != cache.pool);
+    } while (selected_node != cache->pool);
 }
 
 void kfree(const void *ptr)
 {
+    printk("free %p\n", ptr);
     auto meta = (kmalloc_meta *)((uint8_t*)ptr - 16);
     auto slab_node = meta->slab_node;
     auto bit_offset = ((int8_t *)meta - (int8_t *)slab_node->vaddr) / slab_node->slab->object_size;

@@ -30,7 +30,7 @@ static inline void load_tr(uint16_t tr)
 
 void GDT::Init()
 {
-    auto cpu_struct = CPU::GetInstance()->Get();
+    auto& cpu_struct = CPU::GetInstance()->Get();
     load_gdt(&cpu_struct.gdt.gdt_ptr);
     load_tr(0x38);
     printk("CPU: %d GDT_PTR %p\n", cpu_struct.apic_id, &cpu_struct.gdt.gdt_ptr);

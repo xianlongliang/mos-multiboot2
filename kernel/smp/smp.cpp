@@ -28,7 +28,7 @@ void SMP::Init()
     auto smp_entry_address = (uint8_t *)&SMP_JMP;
     printk("smp entry: %p\n", smp_entry_address);
 
-    auto cpus = CPU::GetInstance()->GetAll();
+    auto& cpus = CPU::GetInstance()->GetAll();
     for (int i = 1; i < cpus.size(); ++i)
     {
         auto &cpu = cpus[i];
