@@ -55,6 +55,7 @@ add_executable(kernel
         kernel/thread/userland.cpp
         kernel/std/singleton.h 
         kernel/std/string.h 
+        kernel/std/unordered_set.h 
         kernel/std/new.h 
         kernel/std/new.cpp 
         kernel/std/map.h 
@@ -77,6 +78,7 @@ add_executable(kernel
         kernel/std/move.h
         kernel/std/unique_ptr.h
         kernel/std/c++/pure_virtual_function.cpp
+        kernel/std/c++/global_object.cpp
         kernel/memory/zone.h
         kernel/memory/zone.cpp
         kernel/memory/virtual_page.h
