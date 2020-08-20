@@ -12,9 +12,40 @@ class vector
 public:
     vector() {}
 
-    vector(uint64_t capacity) : capacity(capacity)
+    vector(uint64_t capacity) : capacity(capacity), current_size(0)
     {
         this->pval = (T *)kmalloc(sizeof(T) * capacity, 0);
+    }
+
+    vector(uint64_t capacity, const T& value) : capacity(capacity)
+    {
+        this->pval = (T *)kmalloc(sizeof(T) * capacity, 0);
+        for (uint64_t i = 0; i < capacity; ++i) {
+            new (&this->pval[i]) T(value);
+        }
+    }
+
+    vector(vector&& rval) {
+        this->pval = rval.pval;
+        rval.pval = nullptr;
+        this->current_size = rval.current_size;
+        rval.current_size = 0;
+        this->capacity = rval.capacity;
+        rval.capacity = 0;
+    }
+
+    ~vector() {
+        while(!this->empty()) {
+            this->pop_back();
+        }
+        delete this->pval;
+    }
+
+    vector& operator=(vector&& rval) {
+        swap(this->pval, rval.pval);
+        swap(this->current_size, rval.current_size);
+        swap(this->capacity, rval.capacity);
+        return *this;
     }
 
     bool empty()
@@ -28,7 +59,7 @@ public:
         {
             this->expand();
         }
-        new (&this->pval[this->current_size++]) T(val);
+        new (&this->pval[this->current_size++]) T(move(val));
     }
 
     void pop_back()
