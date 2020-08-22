@@ -6,22 +6,15 @@ a x64 os kernel. mos version2 using multiboot2.
 implementations :
 
 - [x] stack trace debug
-- [x] printk
-- [x] GDT
-- [x] IDT
-- [x] TSS
 - [x] keyboard (from os-elephant)
 - [x] slab
-- [x] kmalloc (based on slab)
-- [x] c++ new and delete (via kmalloc)
+- [x] kmalloc (based on lrmalloc<sup>1</sup>)
 - [x] buddy system
 - [x] mutex
 - [x] spinlock
 - [x] semaphore
 - [x] condition variable
-- [x] task
-- [x] task sleep and wake
-- [x] userland task
+- [x] kernel userland task 
 - [x] pagefault handler
 - [x] task context switch (kernel and userland)
 - [x] round robin scheduler ???
@@ -72,3 +65,4 @@ you can easily dump the kernel binary file using:
 $ make dump
 ```
 
+[1] Leite, Ricardo and Ricardo Rocha. “LRMalloc: A Modern and Competitive Lock-Free Dynamic Memory Allocator.” VECPAR (2018).
