@@ -1,57 +1,49 @@
 #pragma once
 
-typedef enum memory_order
-{
-    memory_order_relaxed,
-    memory_order_consume,
-    memory_order_acquire,
-    memory_order_release,
-    memory_order_acq_rel,
-    memory_order_seq_cst
-} memory_order;
-
 template <class T>
 class atomic
 {
-
 public:
-    atomic() : val(0) {}
-    atomic(T v) : val(v) {}
-
-    void store(T v, memory_order order = memory_order_seq_cst)
+    void store(T v)
     {
-        switch (order)
-        {
-        case memory_order_seq_cst:
-        {
-            asm volatile("movq %1, %0 \n\t"
-                         "mfence \n\t"
-                         : "=m"(this->val)
-                         : "r"((uint64_t)v)
-                         : "memory");
-            break;
-        }
-        default:
-        {
-            asm volatile("movq %1, %0 \n\t"
-                         : "=m"(this->val)
-                         : "r"((uint64_t)v)
-                         : "memory");
-            break;
-        }
-        }
+        asm volatile("movq %1, %%rax \n\t"
+                     "movq %%rax, %0 \n\t"
+                     "mfence \n\t"
+                     : "=m"(this->val)
+                     : "m"(v)
+                     : "memory", "rax");
     }
 
     T load()
     {
-        uint64_t tmp;
+        T tmp;
         asm volatile("movq %1, %%rdi \n\t"
                      "movq %%rdi, %0 \n\t"
                      : "=m"(tmp)
                      : "m"(this->val)
                      : "memory", "rdi");
-        return (T)tmp;
+        return tmp;
     }
+
+    bool operator==(T v)
+    {
+        return this->load() == v;
+    }
+
+    bool compare_exchange(T &old_val, T new_val)
+    {
+        return __sync_bool_compare_and_swap((uint64_t *)&this->val, *((uint64_t *)&old_val), *((uint64_t *)&new_val));
+    }
+
+private:
+    alignas(T) T val;
+};
+
+template <class T>
+struct atomic_number
+{
+    atomic_number() : val(0) {}
+    atomic_number(T v) : val(v) {}
 
     T fetch_add(T v)
     {
@@ -71,11 +63,6 @@ public:
         return (T)this->val;
     }
 
-    bool operator==(T v)
-    {
-        return this->load() == v;
-    }
-
     void operator+=(T v)
     {
         this->fetch_add(v);
@@ -85,7 +72,48 @@ public:
     {
         this->fetch_sub(v);
     }
+    void store(T v)
+    {
+        asm volatile("movq %1, %0 \n\t"
+                     "mfence \n\t"
+                     : "=m"(this->val)
+                     : "r"((uint64_t)v)
+                     : "memory");
+    }
+
+    T load()
+    {
+        uint64_t tmp;
+        asm volatile("movq %1, %%rdi \n\t"
+                     "movq %%rdi, %0 \n\t"
+                     : "=m"(tmp)
+                     : "m"(this->val)
+                     : "memory", "rdi");
+        return (T)tmp;
+    }
+
+    bool operator==(T v)
+    {
+        return this->load() == v;
+    }
+
+    bool compare_exchange(T &old_val, T new_val)
+    {
+        return __sync_bool_compare_and_swap(this->val, old_val, new_val);
+    }
 
 private:
     alignas(T) T val;
+};
+
+template <>
+struct atomic<uint8_t> : public atomic_number<uint8_t>
+{
+    atomic() noexcept = default;
+    ~atomic() noexcept = default;
+    atomic(const atomic &) = delete;
+    atomic &operator=(const atomic &) = delete;
+    atomic &operator=(const atomic &) volatile = delete;
+
+    atomic(uint8_t val) noexcept : atomic_number(val) {}
 };
