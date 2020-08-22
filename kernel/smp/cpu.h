@@ -9,6 +9,7 @@
 #include <std/cpuid.h>
 #include <std/kstring.h>
 #include <thread/scheduler.h>
+#include <memory/lrmalloc/cache_bin.h>
 
 class CPU : public Singleton<CPU>
 {
@@ -22,7 +23,7 @@ public:
         this->cpus.push_back(cpu_struct());
         auto cs = &this->cpus.back();
         cs->apic_id = id;
-        cs->cpu_stack = (uint8_t *)kmalloc(PAGE_4K_SIZE, 0);
+        cs->cpu_stack = (uint8_t *)brk_up(PAGE_4K_SIZE);
         bzero(cs->cpu_stack, PAGE_4K_SIZE);
         cs->tss = tss_struct();
         cs->tss.rsp0 = (uint64_t)cs->cpu_stack;
@@ -40,9 +41,10 @@ public:
         tss_struct tss;
         gdt_struct gdt;
         Scheduler scheduler;
+        TCacheBin* mcache;
     };
 
-    vector<cpu_struct> &GetAll()
+    auto &GetAll()
     {
         return this->cpus;
     }
@@ -67,5 +69,7 @@ public:
     }
 
 private:
-    vector<cpu_struct> cpus;
+    vector<cpu_struct, brk_allocator<cpu_struct>> cpus;
 };
+
+#define this_cpu CPU::GetInstance()->Get()

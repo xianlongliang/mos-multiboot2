@@ -54,7 +54,9 @@ add_executable(kernel
         kernel/thread/userland.h
         kernel/thread/userland.cpp
         kernel/std/singleton.h 
+        kernel/std/initializer_list.h
         kernel/std/string.h 
+        kernel/std/allocator.h 
         kernel/std/unordered_set.h 
         kernel/std/new.h 
         kernel/std/new.cpp 
@@ -79,6 +81,19 @@ add_executable(kernel
         kernel/std/unique_ptr.h
         kernel/std/c++/pure_virtual_function.cpp
         kernel/std/c++/global_object.cpp
+        
+        kernel/memory/lrmalloc/lrmalloc.h
+        kernel/memory/lrmalloc/lrmalloc.cpp
+        kernel/memory/lrmalloc/heap.h
+        kernel/memory/lrmalloc/heap.cpp
+
+        kernel/memory/lrmalloc/descriptor.h
+        kernel/memory/lrmalloc/descriptor.cpp
+        kernel/memory/lrmalloc/lrmalloc.h
+        kernel/memory/lrmalloc/cache_bin.h
+        kernel/memory/lrmalloc/cache_bin.cpp
+        kernel/memory/lrmalloc/size_class.h
+        kernel/memory/lrmalloc/size_class.cpp
         kernel/memory/zone.h
         kernel/memory/zone.cpp
         kernel/memory/virtual_page.h
