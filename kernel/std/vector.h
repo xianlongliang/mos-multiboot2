@@ -4,8 +4,9 @@
 #include "move.h"
 #include "debug.h"
 #include "printk.h"
+#include "allocator.h"
 
-template <typename T>
+template <typename T, typename Allocator = default_allocator<T>>
 class vector
 {
 
@@ -14,12 +15,12 @@ public:
 
     vector(uint64_t capacity) : capacity(capacity), current_size(0)
     {
-        this->pval = (T *)kmalloc(sizeof(T) * capacity, 0);
+        this->pval = (T *)Allocator::allocate(capacity);
     }
 
     vector(uint64_t capacity, const T& value) : capacity(capacity)
     {
-        this->pval = (T *)kmalloc(sizeof(T) * capacity, 0);
+        this->pval = (T *)Allocator::allocate(capacity);
         for (uint64_t i = 0; i < capacity; ++i) {
             new (&this->pval[i]) T(value);
         }
