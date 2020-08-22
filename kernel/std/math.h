@@ -13,7 +13,8 @@ inline int roundup_pow_of_2_to(int numToRound, int multiple)
 #define SET_BIT(var, pos) ((var) |= (1 << (pos)))
 #define UNSET_BIT(var, pos) ((var) &= ~((uint64_t)1 << (pos)))
 
-#define ROUND_UP_8BYTES(addr) (addr + (8 - 1)) & -8
+#define ROUND_UP_8BYTES(addr) ((addr + (8 - 1)) & -8)
+#define ROUND_UP_16BYTES(addr) ((addr + (16 - 1)) & -16)
 
 inline uint64_t round_up_pow_of_2(uint64_t x)
 {
