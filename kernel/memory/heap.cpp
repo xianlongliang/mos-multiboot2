@@ -1,5 +1,6 @@
 #include "heap.h"
 #include "physical_page.h"
+#include <std/math.h>
 
 static uint8_t *brk;
 
@@ -16,7 +17,7 @@ void *brk_get()
 void *brk_up(uint64_t size)
 {
     // printk("brk_up %d\n", size);
-    auto res = brk;
+    auto res = (uint8_t*)ROUND_UP_16BYTES((uint64_t)brk);
     brk = brk + size;
     return res;
 }
