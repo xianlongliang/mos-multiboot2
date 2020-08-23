@@ -5,9 +5,9 @@ extern syscall_entry_c
 syscall_entry:
     swapgs
     ; save userland stack
-    mov [gs:8], rsp
+    mov [gs:16], rsp
     ; switch kernel stack
-    mov rsp, [gs:0]
+    mov rsp, [gs:8]
     ; save all
 
     ; save rsp, drop r15
@@ -49,7 +49,7 @@ syscall_entry:
     pop rbx
     pop rax
 
-    mov rsp, [gs:8]
+    mov rsp, [gs:16]
 
     swapgs
     o64 sysret

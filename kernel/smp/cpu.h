@@ -10,6 +10,35 @@
 #include <std/kstring.h>
 #include <thread/scheduler.h>
 #include <memory/lrmalloc/cache_bin.h>
+#include <std/msr.h>
+
+struct cpu_struct
+{
+    cpu_struct *self;
+    struct
+    {
+        void *syscall_stack;
+        void *syscall_userland_stack;
+    } syscall_struct;
+
+    bool online;
+    uint64_t apic_id;
+    void *cpu_stack;
+    tss_struct tss;
+    gdt_struct gdt;
+    Scheduler scheduler;
+    TCacheBin *mcache;
+};
+
+inline cpu_struct *get_this_cpu()
+{
+    cpu_struct *res;
+    asm volatile("movq	%%gs:0,	%0	\n\t"
+                 : "=r"(res)::"memory");
+    return res;
+}
+
+#define this_cpu get_this_cpu()
 
 class CPU : public Singleton<CPU>
 {
@@ -22,27 +51,17 @@ public:
     {
         this->cpus.push_back(cpu_struct());
         auto cs = &this->cpus.back();
+        cs->self = cs;
         cs->apic_id = id;
-        cs->cpu_stack = (uint8_t *)brk_up(PAGE_4K_SIZE);
-        bzero(cs->cpu_stack, PAGE_4K_SIZE);
         cs->tss = tss_struct();
-        cs->tss.rsp0 = (uint64_t)cs->cpu_stack;
         cs->gdt = gdt_struct();
         cs->gdt.gdt_ptr.gdt_address = (uint8_t *)&cs->gdt.gdt_table;
         cs->gdt.gdt_ptr.limit = uint16_t(80 - 1);
         set_gdt_tss((uint8_t *)&cs->gdt.gdt_table[7], (uint8_t *)&cs->tss, 103, 0x89);
-    }
 
-    struct cpu_struct
-    {
-        bool online;
-        uint64_t apic_id;
-        uint8_t *cpu_stack;
-        tss_struct tss;
-        gdt_struct gdt;
-        Scheduler scheduler;
-        TCacheBin* mcache;
-    };
+        wrmsr(MSR_KERNEL_GS_BASE, uint64_t(cs));
+        asm volatile("swapgs");
+    }
 
     auto &GetAll()
     {
@@ -71,5 +90,3 @@ public:
 private:
     vector<cpu_struct, brk_allocator<cpu_struct>> cpus;
 };
-
-#define this_cpu CPU::GetInstance()->Get()

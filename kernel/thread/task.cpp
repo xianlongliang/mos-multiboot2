@@ -211,7 +211,7 @@ uint64_t init(uint64_t arg)
     printk("current rsp : %x\n", current->thread->rsp0);
     printk("task_init2 rsp : %x\n", task_init2->thread->rsp0);
 
-    cpus->Get().scheduler.Add(current)->Add(bash_task);
+    this_cpu->scheduler.Add(current)->Add(bash_task);
 
     // switch_to(current, next);
     // sti();
@@ -225,7 +225,6 @@ uint64_t init(uint64_t arg)
 
 void task_init()
 {
-    cpus = CPU::GetInstance();
 
     auto page = PhysicalMemory::GetInstance()->Allocate(1, PG_PTable_Maped | PG_Kernel | PG_Active);
 
@@ -264,8 +263,6 @@ void task_init()
     init_task->state = TASK_RUNNING;
 
     asm volatile("movq  %0, %%r15   \n\t"  ::"a"(init_task->thread->rip));
-    asm volatile("movq	%0,	%%fs  \n\t"  ::"a"(init_task->thread->fs));
-    asm volatile("movq	%0,	%%gs  \n\t"  ::"a"(init_task->thread->gs));
     asm volatile("movq	%0,	%%rsp \n\t" ::"a"(init_task->thread->rsp));
     asm volatile("movq	%0,	%%rbp \n\t" ::"a"(init_task->thread->rsp0));
     asm volatile("push  %r15 \n\t");
@@ -278,14 +275,6 @@ extern "C" void __switch_to(struct task_struct *prev, struct task_struct *next)
     auto &task_tss = get_tss();
     task_tss.rsp0 = next->thread->rsp0;
     set_tss(task_tss);
-
-    asm volatile("movq	%%fs,	%0 \n\t"
-                 : "=a"(prev->thread->fs));
-    asm volatile("movq	%%gs,	%0 \n\t"
-                 : "=a"(prev->thread->gs));
-
-    asm volatile("movq	%0,	%%fs \n\t" ::"a"(next->thread->fs));
-    asm volatile("movq	%0,	%%gs \n\t" ::"a"(next->thread->gs));
 
     if (prev->mm == nullptr && next->mm)
     {
@@ -306,7 +295,7 @@ void task_sleep()
     asm volatile("pushf");
     asm volatile("cli");
     current->state = TASK_STOPPED;
-    cpus->Get().scheduler.Remove(current)->Schedule();
+    this_cpu->scheduler.Remove(current)->Schedule();
     asm volatile("popf");
 }
 
@@ -314,7 +303,7 @@ void task_yield()
 {
     asm volatile("pushf");
     asm volatile("cli");
-    cpus->Get().scheduler.Schedule();
+    this_cpu->scheduler.Schedule();
     asm volatile("popf");
 }
 
@@ -323,6 +312,6 @@ void task_wakeup(task_struct *task)
     asm volatile("pushf");
     asm volatile("cli");
     task->state = TASK_RUNNING;
-    cpus->Get().scheduler.Add(task);
+    this_cpu->scheduler.Add(task);
     asm volatile("popf");
 }

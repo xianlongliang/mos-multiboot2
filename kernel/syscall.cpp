@@ -5,6 +5,7 @@
 #include <thread/regs.h>
 #include <tss.h>
 #include <memory/physical_page.h>
+#include <smp/cpu.h>
 
 extern "C" ssize_t sys_read(int fd, uint8_t*buf, size_t count);
 
@@ -28,14 +29,6 @@ struct MSR_STAR_LAYOUT
     uint64_t sysret_cs_ss : 16;
 };
 
-extern "C" char pdpe_low;
-
-struct CPU_STRUCT
-{
-    uint8_t*syscall_stack;
-    uint8_t*syscall_old_stack;
-};
-
 void Syscall::Init()
 {
     /*  
@@ -43,7 +36,7 @@ void Syscall::Init()
             actual value loaded: cs: field + 16, ss: field + 8
         32-47bit: cs ss to be loaded when calling sysret
             actual value loaded: cs: field, ss: field + 8
-        */
+    */
     MSR_STAR_LAYOUT star = {0};
     star.sysret_cs_ss = 0x20;
     star.syscall_cs_ss = 0x08;
@@ -51,9 +44,8 @@ void Syscall::Init()
     // set the syscall entry address
     wrmsr(MSR_LSTAR, (uint64_t(&syscall_entry)));
 
-    // auto cpu_struct = (CPU_STRUCT *)Phy_To_Virt(&pdpe_low);
-    // cpu_struct->syscall_stack = Phy_To_Virt((char *)&pdpe_low + 0x1000);
-    // wrmsr(MSR_KERNEL_GS_BASE, uint64_t(Phy_To_Virt((char *)&pdpe_low)));
+    // point to the top
+    this_cpu->syscall_struct.syscall_stack = brk_up(0x1000, PAGE_4K_SIZE) + 0x1000;
 
     // cli when syscall
     wrmsr(MSR_SYSCALL_MASK, (1 << 9));

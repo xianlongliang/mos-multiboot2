@@ -14,7 +14,7 @@ void lrmalloc_init()
     size_class_init();
     AvailDesc.store({nullptr});
     lrmalloc_heap_init();
-    this_cpu.mcache = TCache;
+    this_cpu->mcache = TCache;
 }
 
 struct lrmalloc_meta
@@ -35,7 +35,9 @@ void MallocFromNewSB(size_t scIdx, TCacheBin *cache, size_t &blockNum)
     desc->heap = heap;
     desc->blockSize = blockSize;
     desc->maxcount = maxcount;
-    desc->superblock = (char *)brk_up(sc->sbSize);
+    // superblock is 4k aligned
+    // thus two block in the same page owned by the same superblock
+    desc->superblock = (char *)brk_up(sc->sbSize, PAGE_4K_SIZE);
 
     // prepare block list
     char *superblock = desc->superblock;
@@ -86,8 +88,7 @@ void *lrmalloc(size_t size)
 {
     // size class calculation
     size_t scIdx = get_size_class(size + sizeof(lrmalloc_meta));
-
-    TCacheBin *cache = &this_cpu.mcache[scIdx];
+    TCacheBin *cache = &this_cpu->mcache[scIdx];
     // fill cache if needed
     if (cache->GetBlockNum() == 0)
         FillCache(scIdx, cache);
@@ -103,7 +104,7 @@ void *lrfree(const void *ptr)
     }
 
     auto meta = (lrmalloc_meta *)(ptr - sizeof(uint64_t));
-    auto cache = &this_cpu.mcache[meta->desc->heap->GetScIdx()];
+    auto cache = &this_cpu->mcache[meta->desc->heap->GetScIdx()];
 
     // flush cache if need
     // if (UNLIKELY(cache->GetBlockNum() >= sc->cacheBlockNum))
