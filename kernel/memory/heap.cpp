@@ -14,10 +14,23 @@ void *brk_get()
     return brk;
 }
 
-void *brk_up(uint64_t size)
+void *brk_up(uint64_t size, uint64_t alignment)
 {
     // printk("brk_up %d\n", size);
-    auto res = (uint8_t*)ROUND_UP_16BYTES((uint64_t)brk);
+    uint8_t *res = nullptr;
+    switch (alignment)
+    {
+    case 4096:
+    {
+        res = (uint8_t *)PAGE_4K_ROUND_UP((uint64_t)brk);
+        break;
+    }
+    default:
+    {
+        res = (uint8_t *)ROUND_UP_16BYTES((uint64_t)brk);
+        break;
+    }
+    }
     brk = brk + size;
     return res;
 }
