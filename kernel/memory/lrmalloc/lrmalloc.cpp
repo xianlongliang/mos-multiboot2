@@ -30,7 +30,6 @@ void DescRetire(Descriptor *desc)
     do
     {
         desc->nextFree.store(oldHead);
-
         newHead.Set(desc, oldHead.GetCounter() + 1);
     } while (!AvailDesc.compare_exchange(oldHead, newHead));
 }
@@ -47,9 +46,7 @@ Descriptor *HeapPopPartial(ProcHeap *heap)
             return nullptr;
 
         newHead = oldDesc->nextPartial.load();
-        Descriptor *desc = newHead.GetDesc();
-        uint64_t counter = oldHead.GetCounter();
-        newHead.Set(desc, counter);
+        newHead.Set(newHead.GetDesc(), oldHead.GetCounter() + 1);
     } while (!list.compare_exchange(oldHead, newHead));
 
     return oldHead.GetDesc();
@@ -243,7 +240,6 @@ void FlushCache(size_t scIdx, TCacheBin *cache)
     //  concurrently reused, so store maxcount
     uint32_t const maxcount = sc->GetBlockNum();
     (void)maxcount; // suppress unused warning
-
     // @todo: optimize
     // in the normal case, we should be able to return several
     //  blocks with a single CAS
