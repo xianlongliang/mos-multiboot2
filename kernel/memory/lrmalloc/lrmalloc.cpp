@@ -12,7 +12,7 @@ extern atomic<DescriptorNode> AvailDesc;
 void lrmalloc_init()
 {
     size_class_init();
-    AvailDesc.store({nullptr});
+    AvailDesc.store(nullptr);
     lrmalloc_heap_init();
     this_cpu->mcache = TCache;
 }
@@ -21,6 +21,100 @@ struct lrmalloc_meta
 {
     Descriptor *desc;
 };
+
+void DescRetire(Descriptor *desc)
+{
+    desc->blockSize = 0;
+    DescriptorNode oldHead = AvailDesc.load();
+    DescriptorNode newHead;
+    do
+    {
+        desc->nextFree.store(oldHead);
+
+        newHead.Set(desc, oldHead.GetCounter() + 1);
+    } while (!AvailDesc.compare_exchange(oldHead, newHead));
+}
+
+Descriptor *HeapPopPartial(ProcHeap *heap)
+{
+    atomic<DescriptorNode> &list = heap->partialList;
+    DescriptorNode oldHead = list.load();
+    DescriptorNode newHead;
+    do
+    {
+        Descriptor *oldDesc = oldHead.GetDesc();
+        if (!oldDesc)
+            return nullptr;
+
+        newHead = oldDesc->nextPartial.load();
+        Descriptor *desc = newHead.GetDesc();
+        uint64_t counter = oldHead.GetCounter();
+        newHead.Set(desc, counter);
+    } while (!list.compare_exchange(oldHead, newHead));
+
+    return oldHead.GetDesc();
+}
+
+void MallocFromPartial(size_t scIdx, TCacheBin *cache, size_t &blockNum)
+{
+    ProcHeap *heap = &Heaps[scIdx];
+
+    Descriptor *desc = HeapPopPartial(heap);
+    if (!desc)
+        return;
+
+    // reserve block(s)
+    Anchor oldAnchor = desc->anchor.load();
+    Anchor newAnchor;
+    uint32_t maxcount = desc->maxcount;
+    uint32_t blockSize = desc->blockSize;
+    char *superblock = desc->superblock;
+
+    // we have "ownership" of block, but anchor can still change
+    // due to free()
+    do
+    {
+        if (oldAnchor.state == SB_EMPTY)
+        {
+            DescRetire(desc);
+            // retry
+            return MallocFromPartial(scIdx, cache, blockNum);
+        }
+
+        // oldAnchor must be SB_PARTIAL
+        // can't be SB_FULL because we *own* the block now
+        // and it came from HeapPopPartial
+        // can't be SB_EMPTY, we already checked
+        // obviously can't be SB_ACTIVE
+        // ASSERT(oldAnchor.state == SB_PARTIAL);
+
+        newAnchor = oldAnchor;
+        newAnchor.count = 0;
+        // avail value doesn't actually matter
+        newAnchor.avail = maxcount;
+        newAnchor.state = SB_FULL;
+    } while (!desc->anchor.compare_exchange(
+        oldAnchor, newAnchor));
+
+    // will take as many blocks as available from superblock
+    // *AND* no thread can do malloc() using this superblock, we
+    //  exclusively own it
+    // if CAS fails, it just means another thread added more available blocks
+    //  through FlushCache, which we can then use
+    uint32_t blocksTaken = oldAnchor.count;
+    uint32_t avail = oldAnchor.avail;
+
+    // ASSERT(avail < maxcount);
+    char *block = superblock + avail * blockSize;
+
+    // cache must be empty at this point
+    // and the blocks are already organized as a list
+    // so all we need do is "push" that list, a constant time op
+    // ASSERT(cache->GetBlockNum() == 0);
+    cache->PushList(block, blocksTaken);
+
+    blockNum += blocksTaken;
+}
 
 void MallocFromNewSB(size_t scIdx, TCacheBin *cache, size_t &blockNum)
 {
@@ -51,6 +145,12 @@ void MallocFromNewSB(size_t scIdx, TCacheBin *cache, size_t &blockNum)
         auto meta = (lrmalloc_meta *)block;
         meta->desc = desc;
     }
+
+    // for the last block
+    auto last_idx = maxcount - 1;
+    char *last_block = superblock + last_idx * blockSize;
+    *(char **)(last_block + sizeof(uint64_t)) = nullptr;
+    ((lrmalloc_meta *)last_block)->desc = desc;
 
     // push blocks to cache
     char *block = superblock; // first block
@@ -123,7 +223,7 @@ void FillCache(size_t scIdx, TCacheBin *cache)
     // at most cache will be filled with number of blocks equal to superblock
     size_t blockNum = 0;
     // use a *SINGLE* partial superblock to try to fill cache
-    // MallocFromPartial(scIdx, cache, blockNum);
+    MallocFromPartial(scIdx, cache, blockNum);
     // if we obtain no blocks from partial superblocks, create a new superblock
     if (blockNum == 0)
         MallocFromNewSB(scIdx, cache, blockNum);
@@ -132,6 +232,7 @@ void FillCache(size_t scIdx, TCacheBin *cache)
     (void)sc;
 }
 
+// the blocks in the cache may comes from different superblock
 void FlushCache(size_t scIdx, TCacheBin *cache)
 {
     ProcHeap *heap = &Heaps[scIdx];

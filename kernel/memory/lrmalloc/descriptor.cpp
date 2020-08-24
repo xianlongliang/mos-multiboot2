@@ -46,7 +46,7 @@ Descriptor *DescAlloc()
                 {
                     Descriptor *curr = (Descriptor *)currPtr;
                     if (prev)
-                        prev->nextFree.store({curr});
+                        prev->nextFree.store(curr);
 
                     prev = curr;
                     currPtr = currPtr + sizeof(Descriptor);

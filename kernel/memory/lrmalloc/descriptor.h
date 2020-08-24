@@ -18,8 +18,28 @@ class ProcHeap;
 struct DescriptorNode
 {
 public:
-    // ptr
-    Descriptor *_desc = nullptr;
+    DescriptorNode(Descriptor *desc = nullptr)
+    {
+        this->split_val = {
+            ._desc = desc,
+            ._counter = 0
+        };
+    }
+
+    union {
+        struct
+        {
+            // ptr
+            Descriptor *_desc = nullptr;
+            // aba counter
+            uint64_t _counter;
+        } split_val;
+
+        struct
+        {
+            uint128_t val;
+        } full_val;
+    };
 
 public:
     void Set(Descriptor *desc, uint64_t counter)
@@ -28,17 +48,17 @@ public:
         // ASSERT(((uint64_t)desc & CACHELINE_MASK) == 0);
         // counter may be incremented but will always be stored in
         //  LG_CACHELINE bits
-        _desc = (Descriptor *)((uint64_t)desc | (counter & CACHELINE_MASK));
+        this->split_val = {._desc = desc, ._counter = counter};
     }
 
     Descriptor *GetDesc() const
     {
-        return (Descriptor *)((uint64_t)_desc & ~CACHELINE_MASK);
+        return (Descriptor *)(this->split_val._desc);
     }
 
     uint64_t GetCounter() const
     {
-        return (uint64_t)((uint64_t)_desc & CACHELINE_MASK);
+        return this->split_val._counter;
     }
 };
 
