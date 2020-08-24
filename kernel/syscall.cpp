@@ -45,7 +45,8 @@ void Syscall::Init()
     wrmsr(MSR_LSTAR, (uint64_t(&syscall_entry)));
 
     // point to the top
-    this_cpu->syscall_struct.syscall_stack = brk_up(0x1000, PAGE_4K_SIZE) + 0x1000;
+    auto page = PhysicalMemory::GetInstance()->Allocate(PAGE_4K_SIZE, 0);
+    this_cpu->syscall_struct.syscall_stack = Phy_To_Virt(page->physical_address) + 0x1000;
 
     // cli when syscall
     wrmsr(MSR_SYSCALL_MASK, (1 << 9));

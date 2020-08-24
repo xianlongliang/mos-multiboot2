@@ -35,11 +35,11 @@ public:
         return this->total_pages_count - this->free_pages_count;
     }
 
-    inline uint64_t Span()
+    inline uint64_t End()
     {
         // memory layout:
         // Zone : nodes : pages
-        return sizeof(Zone) + this->total_pages_count_rounded_up * 2 * sizeof(uint32_t) + this->total_pages_count_rounded_up * sizeof(Page);
+        return this->zone_end;
     }
 
     List list_node;
@@ -52,7 +52,9 @@ private:
     uint64_t physical_start_address;
     uint64_t physical_end_address;
     uint64_t attribute;
+    uint64_t zone_end;
 
     uint32_t *nodes;
     Page *pages;
+
 };

@@ -81,7 +81,7 @@ void basic_init(void *mbi_addr)
     auto mbi_end = (uint8_t *)addr + mbi_size;
     auto free_vstart = (uint8_t *)PAGE_4K_ROUND_UP((uint64_t)mbi_end);
     auto free_vstart_2 = (uint8_t *)PAGE_4K_ROUND_UP((uint64_t)&_kernel_virtual_end);
-    heap_init(max(free_vstart, free_vstart_2));
+    brk_init(max(free_vstart, free_vstart_2));
     for (auto tag = (struct multiboot_tag *)((uint8_t *)addr + 8);
          tag->type != MULTIBOOT_TAG_TYPE_END;
          tag = (struct multiboot_tag *)((multiboot_uint8_t *)tag + ((tag->size + 7) & ~7)))
@@ -111,7 +111,8 @@ void basic_init(void *mbi_addr)
             RSDP::GetInstance()->Init(1, (uint8_t *)&rsdp_tag->rsdp);
             break;
         }
-        case MULTIBOOT_TAG_TYPE_LOAD_BASE_ADDR: {
+        case MULTIBOOT_TAG_TYPE_LOAD_BASE_ADDR:
+        {
             auto rsdp_tag = (multiboot_tag_load_base_addr *)tag;
             rsdp_tag->load_base_addr;
             break;
@@ -129,16 +130,25 @@ void basic_init(void *mbi_addr)
             multiboot_mmap_entry *mmap;
 
             printk("mmap entries count: %d\n", ((multiboot_tag_mmap *)tag)->entry_size);
-
+            auto pm = PhysicalMemory::GetInstance();
+            uint64_t end;
             for (mmap = ((multiboot_tag_mmap *)tag)->entries;
                  (multiboot_uint8_t *)mmap < (multiboot_uint8_t *)tag + tag->size;
                  mmap = (multiboot_mmap_entry *)((uint8_t *)mmap + ((multiboot_tag_mmap *)tag)->entry_size))
             {
                 if (mmap->type == MULTIBOOT_MEMORY_AVAILABLE)
                 {
-                    PhysicalMemory::GetInstance()->Add(mmap);
+                    end = pm->Add(mmap);
                 }
             }
+            auto reserved_page_count = (PAGE_4K_ROUND_UP(end) - (uint64_t)Phy_To_Virt(0x100000)) / PAGE_SIZE_4K;
+            printk("allocating memory ...\n");
+            for (int i = 0; i < reserved_page_count; ++i)
+            {
+                pm->Allocate(1, 0);
+            }
+            printk("allocating memory done\n");
+            brk_done();
             break;
         }
         case MULTIBOOT_TAG_TYPE_ELF_SECTIONS:

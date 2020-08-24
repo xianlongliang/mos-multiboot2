@@ -46,10 +46,11 @@ Zone::Zone(uint8_t *pstart, uint8_t *pend)
     // nodes placed at the end of the zone
     this->nodes = (uint32_t *)brk_up(node_size * sizeof(uint32_t));
     // nodes placed at the end of the nodes
-    this->pages = (Page *)brk_up(pages_count * sizeof(Page));
+    this->pages = (Page *)brk_up(this->total_pages_count * sizeof(Page));
+    printk("zone start at %p -> %p\n", this, uint64_t(this) + sizeof(Zone));
     printk("nodes start at %p -> %p\n", nodes, uint64_t(this->nodes) + node_size * sizeof(uint32_t));
     printk("pages start at %p -> %p\n", pages, uint64_t(pages) + this->total_pages_count * sizeof(Page));
-
+    this->zone_end = uint64_t(pages) + this->total_pages_count * sizeof(Page);
     // build the buddy tree
     for (int i = 0; i < 2 * this->total_pages_count_rounded_up - 1; ++i)
     {
@@ -65,12 +66,6 @@ Zone::Zone(uint8_t *pstart, uint8_t *pend)
         pages[j].attributes = 0;
         pages[j].reference_count = 0;
     }
-
-    auto reserved_pages = PAGE_4K_ROUND_UP(this->Span()) / PAGE_4K_SIZE;
-    printk("reserved pages %d\n", reserved_pages);
-    printk("zone init, start at: %p span: %x\n", this, this->Span());
-    auto pidx = this->AllocatePages(reserved_pages);
-    printk("reserved page from %p to %p\n", this->pages[pidx].physical_address, this->pages[pidx + reserved_pages - 1].physical_address);
 }
 
 int64_t Zone::AllocatePages(uint64_t pages_count)

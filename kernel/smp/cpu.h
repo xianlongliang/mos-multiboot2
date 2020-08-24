@@ -5,7 +5,6 @@
 #include <std/singleton.h>
 #include <tss.h>
 #include <gdt.h>
-#include <memory/physical_page.h>
 #include <std/cpuid.h>
 #include <std/kstring.h>
 #include <thread/scheduler.h>
@@ -43,7 +42,7 @@ inline cpu_struct *get_this_cpu()
 class CPU : public Singleton<CPU>
 {
 public:
-    CPU() : cpus(1) {}
+    CPU();
 
     uint64_t Count();
 
@@ -88,5 +87,5 @@ public:
     }
 
 private:
-    vector<cpu_struct, brk_allocator<cpu_struct>> cpus;
+    vector<cpu_struct, buddy_system_allocator_oneshot<cpu_struct>> cpus;
 };

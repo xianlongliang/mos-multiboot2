@@ -1,7 +1,6 @@
 #include "apic.h"
 #include <std/msr.h>
 #include <std/port_ops.h>
-#include <memory/heap.h>
 #include <memory/physical_page.h>
 #include <std/cpuid.h>
 #include <memory/mapping.h>
@@ -10,6 +9,7 @@
 #include <interrupt/idt.h>
 #include <thread/scheduler.h>
 #include <smp/cpu.h>
+#include <memory/kmalloc.h>
 
 static void timer_callback(uint64_t error_code, uint64_t rsp, uint64_t rflags, uint64_t rip)
 {
@@ -49,11 +49,6 @@ APIC::APIC()
 
 void APIC::Init()
 {
-    if (!this->inited)
-    {
-        this->local_apic_base = (uint32_t *)brk_up(PAGE_4K_SIZE);
-    }
-
     // mask all 8259a
     outb(0x21, 0xff);
     outb(0xA1, 0xff);
