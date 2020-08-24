@@ -16,8 +16,10 @@ public:
 
 public:
     size_t GetScIdx() const { return scIdx; }
-    SizeClassData *GetSizeClass() const;
-
+    SizeClassData *GetSizeClass() const
+    {
+        return get_size_class_via_index(scIdx);
+    }
 };
 
 extern ProcHeap Heaps[MAX_SZ_IDX];
