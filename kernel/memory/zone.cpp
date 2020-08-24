@@ -7,6 +7,7 @@
 #include "flags.h"
 #include <std/math.h>
 #include <memory/heap.h>
+#include <std/lock_guard.h>
 
 #define LEFT_LEAF(index) ((index)*2 + 1)
 #define RIGHT_LEAF(index) ((index)*2 + 2)
@@ -70,6 +71,7 @@ Zone::Zone(uint8_t *pstart, uint8_t *pend)
 
 int64_t Zone::AllocatePages(uint64_t pages_count)
 {
+    LockGuard<Spinlock> lg(this->lock);
     assert(pages_count >= 1);
 
     if (!IS_POWER_OF_2(pages_count))
@@ -110,6 +112,7 @@ int64_t Zone::AllocatePages(uint64_t pages_count)
 }
 bool Zone::Reserve(uint64_t page_offset)
 {
+    LockGuard<Spinlock> lg(this->lock);
     if (page_offset > this->total_pages_count)
         return true;
     // make sure the branch is free
@@ -128,6 +131,7 @@ bool Zone::Reserve(uint64_t page_offset)
 
 int64_t Zone::FreePages(uint64_t offset)
 {
+    LockGuard<Spinlock> lg(this->lock);
     unsigned node_size, index = 0;
     unsigned left_longest, right_longest;
 

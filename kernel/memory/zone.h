@@ -1,6 +1,7 @@
 #pragma once
 #include <std/stdint.h>
 #include "physical_page.h"
+#include <std/spinlock.h>
 
 class multiboot_mmap_entry;
 
@@ -45,6 +46,7 @@ public:
     List list_node;
 
 private:
+    Spinlock lock;
     uint64_t free_pages_count;
     uint64_t total_pages_count;
     uint64_t total_pages_count_rounded_up;
