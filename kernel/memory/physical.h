@@ -18,7 +18,7 @@
             : "memory");          \
     } while (0)
 
-inline uint8_t *Get_CR3()
+inline uint8_t *get_cr3()
 {
     uint8_t *addr;
     asm volatile(

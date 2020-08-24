@@ -1,8 +1,8 @@
 cmake_minimum_required(VERSION 3.16)
 project(kernel)
 
-set(CMAKE_CXX_STANDARD 17)
-set(BUILD_FLAG "-g -march=native -fno-builtin -fno-exceptions -fno-rtti -fno-threadsafe-statics -nostdlib -ffreestanding -g -Wall -Wextra -MMD -mno-red-zone -mcmodel=large")
+set(CMAKE_CXX_STANDARD 20)
+set(BUILD_FLAG "-g -march=native -fconcepts -fno-builtin -fno-exceptions -fno-rtti -fno-threadsafe-statics -nostdlib -ffreestanding -g -Wall -Wextra -MMD -mno-red-zone -mcmodel=large")
 if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
         set(CMAKE_CXX_FLAGS "${BUILD_FLAG}")
         set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fuse-ld=lld ${CMAKE_SOURCE_DIR}/kernel/kernel.ld")
