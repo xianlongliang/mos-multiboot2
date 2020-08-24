@@ -10,8 +10,8 @@ class string
 public:
     string() : len(0)
     {
-        this->ptr = new char[1];
-        this->ptr[0] = '\0';
+        this->ptr = string::zero_str;
+        this->len = 0;
     }
 
     string(char *str, uint64_t len)
@@ -42,7 +42,8 @@ public:
     ~string()
     {
         this->len = 0;
-        delete this->ptr;
+        if (this->ptr != string::zero_str)
+            delete this->ptr;
     }
 
     char operator[](int index) const
@@ -63,7 +64,8 @@ public:
         this->len = len;
     }
 
-    string operator+(string& other) {
+    string operator+(string &other)
+    {
         string tmp = *this;
         tmp += other;
         return tmp;
@@ -74,6 +76,7 @@ public:
     char *c_str() { return this->ptr; }
 
 private:
+    inline static char zero_str[1]  = {'\0'};
     uint64_t len;
     char *ptr;
 };

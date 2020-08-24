@@ -12,4 +12,5 @@ typedef unsigned int uint32_t;
 typedef unsigned long long int uint64_t;
 typedef long unsigned int size_t;
 typedef long signed int ssize_t;
-
+typedef __int128_t int128_t;
+typedef __uint128_t uint128_t;

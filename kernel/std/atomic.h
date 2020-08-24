@@ -97,12 +97,8 @@ struct atomic_number
         return this->load() == v;
     }
 
-    bool compare_exchange(T &old_val, T new_val)
-    {
-        return __sync_bool_compare_and_swap(this->val, old_val, new_val);
-    }
-
 private:
+    friend class atomic<T>;
     alignas(T) T val;
 };
 
@@ -116,4 +112,28 @@ struct atomic<uint8_t> : public atomic_number<uint8_t>
     atomic &operator=(const atomic &) volatile = delete;
 
     atomic(uint8_t val) noexcept : atomic_number(val) {}
+
+    template <class T>
+    bool compare_exchange(T &old_val, T new_val)
+    {
+        return __sync_bool_compare_and_swap_8(&this->val, old_val, new_val);
+    }
+};
+
+template <>
+struct atomic<uint128_t> : public atomic_number<uint128_t>
+{
+    atomic() noexcept = default;
+    ~atomic() noexcept = default;
+    atomic(const atomic &) = delete;
+    atomic &operator=(const atomic &) = delete;
+    atomic &operator=(const atomic &) volatile = delete;
+
+    atomic(uint128_t val) noexcept : atomic_number(val) {}
+
+    template <class T>
+    bool compare_exchange(T &old_val, T new_val)
+    {
+        return __sync_bool_compare_and_swap_16(&static_cast<atomic_number<uint128_t> *>(this)->val, old_val, new_val);
+    }
 };
