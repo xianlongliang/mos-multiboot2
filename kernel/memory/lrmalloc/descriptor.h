@@ -5,6 +5,7 @@
 #include "anchor.h"
 #include <std/atomic.h>
 #include "../heap.h"
+#include <memory/physical.h>
 
 // size of allocated block when allocating descriptors
 // block is split into multiple descriptors
@@ -55,6 +56,7 @@ struct Descriptor
     atomic<Anchor> anchor;
 
     char *superblock;
+    Page *superblock_page;
     ProcHeap *heap;
     uint32_t blockSize; // block size
     uint32_t maxcount;

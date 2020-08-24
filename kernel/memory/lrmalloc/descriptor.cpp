@@ -1,6 +1,7 @@
 #include "descriptor.h"
 #include <std/printk.h>
 #include <std/kstring.h>
+#include <memory/physical.h>
 
 atomic<DescriptorNode> AvailDesc;
 
@@ -26,7 +27,9 @@ Descriptor *DescAlloc()
             // allocate several pages
             // get first descriptor, this is returned to caller
             // alloc 16 * 4096 bytes
-            char *ptr = (char *)brk_up(DESCRIPTOR_BLOCK_SZ);
+            static auto pm = PhysicalMemory::GetInstance();
+            auto page = pm->Allocate(16, 0);
+            char *ptr = (char *)Phy_To_Virt(page->physical_address);
             bzero(ptr, DESCRIPTOR_BLOCK_SZ);
             Descriptor *ret = (Descriptor *)ptr;
             // organize list with the rest of descriptors

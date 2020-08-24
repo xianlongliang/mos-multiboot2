@@ -7,21 +7,21 @@
 #include "zone.h"
 #include <memory/heap.h>
 
-void PhysicalMemory::Add(multiboot_mmap_entry *mmap)
+uint64_t PhysicalMemory::Add(multiboot_mmap_entry *mmap)
 {
     uint64_t start = PAGE_4K_ROUND_UP(mmap->addr);
     uint64_t end = (PAGE_4K_ROUND_DOWN(mmap->addr + mmap->len));
     printk("zone start: %p end: %p\n", start, end);
     printk("actual end: %p\n", mmap->addr + mmap->len);
     if (start == 0x0)
-        return;
+        return 0;
     if (end <= start)
     {
         printk("mmap end <= start, drop\n");
-        return;
+        return 0;
     }
     auto zone_addr = brk_up(sizeof(Zone));
-    auto zone = new (zone_addr) Zone((uint8_t*)start, (uint8_t*)end);
+    auto zone = new (zone_addr) Zone((uint8_t *)start, (uint8_t *)end);
     if (!zones_list)
     {
         this->zones_list = &zone->list_node;
@@ -30,6 +30,8 @@ void PhysicalMemory::Add(multiboot_mmap_entry *mmap)
     {
         list_add_to_behind(this->zones_list, &zone->list_node);
     }
+
+    return zone->End();
 }
 
 Page *PhysicalMemory::Allocate(uint64_t count, uint64_t page_flags)
@@ -43,7 +45,7 @@ Page *PhysicalMemory::Allocate(uint64_t count, uint64_t page_flags)
             zone->Pages()[idx].attributes |= page_flags;
             zone->Pages()[idx].reference_count = 1;
         }
-        printk("alloc: %p\n", zone->Pages()[idx].physical_address);
+        // printk("alloc: %p to %p\n", zone->Pages()[idx].physical_address, zone->Pages()[idx + count - 1].physical_address + 0x1000);
         return &zone->Pages()[idx];
     }
     return nullptr;

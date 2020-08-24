@@ -40,10 +40,6 @@ inline void set_cr3(void *pml4)
 
 class multiboot_mmap_entry;
 
-constexpr uint64_t ZONES_RESERVED = 8;
-
-extern char _kernel_virtual_end;
-
 class PhysicalMemory : public Singleton<PhysicalMemory>
 {
 public:
@@ -51,11 +47,9 @@ public:
     void Free(Page *page);
     bool Reserve(uint64_t physical_address);
 
-    inline static uint8_t *ZONE_VIRTUAL_START = 0x0;
-
 private:
     friend void basic_init(void *mbi_addr);
-    void Add(multiboot_mmap_entry *mmap);
+    uint64_t Add(multiboot_mmap_entry *mmap);
 
     List *zones_list;
 };
