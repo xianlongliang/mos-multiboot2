@@ -28,8 +28,8 @@ public:
 
     string &operator=(string other)
     {
-        swap(this->ptr, other.ptr);
-        swap(this->len, other.len);
+        std::swap(this->ptr, other.ptr);
+        std::swap(this->len, other.len);
         return *this;
     }
 
@@ -51,7 +51,7 @@ public:
         return this->ptr[index];
     }
 
-    void operator+=(string &other)
+    void operator+=(const string &other)
     {
         auto len = this->len + other.len;
         auto p = new char[len + 1];
@@ -64,7 +64,7 @@ public:
         this->len = len;
     }
 
-    string operator+(string &other)
+    string operator+(const string &other)
     {
         string tmp = *this;
         tmp += other;

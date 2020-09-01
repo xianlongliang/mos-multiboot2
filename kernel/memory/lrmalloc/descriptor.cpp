@@ -3,7 +3,7 @@
 #include <std/kstring.h>
 #include <memory/physical.h>
 
-atomic<DescriptorNode> AvailDesc;
+std::atomic<DescriptorNode> AvailDesc;
 
 Descriptor *DescAlloc()
 {

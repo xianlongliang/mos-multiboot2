@@ -142,7 +142,7 @@ public:
 
     void push_back(T &&val)
     {
-        auto node = new list_node(forward<T>(val));
+        auto node = new list_node(std::forward<T>(val));
         auto last = head->prev;
         head->prev = node;
         last->next = node;
@@ -178,7 +178,7 @@ public:
 
     void push_front(T &&val)
     {
-        auto node = new list_node(forward<T>(val));
+        auto node = new list_node(std::forward<T>(val));
         this->head->next->prev = node;
         node->next = this->head->next;
         node->prev = this->head;

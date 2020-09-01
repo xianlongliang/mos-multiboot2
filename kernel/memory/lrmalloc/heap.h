@@ -10,7 +10,7 @@ struct ProcHeap
 {
 public:
     // ptr to descriptor, head of partial descriptor list
-    atomic<DescriptorNode> partialList;
+    std::atomic<DescriptorNode> partialList;
     // size class index
     size_t scIdx;
 

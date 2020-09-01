@@ -69,11 +69,11 @@ struct Descriptor
 {
     // list node pointers
     // used in free descriptor list
-    atomic<DescriptorNode> nextFree;
+    std::atomic<DescriptorNode> nextFree;
     // used in partial descriptor list
-    atomic<DescriptorNode> nextPartial;
+    std::atomic<DescriptorNode> nextPartial;
     // anchor
-    atomic<Anchor> anchor;
+    std::atomic<Anchor> anchor;
 
     char *superblock;
     Page *superblock_page;
@@ -82,6 +82,6 @@ struct Descriptor
     uint32_t maxcount;
 };
 
-extern atomic<DescriptorNode> AvailDesc;
+extern std::atomic<DescriptorNode> AvailDesc;
 
 Descriptor *DescAlloc();

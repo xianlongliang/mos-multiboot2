@@ -7,7 +7,7 @@
 // set true when smp init completed
 static bool full_init;
 
-extern atomic<DescriptorNode> AvailDesc;
+extern std::atomic<DescriptorNode> AvailDesc;
 
 void lrmalloc_init()
 {
@@ -36,7 +36,7 @@ void DescRetire(Descriptor *desc)
 
 Descriptor *HeapPopPartial(ProcHeap *heap)
 {
-    atomic<DescriptorNode> &list = heap->partialList;
+    std::atomic<DescriptorNode> &list = heap->partialList;
     DescriptorNode oldHead = list.load();
     DescriptorNode newHead;
     do

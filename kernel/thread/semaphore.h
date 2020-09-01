@@ -13,6 +13,6 @@ public:
     void Down();
     void Up();
 private:
-    atomic<uint8_t> value;
+    std::atomic<uint8_t> value;
     list<task_struct *> wait_list;
 };

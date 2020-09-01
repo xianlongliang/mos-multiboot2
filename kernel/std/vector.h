@@ -43,9 +43,9 @@ public:
     }
 
     vector& operator=(vector&& rval) {
-        swap(this->pval, rval.pval);
-        swap(this->current_size, rval.current_size);
-        swap(this->capacity, rval.capacity);
+        std::swap(this->pval, rval.pval);
+        std::swap(this->current_size, rval.current_size);
+        std::swap(this->capacity, rval.capacity);
         return *this;
     }
 
@@ -60,7 +60,7 @@ public:
         {
             this->expand();
         }
-        new (&this->pval[this->current_size++]) T(move(val));
+        new (&this->pval[this->current_size++]) T(std::move(val));
     }
 
     void pop_back()
@@ -139,7 +139,7 @@ private:
         auto new_pval = (T *)kmalloc(target_capacity * sizeof(T), 0);
         for (uint64_t i = 0; i < this->current_size; ++i)
         {
-            new (&new_pval[i]) T(move(this->pval[i]));
+            new (&new_pval[i]) T(std::move(this->pval[i]));
         }
         if (this->pval) kfree(this->pval);
         this->pval = new_pval;
