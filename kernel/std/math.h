@@ -21,6 +21,18 @@ inline uint64_t round_up_pow_of_2(uint64_t x)
     return x == 1 ? 1 : 1 << (64 - __builtin_clzl(x - 1));
 }
 
+inline uint32_t next_pow_of_2(uint32_t v)
+{
+    v--;
+    v |= v >> 1;
+    v |= v >> 2;
+    v |= v >> 4;
+    v |= v >> 8;
+    v |= v >> 16;
+    v++;
+    return v;
+}
+
 inline int64_t pow(int64_t base, int64_t exp)
 {
     int64_t result = 1;

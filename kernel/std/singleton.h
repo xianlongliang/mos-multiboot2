@@ -8,7 +8,7 @@ public:
     template<typename... Args>
 	inline static T* GetInstance(Args&&... args)
 	{
-		static auto instance = T(forward<Args>(args)...);
+		static auto instance = T(std::forward<Args>(args)...);
 		return &instance;
 	}
 };

@@ -38,7 +38,7 @@ Zone::Zone(uint8_t *pstart, uint8_t *pend)
 
     if (!IS_POWER_OF_2(pages_count))
     {
-        this->total_pages_count_rounded_up = round_up_pow_of_2(pages_count);
+        this->total_pages_count_rounded_up = next_pow_of_2(pages_count);
         printk("buddy page round %d\n", this->total_pages_count_rounded_up);
     }
 
@@ -75,7 +75,7 @@ int64_t Zone::AllocatePages(uint64_t pages_count)
     assert(pages_count >= 1);
 
     if (!IS_POWER_OF_2(pages_count))
-        pages_count = round_up_pow_of_2(pages_count);
+        pages_count = next_pow_of_2(pages_count);
     unsigned index = 0;
     // if the first(largest) doesn't fit return error
     if (this->nodes[index] < pages_count)

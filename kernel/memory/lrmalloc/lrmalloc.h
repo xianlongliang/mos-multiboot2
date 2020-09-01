@@ -18,6 +18,6 @@ enum SuperblockState
 };
 
 void *lrmalloc(size_t size);
-void *lrfree(const void *ptr);
+void lrfree(const void *ptr);
 
 void lrmalloc_init();

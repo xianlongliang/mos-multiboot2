@@ -15,5 +15,5 @@ public:
 
 private:
     friend void task_init();
-    task_struct *next_task;
+    task_struct *next_task = nullptr;
 };

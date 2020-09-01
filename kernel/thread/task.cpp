@@ -208,8 +208,8 @@ uint64_t init(uint64_t arg)
 
     auto task_init2 = create_kernel_thread(&init2, 1, CLONE_FS | CLONE_FILES | CLONE_SIGNAL);
     auto bash_task = create_kernel_thread(&bash, 1, CLONE_FS | CLONE_FILES | CLONE_SIGNAL);
-    printk("current rsp : %x\n", current->thread->rsp0);
-    printk("task_init2 rsp : %x\n", task_init2->thread->rsp0);
+    printk("current : %x\n", current);
+    printk("bash_task : %x\n", bash_task);
 
     this_cpu->scheduler.Add(current)->Add(bash_task);
 

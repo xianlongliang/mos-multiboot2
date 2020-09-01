@@ -79,7 +79,7 @@ extern "C" void smp_apu_init()
 
 extern "C" void smp_callback()
 {
-    auto stack = CPU::GetInstance()->Get().cpu_stack + PAGE_4K_SIZE - 0x10;
+    auto stack = (int8_t*)CPU::GetInstance()->Get().cpu_stack + PAGE_4K_SIZE - 0x10;
     // setup the stack
     asm volatile("movq %0, %%rsp \n\t"
                  "movq %%rsp, %%rbp \n\t" ::"m"(stack));

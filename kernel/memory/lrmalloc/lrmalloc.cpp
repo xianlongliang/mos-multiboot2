@@ -327,14 +327,14 @@ void *lrmalloc(size_t size)
     return cache->PopBlock();
 }
 
-void *lrfree(const void *ptr)
+void lrfree(const void *ptr)
 {
     if (ptr == nullptr)
     {
         panic("freeing nullptr");
     }
 
-    auto meta = (lrmalloc_meta *)(ptr - sizeof(uint64_t));
+    auto meta = (lrmalloc_meta *)((int8_t*)ptr - sizeof(uint64_t));
     auto scIdx = meta->desc->heap->GetScIdx();
     auto sc = meta->desc->heap->GetSizeClass();
     auto cache = &this_cpu->mcache[scIdx];
