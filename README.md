@@ -65,4 +65,6 @@ you can easily dump the kernel binary file using:
 $ make dump
 ```
 
+## References
+
 [1] Leite, Ricardo and Ricardo Rocha. “LRMalloc: A Modern and Competitive Lock-Free Dynamic Memory Allocator.” VECPAR (2018).
