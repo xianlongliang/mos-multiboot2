@@ -12,6 +12,7 @@
 #include "mutex.h"
 #include "condition_variable.h"
 #include <smp/cpu.h>
+#include <std/interrupt.h>
 
 static uint64_t global_pid = 0;
 // we pop all pt_regs out
@@ -163,7 +164,7 @@ void bash()
     while (1)
     {
         uint8_t ch = 0;
-        sys_read(1, &ch, 1);
+        CLI_GUARD(sys_read(1, &ch, 1));
         switch (ch)
         {
         case '\r':
@@ -213,13 +214,10 @@ uint64_t init(uint64_t arg)
 
     this_cpu->scheduler.Add(current)->Add(bash_task);
 
-    // switch_to(current, next);
-    // sti();
+    sti();
     while (1)
     {
-        // remove self from the scheduler when there are others tasks running
-        asm volatile("sti; hlt");
-        // idle task will be added back when there's no task to run
+        hlt();
     }
 }
 

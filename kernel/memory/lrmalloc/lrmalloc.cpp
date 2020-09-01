@@ -14,7 +14,7 @@ void lrmalloc_init()
     size_class_init();
     AvailDesc.store(nullptr);
     lrmalloc_heap_init();
-    this_cpu->mcache = TCache;
+    CPU::GetInstance()->Get().mcache = TCache;
 }
 
 struct lrmalloc_meta

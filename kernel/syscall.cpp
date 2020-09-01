@@ -46,8 +46,12 @@ void Syscall::Init()
 
     // point to the top
     auto page = PhysicalMemory::GetInstance()->Allocate(PAGE_4K_SIZE, 0);
-    this_cpu->syscall_struct.syscall_stack = Phy_To_Virt(page->physical_address) + 0x1000;
+    auto& cs = CPU::GetInstance()->Get();
+    cs.syscall_struct.syscall_stack = Phy_To_Virt(page->physical_address) + 0x1000;
 
     // cli when syscall
     wrmsr(MSR_SYSCALL_MASK, (1 << 9));
+
+    wrmsr(MSR_KERNEL_GS_BASE, uint64_t(cs.self));
+    asm volatile("swapgs");
 }

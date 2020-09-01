@@ -6,8 +6,7 @@
 #include <gdt.h>
 #include <thread/task.h>
 #include <syscall.h>
-
-static Spinlock smp_lock;
+#include <std/interrupt.h>
 
 void SMP::Init()
 {
@@ -15,7 +14,6 @@ void SMP::Init()
     IDT::GetInstance()->Init();
     APIC::GetInstance()->Init();
     Syscall::GetInstance()->Init();
-    smp_lock = Spinlock();
 
     auto apic = APIC::GetInstance();
     // DSH: 0x3 all excluding self
@@ -59,27 +57,36 @@ void SMP::Init()
     }
 }
 
+extern "C" void smp_entry()
+{
+    sti();
+    while (1)
+    {
+        hlt();
+    }
+}
+
 extern "C" void smp_apu_init()
 {
-    smp_lock.lock();
     GDT::GetInstance()->Init();
     IDT::GetInstance()->Init();
     Syscall::GetInstance()->Init();
     APIC::GetInstance()->Init();
 
+    auto &u = CPU::GetInstance()->Get();
     CPU::GetInstance()->SetOnline();
     printk("AP CPU %d online\n", CPU::GetInstance()->Get().apic_id);
-    smp_lock.unlock();
-    asm volatile("sti");
-    while (1)
-    {
-        asm volatile("hlt");
-    }
+
+    asm volatile("movq %0, %%rsp \n\t"
+                 "movq %%rsp, %%rbp \n\t" ::"m"(u.syscall_struct.syscall_stack));
+    //no return
+    asm volatile("jmp smp_entry");
 }
 
 extern "C" void smp_callback()
 {
-    auto stack = (int8_t*)CPU::GetInstance()->Get().cpu_stack + PAGE_4K_SIZE - 0x10;
+    extern char SMP_STACK_START;
+    auto stack = (int8_t *)&SMP_STACK_START;
     // setup the stack
     asm volatile("movq %0, %%rsp \n\t"
                  "movq %%rsp, %%rbp \n\t" ::"m"(stack));

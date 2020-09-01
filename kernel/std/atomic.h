@@ -95,6 +95,11 @@ namespace std
         {
             this->fetch_sub(v);
         }
+
+        T operator++() {
+            return this->fetch_add(1);
+        } 
+
         void store(T v)
         {
             asm volatile("movq %1, %0 \n\t"
@@ -146,5 +151,17 @@ namespace std
         atomic &operator=(const atomic &) volatile = delete;
 
         atomic(uint128_t val) noexcept : atomic_number(val) {}
+    };
+
+    template <>
+    struct atomic<uint64_t> : public atomic_number<uint64_t>
+    {
+        atomic() noexcept = default;
+        ~atomic() noexcept = default;
+        atomic(const atomic &) = delete;
+        atomic &operator=(const atomic &) = delete;
+        atomic &operator=(const atomic &) volatile = delete;
+
+        atomic(uint64_t val) noexcept : atomic_number(val) {}
     };
 }; 

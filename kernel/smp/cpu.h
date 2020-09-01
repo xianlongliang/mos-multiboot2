@@ -18,7 +18,7 @@ struct cpu_struct
     {
         void *syscall_stack;
         void *syscall_userland_stack;
-    } syscall_struct;
+    } syscall_struct = {0};
 
     bool online;
     uint64_t apic_id;
@@ -58,6 +58,9 @@ public:
         cs->gdt.gdt_ptr.limit = uint16_t(80 - 1);
         set_gdt_tss((uint8_t *)&cs->gdt.gdt_table[7], (uint8_t *)&cs->tss, 103, 0x89);
 
+        cs->scheduler = Scheduler();
+        cs->mcache = nullptr;
+        
         wrmsr(MSR_KERNEL_GS_BASE, uint64_t(cs));
         asm volatile("swapgs");
     }
