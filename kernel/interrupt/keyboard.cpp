@@ -196,14 +196,14 @@ void keyboard_irq_handler(uint64_t error_code, uint64_t rsp, uint64_t rflags, ui
         }
 
         uint8_t index = (scancode &= 0x00ff); // 将扫描码的高字节置0,主要是针对高字节是e0的扫描码.
-        char cur_char = keymap[index][shift]; // 在数组中找到对应的字符
+        int8_t cur_char = keymap[index][shift]; // 在数组中找到对应的字符
 
         /* 只处理ascii码不为0的键 */
         if (cur_char != 0)
         {
             keyboard_buffer[keyboard_buffer_cursor++] = cur_char;
             keyboard_buffer[keyboard_buffer_cursor] = '\0';
-            KeyboardIO::GetInstance()->Queue.Push(move(cur_char));
+            KeyboardIO::GetInstance()->Queue.Push(cur_char);
         }
         switch (cur_char)
         {

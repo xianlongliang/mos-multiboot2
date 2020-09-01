@@ -14,13 +14,15 @@ class IOQueue
 public:
     IOQueue(uint64_t max_queue_size) : max_queue_size(max_queue_size), queue() {}
 
-    void Push(T &&val)
+    // ValType must match with T
+    template<typename ValType>
+    void Push(ValType &&val)
     {
         LockGuard lg(this->lock);
         if (this->queue.size() > this->max_queue_size) {
              return;
         }
-        this->queue.push_front(forward<T>(val));
+        this->queue.push_front(std::forward<T>(val));
         this->cv.notify_one();
     }
 
