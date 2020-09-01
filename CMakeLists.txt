@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.16)
 project(kernel)
 
 set(CMAKE_CXX_STANDARD 20)
-set(BUILD_FLAG "-g -static -march=native -fconcepts -fno-builtin -fno-rtti -fno-threadsafe-statics -nostdlib -ffreestanding -g -Wall -Wextra -MMD -mno-red-zone -mcmodel=large")
+set(BUILD_FLAG "-g -static -march=native -fno-exceptions -fconcepts -fno-builtin -fno-rtti -fno-threadsafe-statics -nostdlib -ffreestanding -g -Wall -Wextra -MMD -mno-red-zone -mcmodel=large")
 if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
         set(CMAKE_CXX_FLAGS "${BUILD_FLAG}")
         set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fuse-ld=lld ${CMAKE_SOURCE_DIR}/kernel/kernel.ld")
@@ -79,6 +79,7 @@ add_executable(kernel
         kernel/std/bitmap.cpp
         kernel/std/move.h
         kernel/std/unique_ptr.h
+        kernel/std/shared_ptr.h
         kernel/std/c++/pure_virtual_function.cpp
         kernel/std/c++/global_object.cpp
         
