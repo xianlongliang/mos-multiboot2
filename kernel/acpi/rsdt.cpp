@@ -6,6 +6,7 @@
 #include <memory/physical_page.h>
 #include <interrupt/io_apic.h>
 #include <smp/cpu.h>
+#include <std/move.h>
 
 struct acpi_rsdt_header_t
 {
@@ -23,7 +24,15 @@ struct acpi_rsdt_header_t
 struct acpi_rsdt_t
 {
     acpi_rsdt_header_t header;
-    uint32_t other_sdt[0];
+    uint32_t other_sdt[];
+    typedef uint32_t* entry_type;
+};
+
+struct acpi_xsdt_t
+{
+    acpi_rsdt_header_t header;
+    uint32_t other_sdt[];
+    typedef uint32_t* entry_type;
 };
 
 struct acpi_apic_t
@@ -75,7 +84,8 @@ struct acpi_apic_t
     };
 };
 
-static bool rsdt_checksum(acpi_rsdt_t *header)
+template <class SDT_TYPE>
+static bool rsdt_checksum(SDT_TYPE *header)
 {
     unsigned char sum = 0;
 
@@ -86,28 +96,31 @@ static bool rsdt_checksum(acpi_rsdt_t *header)
 
     return sum == 0;
 }
-
-void RSDT::Init()
+template <class SDT_TYPE>
+void do_init(RSDP *rsdp)
 {
-    auto rsdp = RSDP::GetInstance();
-
-    auto rsdt = (acpi_rsdt_t *)rsdp->RSDTAddress();
+    auto rsdt = (SDT_TYPE *)rsdp->RSDTAddress();
     if (!rsdt_checksum(rsdt))
     {
         panic("rsdt checksum error\n");
     }
     auto rsdt_addr = rsdp->RSDTAddress();
-    auto entry_len = (rsdt->header.length - sizeof(acpi_rsdt_t)) / 4;
+    auto size = sizeof(decltype(*rsdt->other_sdt));
+    auto entry_len = (rsdt->header.length - sizeof(rsdt->header)) / sizeof(decltype(*rsdt->other_sdt));
     for (uint64_t i = 0; i < entry_len; ++i)
     {
-        auto other = (acpi_rsdt_t *)(Phy_To_Virt(rsdt->other_sdt[i]));
+        auto other = (typename SDT_TYPE::entry_type)&rsdt->other_sdt;
+        SDT_TYPE* entry = (SDT_TYPE*)other[i];
+
+        entry = (SDT_TYPE*)Phy_To_Virt(entry);
+
         // parse madt
         // check https://wiki.osdev.org/MADT
-        if (!strncmp(other->header.signature, "APIC", 4))
+        if (!strncmp(entry->header.signature, "APIC", 4))
         {
             printk("find APIC\n");
-            auto apic_header = (acpi_apic_t *)other;
-            auto end_addr = (int8_t *)other + other->header.length;
+            auto apic_header = (acpi_apic_t *)entry;
+            auto end_addr = (int8_t *)entry + entry->header.length;
             auto start_addr = apic_header->entry_start;
             while (start_addr < end_addr)
             {
@@ -159,10 +172,26 @@ void RSDT::Init()
                 start_addr += ent->length;
             }
         }
-        if (!strncmp(other->header.signature, "FACP", 4))
+        if (!strncmp(entry->header.signature, "FACP", 4))
         {
             printk("find FACP\n");
         }
     }
+}
 
+void RSDT::Init()
+{
+    auto rsdp = RSDP::GetInstance();
+
+    switch (rsdp->ACPIVersion())
+    {
+    case 1:
+        do_init<acpi_rsdt_t>(rsdp);
+        break;
+    case 2:
+        do_init<acpi_xsdt_t>(rsdp);
+        break;
+    default:
+        break;
+    }
 }

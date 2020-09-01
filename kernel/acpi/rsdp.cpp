@@ -11,11 +11,12 @@ struct acpi_rsdp_t
     char oem_id[6];
     uint8_t revision;
     uint32_t rsdt_address;
+    // below for Version 2.0
     uint32_t length;
     uint64_t xsdt_address;
     uint8_t extended_checksum;
     char reserved[3];
-} __attribute__((__packed__));
+} __attribute__ ((packed));
 
 uint8_t*RSDP::RSDTAddress()
 {
@@ -37,6 +38,7 @@ void RSDP::Init(uint8_t rsdp_version, uint8_t*rsdp_address)
         printk("rsdt addr: %p\n", rsdp->rsdt_address);
         PhysicalMemory::GetInstance()->Reserve(rsdp->rsdt_address);
         this->rsdt_vaddr = Phy_To_Virt((uint8_t*)(rsdp->rsdt_address));
+        this->acpi_version = 1;
         break;
     }
     case 2:
@@ -45,6 +47,7 @@ void RSDP::Init(uint8_t rsdp_version, uint8_t*rsdp_address)
         printk("rsdt addr: %p\n", rsdp->rsdt_address);
         PhysicalMemory::GetInstance()->Reserve(rsdp->rsdt_address);
         this->rsdt_vaddr = Phy_To_Virt((uint8_t*)(rsdp->rsdt_address));
+        this->acpi_version = 2;
         break;
     }
     default:

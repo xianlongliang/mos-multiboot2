@@ -101,7 +101,6 @@ void basic_init(void *mbi_addr)
             auto rsdp_tag = (multiboot_tag_old_acpi *)tag;
             printk("rsdp: %p, size: %d\n", rsdp_tag->rsdp, rsdp_tag->size);
             RSDP::GetInstance()->Init(2, (uint8_t *)&rsdp_tag->rsdp);
-            panic("no support for MULTIBOOT_TAG_TYPE_ACPI_NEW\n");
             break;
         }
         case MULTIBOOT_TAG_TYPE_ACPI_OLD:

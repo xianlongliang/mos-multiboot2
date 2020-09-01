@@ -15,11 +15,18 @@ uint64_t PhysicalMemory::Add(multiboot_mmap_entry *mmap)
     printk("actual end: %p\n", mmap->addr + mmap->len);
     if (start == 0x0)
         return 0;
+
     if (end <= start)
     {
         printk("mmap end <= start, drop\n");
         return 0;
     }
+
+    if (start >= 0xbff00000 && end <= 0xc0000000) {
+        printk("mmio reserved\n");
+        return 0;
+    }
+
     auto zone_addr = brk_up(sizeof(Zone));
     auto zone = new (zone_addr) Zone((uint8_t *)start, (uint8_t *)end);
     if (!zones_list)
