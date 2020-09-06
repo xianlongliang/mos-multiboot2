@@ -196,7 +196,7 @@ _start64:
     mov gs, ax
     mov ss, ax
 
-    mov rsp, STACK_START
+    mov rsp, STACK_START + KERNEL_TEXT_BASE
     mov rbp, rsp
 
     mov rdi, rbx

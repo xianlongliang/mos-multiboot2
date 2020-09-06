@@ -15,6 +15,11 @@ ENABLE_LANGUAGE(ASM_NASM)
 
 include_directories(${CMAKE_SOURCE_DIR}/kernel)
 add_executable(kernel 
+        u_vga16.o
+
+        kernel/display/gop.h
+        kernel/display/gop.cpp
+        
         kernel/boot.asm
         kernel/kernel.h 
         kernel/kernel.cpp 
@@ -133,5 +138,6 @@ add_custom_command(TARGET kernel
         COMMAND mkdir -p ${CMAKE_BINARY_DIR}/iso/boot/grub
         COMMAND cp ${CMAKE_SOURCE_DIR}/grub.cfg ${CMAKE_BINARY_DIR}/iso/boot/grub/
         COMMAND cp ${CMAKE_BINARY_DIR}/kernel ${CMAKE_BINARY_DIR}/iso/boot/
+        COMMAND cp -r ${CMAKE_SOURCE_DIR}/EFI ${CMAKE_BINARY_DIR}/iso/
         COMMAND grub-mkrescue -o kernel.iso ${CMAKE_BINARY_DIR}/iso
         )
