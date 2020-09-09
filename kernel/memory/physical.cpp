@@ -13,8 +13,6 @@ uint64_t PhysicalMemory::Add(multiboot_mmap_entry *mmap)
     uint64_t end = (PAGE_4K_ROUND_DOWN(mmap->addr + mmap->len));
     printk("zone start: %p end: %p\n", start, end);
     printk("actual end: %p\n", mmap->addr + mmap->len);
-    if (start == 0x0)
-        return 0;
 
     if (end <= start)
     {
@@ -22,12 +20,18 @@ uint64_t PhysicalMemory::Add(multiboot_mmap_entry *mmap)
         return 0;
     }
 
-    if (start >= 0xbff00000 && end <= 0xc0000000) {
-        printk("mmio reserved\n");
+    if (end - start < 0x800000) {
+        printk("region less than 8Mb, dropped\n");
         return 0;
     }
 
-    auto zone_addr = brk_up(sizeof(Zone));
+    if (start >= 0x100000000) {
+        printk("todo: add map for 4G+ mem\n");
+        return 0;
+    }
+
+    // auto zone_addr = brk_up(sizeof(Zone));
+    auto zone_addr = Phy_To_Virt(start);
     auto zone = new (zone_addr) Zone((uint8_t *)start, (uint8_t *)end);
     if (!zones_list)
     {

@@ -39,6 +39,7 @@ inline void set_cr3(void *pml4)
 }
 
 class multiboot_mmap_entry;
+class MBI2;
 
 class PhysicalMemory : public Singleton<PhysicalMemory>
 {
@@ -48,6 +49,7 @@ public:
     bool Reserve(uint64_t physical_address);
 
 private:
+    friend class MBI2;
     friend void basic_init(void *mbi_addr);
     uint64_t Add(multiboot_mmap_entry *mmap);
 

@@ -14,6 +14,5 @@ void *kmalloc(uint64_t size, uint64_t flags)
 
 void kfree(const void *ptr)
 {
-    // printk("free %p\n", ptr);
     lrfree(ptr);
 }

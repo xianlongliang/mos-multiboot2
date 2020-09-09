@@ -8,6 +8,7 @@
 #include <std/math.h>
 #include <memory/heap.h>
 #include <std/lock_guard.h>
+#include <memory/physical.h>
 
 #define LEFT_LEAF(index) ((index)*2 + 1)
 #define RIGHT_LEAF(index) ((index)*2 + 2)
@@ -45,9 +46,13 @@ Zone::Zone(uint8_t *pstart, uint8_t *pend)
     // node number is size * 2 - 1, we alloc size * 2
     auto node_size = this->total_pages_count_rounded_up * 2;
     // nodes placed at the end of the zone
-    this->nodes = (uint32_t *)brk_up(node_size * sizeof(uint32_t));
+    auto zone_end = (int8_t *)this + sizeof(Zone);
+    this->nodes = (uint32_t *)zone_end;
+    auto nodes_end = zone_end + sizeof(this->nodes) * node_size;
     // nodes placed at the end of the nodes
-    this->pages = (Page *)brk_up(this->total_pages_count * sizeof(Page));
+    this->pages = (Page *)nodes_end;
+    auto pages_end = nodes_end + sizeof(Page) * this->total_pages_count;
+
     printk("zone start at %p -> %p\n", this, uint64_t(this) + sizeof(Zone));
     printk("nodes start at %p -> %p\n", nodes, uint64_t(this->nodes) + node_size * sizeof(uint32_t));
     printk("pages start at %p -> %p\n", pages, uint64_t(pages) + this->total_pages_count * sizeof(Page));
@@ -66,6 +71,13 @@ Zone::Zone(uint8_t *pstart, uint8_t *pend)
         pages[j].physical_address = (uint8_t *)(this->physical_start_address + PAGE_4K_SIZE * j);
         pages[j].attributes = 0;
         pages[j].reference_count = 0;
+    }
+
+    auto reserved_page_count = (PAGE_4K_ROUND_UP((uint64_t)pages_end) - (uint64_t)Phy_To_Virt(pstart)) / PAGE_4K_SIZE;
+    printk("allocating memory ...\n");
+    for (int i = 0; i < reserved_page_count; ++i)
+    {
+        this->AllocatePages(1);
     }
 }
 
