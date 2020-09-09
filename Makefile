@@ -7,7 +7,7 @@ dump:
 	# objdump -S build/user > build/user.dump
 
 qemu:
-	qemu-system-x86_64 -cpu Haswell -smp 1 -monitor stdio -hda build/kernel.iso -hdb hd80.img -m 8192M -s -S
+	qemu-system-x86_64 -cpu Broadwell --bios OVMF.fd -net none -monitor stdio -drive file=build/kernel.iso,index=0,media=disk,format=raw -m 8192M -s -S
 
 qemu-gdb:
 	nohup qemu-system-x86_64 -cdrom build/kernel.iso -serial stdio -m 64M -s -S & 
