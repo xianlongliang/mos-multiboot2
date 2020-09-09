@@ -46,7 +46,7 @@ static void print_stack_trace()
     asm volatile("mov %%rbp, %0"
                  : "=r"(rbp));
 
-    auto kernel_stack_start = (uint64_t)&STACK_START;
+    auto kernel_stack_start = (uint64_t)Phy_To_Virt(&STACK_START);
     // we keep poping stack until reaching start_kernel_base
     for (int i = 0; i < 10 && *rbp != kernel_stack_start; ++i)
     // while (*rbp != start_kernel_base)
