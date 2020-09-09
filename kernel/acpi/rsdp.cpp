@@ -36,7 +36,7 @@ void RSDP::Init(uint8_t rsdp_version, uint8_t*rsdp_address)
     {
         auto rsdp = (acpi_rsdp_t *)rsdp_address;
         printk("rsdt addr: %p\n", rsdp->rsdt_address);
-        PhysicalMemory::GetInstance()->Reserve(rsdp->rsdt_address);
+        // PhysicalMemory::GetInstance()->Reserve(rsdp->rsdt_address);
         this->rsdt_vaddr = Phy_To_Virt((uint8_t*)(rsdp->rsdt_address));
         this->acpi_version = 1;
         break;
@@ -45,7 +45,7 @@ void RSDP::Init(uint8_t rsdp_version, uint8_t*rsdp_address)
     {
         auto rsdp = (acpi_rsdp_t *)rsdp_address;
         printk("rsdt addr: %p\n", rsdp->rsdt_address);
-        PhysicalMemory::GetInstance()->Reserve(rsdp->rsdt_address);
+        // PhysicalMemory::GetInstance()->Reserve(rsdp->rsdt_address);
         this->rsdt_vaddr = Phy_To_Virt((uint8_t*)(rsdp->rsdt_address));
         this->acpi_version = 2;
         break;
