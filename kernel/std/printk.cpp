@@ -213,7 +213,7 @@ void putvalue(uint8_t *val)
         GOP::PutChar('x');
 
         auto padding = 16 - end_idx;
-        while (padding--)
+        while (--padding)
         {
                 GOP::PutChar('0');
         }
