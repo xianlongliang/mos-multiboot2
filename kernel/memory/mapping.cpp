@@ -24,7 +24,6 @@ static SwapPTE swap_pte;
 
 void vmap_init()
 {
-    printk("%p\n", &swap_pte);
     swap_pte = {(uint64_t)Virt_To_Phy(kernel_pte_reserved), (uint64_t)kernel_pte_reserved};
 }
 

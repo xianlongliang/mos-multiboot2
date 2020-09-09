@@ -20,13 +20,20 @@
 #include <std/spinlock.h>
 #include <std/string.h>
 #include <std/unordered_set.h>
+#include <std/shared_ptr.h>
+
+class SP
+{
+public:
+  SP() {}
+};
 
 extern "C" void Kernel_Main(void *mbi_addr)
 {
-  clear();
   basic_init(mbi_addr);
   RSDT::GetInstance()->Init();
   kmalloc_init();
+  // auto s = shared_ptr<UniqueTest>(new UniqueTest());
   SMP::GetInstance()->Init();
   task_init();
 }

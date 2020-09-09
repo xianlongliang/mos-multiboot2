@@ -48,23 +48,19 @@ void GOP::PutChar(char c, Color back, Color fore)
     else if (c == '\r')
     {
         cursor_x = 0;
-        cursor_y += 12;
+        cursor_y += 15;
     }
     else if (c == '\n')
     {
         cursor_x = 0;
-        cursor_y += 12;
+        cursor_y += 15;
     }
 
     // 每 80 个字符一行，满80就必须换行了
     if (cursor_x >= ssfn_dst.w)
     {
         cursor_x = 0;
-        cursor_y += 12;
-    }
-    if (cursor_y == 600)
-    {
-        int j = 0;
+        cursor_y += 15;
     }
     scroll();
     ssfn_putc(c);
@@ -98,10 +94,10 @@ void GOP::scroll()
         // 将所有行的显示数据复制到上一行，第一行永远消失了...
         int i;
 
-        auto last_line = y_count * x_count - 12 * x_count;
+        auto last_line = y_count * x_count - 15 * x_count;
         for (i = 0; i < last_line; i++)
         {
-            video_memory[i] = video_memory[i + 12 * x_count];
+            video_memory[i] = video_memory[i + 15 * x_count];
         }
 
         auto end_line = y_count * x_count;
@@ -112,6 +108,6 @@ void GOP::scroll()
         }
 
         // 向上移动了一行，所以 cursor_y 现在是 24
-        cursor_y -= 12;
+        cursor_y -= 15;
     }
 }
