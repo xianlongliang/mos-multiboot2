@@ -15,11 +15,7 @@ ENABLE_LANGUAGE(ASM_NASM)
 
 include_directories(${CMAKE_SOURCE_DIR}/kernel)
 add_executable(kernel 
-        u_vga16.o
 
-        kernel/display/gop.h
-        kernel/display/gop.cpp
-        
         kernel/boot.asm
         kernel/kernel.h 
         kernel/kernel.cpp 
@@ -131,6 +127,9 @@ add_executable(kernel
         kernel/interrupt/keyboard.cpp
         kernel/syscall/read.cpp
         kernel/syscall/write.cpp
+        kernel/display/gop.h
+        kernel/display/gop.cpp
+        u_vga16.o
         )
 
 add_custom_command(TARGET kernel
