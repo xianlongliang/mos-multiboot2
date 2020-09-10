@@ -25,6 +25,7 @@ implementations :
 - [x] APIC
 - [x] IO-APIC
 - [x] SMP
+- [x] UEFI
 
 todos:
 
