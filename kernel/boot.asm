@@ -74,6 +74,10 @@ SMP_STACK_END:
 global SMP_STACK_START
 SMP_STACK_START:
 
+global smp_spin_lock
+smp_spin_lock:
+    dq 0x0
+
 extern smp_callback
 section .smp
 global SMP_JMP
@@ -112,15 +116,22 @@ SMP_JMP:
 
     lgdt [GDT.Pointer] 
     
-    jmp CODE_SEG:smp_protect_mode
+    jmp CODE_SEG:smp_lock
     
 BITS 64
+smp_lock:
+    mov rcx, 0x1
+smp_lock_retry:
+    xor rax, rax
+    lock cmpxchg [smp_spin_lock], rcx
+    pause
+    jnz smp_lock_retry
 smp_protect_mode:
     ; multiple apus share the same stack
     ; we don't care because 
     mov rsp, SMP_STACK_START
     mov rbp, rsp
-        
+
     mov rax, smp_callback
     call rax
 
