@@ -73,7 +73,6 @@ void GOP::PutChar(char c, Color back, Color fore)
         cursor_y += 15;
     }
 
-    // 每 80 个字符一行，满80就必须换行了
     if (cursor_x >= ssfn_dst.w)
     {
         cursor_x = 0;
