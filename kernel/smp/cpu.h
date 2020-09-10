@@ -13,7 +13,7 @@
 
 struct cpu_struct
 {
-    cpu_struct *self;
+    cpu_struct* self;
     struct
     {
         void *syscall_stack;
@@ -48,9 +48,9 @@ public:
 
     void Add(uint64_t id)
     {
+        printk("find cpu: %d\n", id);
         this->cpus.push_back(cpu_struct());
         auto cs = &this->cpus.back();
-        cs->self = cs;
         cs->apic_id = id;
         cs->tss = tss_struct();
         cs->gdt = gdt_struct();
@@ -60,9 +60,13 @@ public:
 
         cs->scheduler = Scheduler();
         cs->mcache = nullptr;
-        
-        wrmsr(MSR_KERNEL_GS_BASE, uint64_t(cs));
-        asm volatile("swapgs");
+    }
+
+    void Refresh() {
+        for (int i = 0; i < this->cpus.size(); ++i) {
+            auto& u = this->cpus[i];
+            u.self = &this->cpus[i];
+        }
     }
 
     auto &GetAll()
