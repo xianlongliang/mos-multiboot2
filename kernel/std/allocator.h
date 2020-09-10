@@ -37,13 +37,22 @@ struct brk_allocator
 template <typename T>
 struct buddy_system_allocator_oneshot
 {
-    inline static void *allocate(size_t size)
+    inline void *allocate(size_t size)
     {
-        auto page_count = (size * sizeof(T)) / 4096;
-        page_count = page_count == 0 ? 1 : page_count;
-        auto page = PhysicalMemory::GetInstance()->Allocate(page_count, 0);
+        auto page_count = (double)(size * sizeof(T)) / (double)4096;
+        auto page_alloc_count = (uint64_t)(__builtin_ceil(page_count));
+        if (page_alloc_count == 0) page_alloc_count = 1;
+        auto page = PhysicalMemory::GetInstance()->Allocate(page_alloc_count, 0);
+        this->pages = page;
         return Phy_To_Virt(page->physical_address);
     }
 
-    inline static void deallocate(void *ptr) {}
+    inline void deallocate(void *ptr)
+    {
+        PhysicalMemory::GetInstance()->Free(this->pages);
+        this->pages = nullptr;
+    }
+
+private:
+    Page *pages = nullptr;
 };
