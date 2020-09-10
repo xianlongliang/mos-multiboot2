@@ -33,9 +33,9 @@ Zone::Zone(uint8_t *pstart, uint8_t *pend)
 
     uint64_t pages_count = (this->physical_end_address - this->physical_start_address) / PAGE_4K_SIZE;
     printk("page size: 4k, avaliable pages: %d\n", pages_count);
-
     this->free_pages_count = pages_count;
     this->total_pages_count = pages_count;
+    this->total_pages_count_rounded_up = pages_count;
 
     if (!IS_POWER_OF_2(pages_count))
     {

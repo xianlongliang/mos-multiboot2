@@ -25,14 +25,14 @@ struct acpi_rsdt_t
 {
     acpi_rsdt_header_t header;
     uint32_t other_sdt[];
-    typedef uint32_t* entry_type;
+    typedef uint32_t *entry_type;
 };
 
 struct acpi_xsdt_t
 {
     acpi_rsdt_header_t header;
     uint32_t other_sdt[];
-    typedef uint32_t* entry_type;
+    typedef uint32_t *entry_type;
 };
 
 struct acpi_apic_t
@@ -109,10 +109,10 @@ void do_init(RSDP *rsdp)
     auto entry_len = (rsdt->header.length - sizeof(rsdt->header)) / sizeof(decltype(*rsdt->other_sdt));
     for (uint64_t i = 0; i < entry_len; ++i)
     {
-        auto other = (typename SDT_TYPE::entry_type)&rsdt->other_sdt;
-        SDT_TYPE* entry = (SDT_TYPE*)other[i];
+        auto other = (typename SDT_TYPE::entry_type) & rsdt->other_sdt;
+        SDT_TYPE *entry = (SDT_TYPE *)other[i];
 
-        entry = (SDT_TYPE*)Phy_To_Virt(entry);
+        entry = (SDT_TYPE *)Phy_To_Virt(entry);
 
         // parse madt
         // check https://wiki.osdev.org/MADT
@@ -171,6 +171,7 @@ void do_init(RSDP *rsdp)
                 }
                 start_addr += ent->length;
             }
+            CPU::GetInstance()->Refresh();
         }
         if (!strncmp(entry->header.signature, "FACP", 4))
         {
