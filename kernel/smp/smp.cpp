@@ -8,12 +8,22 @@
 #include <syscall.h>
 #include <std/interrupt.h>
 
+void cpu_local_struct_init()
+{
+    auto cpu = &CPU::GetInstance()->Get();
+    printk("%p\n", cpu);
+    wrmsr(MSR_KERNEL_GS_BASE, uint64_t(cpu));
+    asm volatile("swapgs");
+}
+
 void SMP::Init()
 {
     GDT::GetInstance()->Init();
     IDT::GetInstance()->Init();
     APIC::GetInstance()->Init();
     Syscall::GetInstance()->Init();
+
+    cpu_local_struct_init();
 
     auto apic = APIC::GetInstance();
     // DSH: 0x3 all excluding self
@@ -45,7 +55,7 @@ void SMP::Init()
             printk("Startup IPI %d Send\n", i);
             apic->ICR_Write((APIC::ICR_Register *)&startup_ipi);
             // give 100 ms for smp_callback to setup stack
-            pit_spin(100);
+            pit_spin(5000);
             if (cpu.online)
                 break;
         }
@@ -59,6 +69,10 @@ void SMP::Init()
 
 extern "C" void smp_entry()
 {
+    extern uint64_t smp_spin_lock;
+    // smp_spin_lock must be 1 because you can't reach here unless you hold the lock
+    smp_spin_lock = 0;
+    asm volatile("mfence");
     sti();
     while (1)
     {
@@ -72,6 +86,8 @@ extern "C" void smp_apu_init()
     IDT::GetInstance()->Init();
     Syscall::GetInstance()->Init();
     APIC::GetInstance()->Init();
+
+    cpu_local_struct_init();
 
     auto &u = CPU::GetInstance()->Get();
     CPU::GetInstance()->SetOnline();

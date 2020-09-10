@@ -51,7 +51,4 @@ void Syscall::Init()
 
     // cli when syscall
     wrmsr(MSR_SYSCALL_MASK, (1 << 9));
-
-    wrmsr(MSR_KERNEL_GS_BASE, uint64_t(cs.self));
-    asm volatile("swapgs");
 }
