@@ -31,8 +31,8 @@
 #define CMD_ACC_HI 0x10
 #define CMD_ACC_LOHI 0x30
 #define CMD_CH0 0x00
-#define CMD_CH1 0x80
-#define CMD_CH2 0x40
+#define CMD_CH1 0x40
+#define CMD_CH2 0x80
 #define CMD_READBACK 0xC0
 
 /* readback flags, lowest 6 bits are the same as the CMD bits */
@@ -43,10 +43,16 @@ static inline void _pit_spin(int ms)
 {
     /* disable the CH2 GATE pin while we program the PIT */
     uint8_t ctrl = inb(PORT_CTRL);
-    ctrl &= ~CTRL_GATE;
+    ctrl &= 0xC;
+    ctrl |= 0x1;
     outb(PORT_CTRL, ctrl);
 
     /* send the command byte */
+    // Binary mode
+    // interrupt on terminal count
+    // Access mode: lobyte/hibyte
+    // Channel 2
+    uint8_t j = CMD_BINARY | CMD_MODE0 | CMD_ACC_LOHI | CMD_CH2;
     outb(PORT_CMD, CMD_BINARY | CMD_MODE0 | CMD_ACC_LOHI | CMD_CH2);
 
     /* send the count word */
