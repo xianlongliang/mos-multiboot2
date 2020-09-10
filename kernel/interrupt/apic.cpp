@@ -65,8 +65,8 @@ void APIC::Init()
     this->local_apic_base = (uint32_t *)Phy_To_Virt(apic_base_addr_reg->ABA << PAGE_4K_SHIFT);
     // vmap_frame_kernel(this->local_apic_base, (uint8_t*)(apic_base_addr_reg->ABA << PAGE_4K_SHIFT));
 
-    wrmsr(IA32_APIC_BASE, apic_base_val);
-    apic_base_val = rdmsr(IA32_APIC_BASE);
+    // wrmsr(IA32_APIC_BASE, apic_base_val);
+    // apic_base_val = rdmsr(IA32_APIC_BASE);
     // now apic is enabled
     auto apic_id_val = apic_read(APIC_ID);
     printk("APIC ID: %d\n", apic_id_val);
