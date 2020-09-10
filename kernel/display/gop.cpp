@@ -24,6 +24,18 @@ void GOP::Init(void *address, uint16_t width, uint16_t height, uint16_t pitch)
     GOP::Clear();
 }
 
+inline void do_backspace() {
+    // font height 15 pixels
+    auto y_start = ssfn_dst.y - 1;
+    for (int i = 0; i < 16; i++) {
+        auto start = y_start * ssfn_dst.w * sizeof(uint32_t) + (ssfn_dst.x - 1) * sizeof(uint32_t);
+        uint32_t* ptr = (uint32_t*)(ssfn_dst.ptr + start);
+        for (int j = 0; j < 8; ++i) {
+            ptr[0] = 0x0;
+        }
+    }
+}
+
 void GOP::PutChar(char c, Color back, Color fore)
 {
 
@@ -37,8 +49,13 @@ void GOP::PutChar(char c, Color back, Color fore)
     // Backspace
     if (c == 0x08 && cursor_x)
     {
-        cursor_x--;
-        ssfn_putc(0);
+        cursor_x -= 8;
+        auto fg_bak = ssfn_dst.fg;
+        ssfn_dst.fg = ssfn_dst.bg;
+        ssfn_putc(0x08);
+        ssfn_dst.fg = fg_bak;
+        cursor_x -= 8;
+        return;
     }
     // Tab
     else if (c == 0x09)
@@ -76,7 +93,7 @@ void GOP::PutString(char *str, Color back, Color fore)
 
 void GOP::Clear()
 {
-    bzero(ssfn_dst.ptr, 800 * 600 * sizeof(ssfn_dst.fg));
+    bzero(ssfn_dst.ptr, ssfn_dst.w * ssfn_dst.h * sizeof(ssfn_dst.fg));
     ssfn_dst.x = 0; /* pen position */
     ssfn_dst.y = 0; /* pen position */
 }
