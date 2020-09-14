@@ -20,7 +20,6 @@
 #include <std/spinlock.h>
 #include <std/string.h>
 #include <std/unordered_set.h>
-#include <std/shared_ptr.h>
 
 class SP
 {
