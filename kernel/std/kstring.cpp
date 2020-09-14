@@ -54,6 +54,30 @@ void bzero(void *dest, uint64_t len)
     memset(dest, 0, len);
 }
 
+void lzero(void *dest, uint64_t len)
+{
+    auto psdt = (uint32_t*)dest;
+    for (uint64_t i = 0; i < len; ++i) {
+        psdt[i] = 0x0;
+    }
+}
+
+void qzero(void *dest, uint64_t len)
+{
+    auto psdt = (uint64_t*)dest;
+    for (uint64_t i = 0; i < len; ++i) {
+        psdt[i] = 0x0;
+    }
+}
+
+void hzero(void *dest, uint64_t len)
+{
+    auto psdt = (uint128_t*)dest;
+    for (uint128_t i = 0; i < len; ++i) {
+        psdt[i] = 0x0;
+    }
+}
+
 int strcmp(const char *s1, const char *s2)
 {
     int8_t res = 0;
