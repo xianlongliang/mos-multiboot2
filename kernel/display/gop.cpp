@@ -92,7 +92,7 @@ void GOP::PutString(char *str, Color back, Color fore)
 
 void GOP::Clear()
 {
-    bzero(ssfn_dst.ptr, ssfn_dst.w * ssfn_dst.h * sizeof(ssfn_dst.fg));
+    hzero(ssfn_dst.ptr, ssfn_dst.w * ssfn_dst.h / 4);
     ssfn_dst.x = 0; /* pen position */
     ssfn_dst.y = 0; /* pen position */
 }

@@ -20,6 +20,7 @@
 #include <std/spinlock.h>
 #include <std/string.h>
 #include <std/unordered_set.h>
+#include <pci/io.h>
 
 class SP
 {
@@ -32,6 +33,7 @@ extern "C" void Kernel_Main(void *mbi_addr)
   basic_init(mbi_addr);
   RSDT::GetInstance()->Init();
   kmalloc_init();
+  pci_probe();
   // auto s = shared_ptr<UniqueTest>(new UniqueTest());
   SMP::GetInstance()->Init();
   task_init();

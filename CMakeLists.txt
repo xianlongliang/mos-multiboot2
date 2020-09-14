@@ -129,6 +129,11 @@ add_executable(kernel
         kernel/syscall/write.cpp
         kernel/display/gop.h
         kernel/display/gop.cpp
+
+        kernel/pci/io.h
+        kernel/rtc/rtc.h
+        kernel/rtc/rtc.cpp
+
         u_vga16.o
         )
 
