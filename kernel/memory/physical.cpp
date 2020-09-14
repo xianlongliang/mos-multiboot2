@@ -20,8 +20,8 @@ uint64_t PhysicalMemory::Add(multiboot_mmap_entry *mmap)
         return 0;
     }
 
-    if (end - start < 0x800000) {
-        printk("region less than 8Mb, dropped\n");
+    if (end - start < 0x8000000) {
+        printk("region less than 128Mb, dropped\n");
         return 0;
     }
 
@@ -31,7 +31,17 @@ uint64_t PhysicalMemory::Add(multiboot_mmap_entry *mmap)
     }
 
     // auto zone_addr = brk_up(sizeof(Zone));
-    auto zone_addr = Phy_To_Virt(start);
+    auto valid_start = (uint64_t)Virt_To_Phy(brk_get());
+    uint8_t* zone_addr = nullptr;
+    if (start > valid_start) {
+        zone_addr = (uint8_t*)start;
+    }else if (start < valid_start && valid_start < end) {
+        zone_addr = (uint8_t*)valid_start;
+        start = valid_start;
+    }else {
+        return 0;
+    }
+    zone_addr = Phy_To_Virt(zone_addr);
     auto zone = new (zone_addr) Zone((uint8_t *)start, (uint8_t *)end);
     if (!zones_list)
     {
