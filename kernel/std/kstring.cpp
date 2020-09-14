@@ -15,10 +15,29 @@ void memmove(void *dst, const void *src, uint64_t len)
 {
     uint8_t *cdst = (uint8_t *)dst;
     uint8_t *csrc = (uint8_t *)src;
-    for (; len != 0; len--)
+    if (cdst > csrc && cdst < csrc + len)
     {
-        *cdst++ = *csrc++;
+        uint8_t *right_d_start = cdst + len - 1;
+        uint8_t *right_s_start = csrc + len - 1;
+        for (int i = 0; i < len; ++i)
+        {
+            *(right_d_start - i) = *(right_s_start - i);
+        }
+        return;
     }
+
+    if (csrc > cdst && csrc < cdst + len)
+    {
+        uint8_t *left_d_start = cdst;
+        uint8_t *left_s_start = csrc;
+        for (int i = 0; i < len; ++i)
+        {
+            *(left_d_start + i) = *(left_s_start + i);
+        }
+        return;
+    }
+
+    memcpy(dst, src, len);
 }
 
 void memset(void *dst, uint8_t val, uint64_t len)
