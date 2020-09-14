@@ -38,7 +38,7 @@ struct MBI2
 
         if (acpi_new_tag_address)
         {
-            auto tag = (multiboot_tag *)acpi_old_tag_address;
+            auto tag = (multiboot_tag *)acpi_new_tag_address;
             auto rsdp_tag = (multiboot_tag_new_acpi *)tag;
             printk("rsdp: %p, size: %d\n", rsdp_tag->rsdp, rsdp_tag->size);
             RSDP::GetInstance()->Init(2, (uint8_t *)&rsdp_tag->rsdp);

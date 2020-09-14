@@ -55,7 +55,7 @@ void SMP::Init()
             printk("Startup IPI %d Send\n", i);
             apic->ICR_Write((APIC::ICR_Register *)&startup_ipi);
             // give 100 ms for smp_callback to setup stack
-            pit_spin(5000);
+            pit_spin(500);
             if (cpu.online)
                 break;
         }
