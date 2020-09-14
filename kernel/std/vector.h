@@ -15,12 +15,12 @@ public:
 
     vector(uint64_t capacity) : capacity(capacity), current_size(0)
     {
-        this->pval = (T *)Allocator::allocate(capacity);
+        this->pval = (T *)this->allocator.allocate(capacity);
     }
 
     vector(uint64_t capacity, const T& value) : capacity(capacity)
     {
-        this->pval = (T *)Allocator::allocate(capacity);
+        this->pval = (T *)this->allocator.allocate(capacity);
         for (uint64_t i = 0; i < capacity; ++i) {
             new (&this->pval[i]) T(value);
         }
@@ -130,18 +130,19 @@ private:
     T *pval;
     uint64_t current_size;
     uint64_t capacity;
+    Allocator allocator;
 
     void expand()
     {
         uint64_t target_capacity = capacity * 2;
         if (target_capacity == 0)
             target_capacity = 1;
-        auto new_pval = (T *)kmalloc(target_capacity * sizeof(T), 0);
+        auto new_pval = (T *)allocator.allocate(target_capacity);
         for (uint64_t i = 0; i < this->current_size; ++i)
         {
             new (&new_pval[i]) T(std::move(this->pval[i]));
         }
-        if (this->pval) kfree(this->pval);
+        if (this->pval) allocator.deallocate(this->pval);
         this->pval = new_pval;
         this->capacity = target_capacity;
     }
