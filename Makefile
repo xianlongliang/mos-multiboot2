@@ -8,8 +8,8 @@ dump:
 	# objdump -S build/user > build/user.dump
 
 qemu:
-	qemu-system-x86_64 -smp 4 --bios OVMF.fd -net none -monitor stdio -drive file=build/kernel.iso,index=0,media=disk,format=raw -m 8192M -s -S \
-	-drive file=hd80.img,if=none,id=disk \
+	qemu-system-x86_64 -smp 2 --bios OVMF.fd -net none -monitor stdio -m 8192M -s -S \
+	-drive file=build/kernel.iso,if=none,id=disk \
 	-device ich9-ahci,id=ahci \
 	-device ide-hd,drive=disk,bus=ahci.0 \
 
