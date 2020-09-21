@@ -50,24 +50,49 @@ struct MBI2
             multiboot_mmap_entry *mmap;
             printk("mmap entries count: %d\n", ((multiboot_tag_mmap *)tag)->entry_size);
             auto pm = PhysicalMemory::GetInstance();
-            uint64_t end;
             for (mmap = ((multiboot_tag_mmap *)tag)->entries;
                  (multiboot_uint8_t *)mmap < (multiboot_uint8_t *)tag + tag->size;
                  mmap = (multiboot_mmap_entry *)((uint8_t *)mmap + ((multiboot_tag_mmap *)tag)->entry_size))
             {
-                if (mmap->type == MULTIBOOT_MEMORY_AVAILABLE)
+                printk("mmap from: %p to: %p\n", mmap->addr, mmap->addr + mmap->len);
+                switch (mmap->type)
                 {
-                    end = pm->Add(mmap);
+                case MULTIBOOT_MEMORY_AVAILABLE:
+                {
+                    printk("MEMORY_AVAILABLE\n");
+                    pm->Add(mmap);
+                    break;
+                }
+                case MULTIBOOT_MEMORY_RESERVED:
+                {
+                    printk("MEMORY_RESERVED\n");
+                    break;
+                }
+
+                case MULTIBOOT_MEMORY_ACPI_RECLAIMABLE:
+                {
+                    printk("MEMORY_ACPI_RECLAIMABLE\n");
+                    break;
+                }
+                case MULTIBOOT_MEMORY_NVS:
+                {
+                    printk("MEMORY_NVS\n");
+                    break;
+                }
+                case MULTIBOOT_MEMORY_BADRAM:
+                {
+                    printk("MEMORY_BADRAM\n");
+                    break;
+                }
+                case MULTIBOOT_MEMORY_FIRMWARE:
+                {
+                    printk("MEMORY_FIRMWARE\n");
+                    break;
+                }
+                default:
+                    break;
                 }
             }
-            // auto reserved_page_count = (PAGE_4K_ROUND_UP(end) - (uint64_t)Phy_To_Virt(0x100000)) / PAGE_SIZE_4K;
-            // printk("allocating memory ...\n");
-            // for (int i = 0; i < reserved_page_count; ++i)
-            // {
-            //     pm->Allocate(1, 0);
-            // }
-            // printk("allocating memory done\n");
-            // brk_done();
         }
 
         if (elf_section_tag_address)

@@ -51,7 +51,7 @@ public:
 private:
     friend class MBI2;
     friend void basic_init(void *mbi_addr);
-    uint64_t Add(multiboot_mmap_entry *mmap);
+    void Add(multiboot_mmap_entry *mmap);
 
     List *zones_list;
 };
