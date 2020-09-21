@@ -36,13 +36,6 @@ public:
         return this->total_pages_count - this->free_pages_count;
     }
 
-    inline uint64_t End()
-    {
-        // memory layout:
-        // Zone : nodes : pages
-        return this->zone_end;
-    }
-
     List list_node;
 
 private:

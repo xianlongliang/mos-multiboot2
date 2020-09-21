@@ -74,11 +74,12 @@ Zone::Zone(uint8_t *pstart, uint8_t *pend)
     }
 
     auto reserved_page_count = (PAGE_4K_ROUND_UP((uint64_t)pages_end) - (uint64_t)Phy_To_Virt(pstart)) / PAGE_4K_SIZE;
-    printk("allocating memory ...\n");
+    printk("reserving memory ...\n");
     for (int i = 0; i < reserved_page_count; ++i)
     {
         this->AllocatePages(1);
     }
+    printk("reserving memory done\n");
 }
 
 int64_t Zone::AllocatePages(uint64_t pages_count)
