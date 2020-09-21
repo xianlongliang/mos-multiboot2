@@ -25,7 +25,7 @@ void GOP::Init(void *address, uint16_t width, uint16_t height, uint16_t pitch)
 }
 
 inline void do_backspace() {
-    // font height 15 pixels
+    // font height 16 pixels
     auto y_start = ssfn_dst.y - 1;
     for (int i = 0; i < 16; i++) {
         auto start = y_start * ssfn_dst.w * sizeof(uint32_t) + (ssfn_dst.x - 1) * sizeof(uint32_t);
@@ -65,18 +65,18 @@ void GOP::PutChar(char c, Color back, Color fore)
     else if (c == '\r')
     {
         cursor_x = 0;
-        cursor_y += 15;
+        cursor_y += 16;
     }
     else if (c == '\n')
     {
         cursor_x = 0;
-        cursor_y += 15;
+        cursor_y += 16;
     }
 
     if (cursor_x >= ssfn_dst.w)
     {
         cursor_x = 0;
-        cursor_y += 15;
+        cursor_y += 16;
     }
     scroll();
     ssfn_putc(c);
@@ -105,25 +105,25 @@ void GOP::scroll()
     auto y_count = ssfn_dst.h;
 
     // cursor_y 到 25 的时候，就该换行了
-    if (cursor_y >= ssfn_dst.h)
+    if (cursor_y + 16 >= ssfn_dst.h)
     {
         // 将所有行的显示数据复制到上一行，第一行永远消失了...
         int i;
 
-        auto last_line = y_count * x_count - 15 * x_count;
-        for (i = 0; i < last_line; i++)
+        auto last_pixel = y_count * x_count - 16 * x_count;
+        for (i = 0; i <= last_pixel; i++)
         {
-            video_memory[i] = video_memory[i + 15 * x_count];
+            video_memory[i] = video_memory[i + 16 * x_count];
         }
 
-        auto end_line = y_count * x_count;
+        auto end_line = y_count * x_count - 1;
         // 最后的一行数据现在填充空格，不显示任何字符
-        for (i = last_line; i < end_line; i++)
+        for (i = last_pixel + 1; i < end_line; i++)
         {
             video_memory[i] = 0x0;
         }
 
         // 向上移动了一行，所以 cursor_y 现在是 24
-        cursor_y -= 15;
+        cursor_y -= 16;
     }
 }
